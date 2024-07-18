@@ -4,9 +4,10 @@ on the database and will be used as schemas/response/request data in the API sch
 from sqlmodel import Field, Relationship
 from datetime import date
 from app.models.bases import *
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 if TYPE_CHECKING:
     from app.models.users import User
+    from app.models.colony import Colony, Match, MatchPlayerLink
 
 
 # PLAYER
@@ -18,6 +19,8 @@ class Player(BasePlayer, table=True):
     cursed_technique: "CursedTechnique" = Relationship(back_populates="player")
     user_id: int | None = Field(default=None, foreign_key="user.id")
     user: "User" = Relationship(back_populates="player")
+    colony_id: int | None = Field(default=None, foreign_key="colony.id")
+    colony: "Colony" = Relationship(back_populates="players")
 
 class CreatePlayer(BasePlayer):
     'For creating a Player'
@@ -45,21 +48,15 @@ class CTApp(BaseCTApp, table=True):
 
 class CreateCTApp(BaseCTApp):
     'for creating a cursed technique application'
-    """model_config = {
-        "json_schema_extra": {
-            "examples": [
-                {"application": "cruel world"}
-            ]
-        }
-    }"""
     pass
 
 
 # CLIENT SIDE RESPONSE MODELS
 class PlayerInfo(BasePlayerInfo):
-    'Player info with cursed technique'
+    'Player info with cursed technique, user, and colony info'
     cursed_technique: BaseCTInfo
-    user: "BaseUserInfo"
+    colony: BaseColonyInfo
+    user: BaseUserInfo
 
 class CTInfo(BaseCTInfo):
     'cursed technique, with player info'

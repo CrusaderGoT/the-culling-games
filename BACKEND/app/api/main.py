@@ -1,15 +1,17 @@
-from app.settings import app
-from fastapi import Body, Path, Query, status, HTTPException, Depends
+from app.api.settings import app
+from fastapi import Body, Path, Query, status, HTTPException
 from app.models.users import CreateUser, User, UserInfo, EditUser
 from app.models.players import (Player, CreatePlayer, PlayerInfo,
                                 CreateCT, CursedTechnique,
                                 CTApp, CreateCTApp)
-from app.utils.dependencies import get_session
+from app.models.colony import Colony, ColonyInfo
+from app.utils.dependencies import session, colony
 from typing import Annotated
 from app.utils.auth import PasswordAuth
 from app.utils.config import UserException, Tag
-from sqlmodel import Session, select, or_
+from sqlmodel import select, or_, func
 from app.database.pgsql import create_db_tables
+from random import choice
 
 # write you path functions here.
 
@@ -20,7 +22,7 @@ def on_start():
 # USERS
 @app.post("/create-user", response_model=UserInfo, status_code=status.HTTP_201_CREATED,
           tags=[Tag.user], summary='Create a new User', response_description='New User')
-def create_user(session: Annotated[Session, Depends(get_session)],
+def create_user(session: session,
                 user: Annotated[CreateUser, Body(description="The User details; Request")]):
     # convert user username to lowercase; for easier variable use
     l_username = user.username.lower().strip()
@@ -62,7 +64,7 @@ def create_user(session: Annotated[Session, Depends(get_session)],
         
 @app.get('/users/{user_id}', response_model=UserInfo, response_description="A User",
         tags=[Tag.user], summary="get a user with their ID.", status_code=status.HTTP_200_OK)
-def get_user(session: Annotated[Session, Depends(get_session)],
+def get_user(session: session,
              user_id: Annotated[int, Path()]):
     user = session.exec(select(User).where(User.id == user_id)).first()
     if user:
@@ -73,7 +75,7 @@ def get_user(session: Annotated[Session, Depends(get_session)],
     
 @app.patch('/edit-user/{user_id}', response_model=UserInfo, response_description="Edited User",
         tags=[Tag.user], summary="get a user with their ID.", status_code=status.HTTP_200_OK)
-def edit_user(session: Annotated[Session, Depends(get_session)],
+def edit_user(session: session,
               user_id: Annotated[int, Path()],
               password: Annotated[str, Query()],
               edit_user: Annotated[EditUser, Body()]):
@@ -100,7 +102,7 @@ def edit_user(session: Annotated[Session, Depends(get_session)],
 @app.post('/create-player/{user_id}', response_model=PlayerInfo, tags=[Tag.player],
           response_description="New Player", summary="create a new player",
           status_code=status.HTTP_201_CREATED)
-def create_player(session: Annotated[Session, Depends(get_session)],
+def create_player(session: session, colony: colony,
                   user_id: Annotated[str, Path()],
                   player: Annotated[CreatePlayer, Body()],
                   cursed_technique: Annotated[CreateCT, Body()],
@@ -108,23 +110,28 @@ def create_player(session: Annotated[Session, Depends(get_session)],
                 ):
     user = session.get(User, user_id)
     if user:
-        ct_apps_ins = [CTApp.model_validate(ct_app) for ct_app in applications] # ct application instances, for ct_ins
-        update_ct = {"applications": ct_apps_ins}
-        ct_ins = CursedTechnique.model_validate(cursed_technique, update=update_ct) # cursed technique instance
-        update_player = {"cursed_technique": ct_ins,
-                         "user": user}
-        new_player = Player.model_validate(player, update=update_player)
-        session.add(new_player)
-        session.commit()
-        session.refresh(new_player)
-        return new_player
+        # check if user already has a player
+        if user.player:
+            err_msg = f"'{user.username} already has a player '{user.player.name}'. Edit player instead."
+            raise UserException(user, status.HTTP_409_CONFLICT, err_msg)
+        else: # user has no player
+            ct_apps_ins = [CTApp.model_validate(ct_app) for ct_app in applications] # ct app instances, for ct_ins
+            update_ct = {"applications": ct_apps_ins}
+            ct_ins = CursedTechnique.model_validate(cursed_technique, update=update_ct) # cursed technique instance
+            update_player = {"cursed_technique": ct_ins,
+                            "user": user, "colony": colony}
+            new_player = Player.model_validate(player, update=update_player)
+            session.add(new_player)
+            session.commit()
+            session.refresh(new_player)
+            return new_player      
     else: # no user found
         err_msg = f"user ID '{user_id}' not found"
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail=err_msg)
 
 @app.get('/player/{player_id}', response_model=PlayerInfo, status_code=status.HTTP_200_OK,
          tags=[Tag.player], response_description="A Player", summary="Get a player with their ID")
-def get_player(player_id: Annotated[int, Path()], session: Annotated[Session, Depends(get_session)]):
+def get_player(player_id: Annotated[int, Path()], session: session):
     player = session.exec(select(Player).where(Player.id == player_id)).first()
     if player:
         print(player.cursed_technique)
@@ -132,3 +139,13 @@ def get_player(player_id: Annotated[int, Path()], session: Annotated[Session, De
     else:
         err_msg = f"player ID '{player_id}' not found"
         raise HTTPException(status.HTTP_404_NOT_FOUND, err_msg)
+    
+@app.get("/player/colony/{player_id}", response_model=ColonyInfo)
+def get_player_colony(session: session, player_id: Annotated[int, Path()]):
+    colony = session.exec(
+        select(Colony).join(Player).where(Player.id == player_id)
+    ).one_or_none()
+    if colony:
+        return colony
+    else: # no colony for player; means player doesn't exist
+        raise HTTPException(status.HTTP_404_NOT_FOUND, f"player with ID '{player_id}' not found.")

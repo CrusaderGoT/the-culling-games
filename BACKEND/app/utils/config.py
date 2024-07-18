@@ -2,8 +2,8 @@
 1. path operation decorators args; e.g tags.
 2. custom exceptions.
 3. Dependecies'''
-from app.settings import app
-from app.models.users import UserInfo, BaseUser
+from app.api.settings import app
+from app.models.users import UserInfo, User
 from fastapi import status
 from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.exceptions import RequestValidationError
@@ -15,11 +15,10 @@ from enum import Enum
 # 1. EXCEPTIONS
 
 class UserException(Exception):
-    '''user custom exception'''
-    # BaseUser to make returning a failed CreateUser compatible
-    def __init__(self, user:UserInfo | BaseUser, code:int=status.HTTP_406_NOT_ACCEPTABLE,
+    '''user custom exception; will convert the User to UserInfo'''
+    def __init__(self, user:User, code:int=status.HTTP_406_NOT_ACCEPTABLE,
                  err_msg:str | dict={'msg': 'An Error Occured with this User'},) -> None:
-        self.user = user
+        self.user = UserInfo.model_validate(user)
         self.err_msg = err_msg
         self.code = code
 
