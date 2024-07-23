@@ -1,13 +1,14 @@
 #./api/models/players.py
-'''module for defining the `players` models that will be used to perform CRUD operation
+'''module for defining the `players` `cursed technique` and `cursed technique applications` models that will be used to perform CRUD operation
 on the database and will be used as schemas/response/request data in the API schema. All SQLModels'''
 from sqlmodel import Field, Relationship
 from datetime import date
 from app.models.bases import *
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from app.models.users import User
-    from app.models.colony import Colony, Match, MatchPlayerLink
+    from app.models.colony import Colony
+    from app.models.match import Match
 
 
 # PLAYER
@@ -21,6 +22,10 @@ class Player(BasePlayer, table=True):
     user: "User" = Relationship(back_populates="player")
     colony_id: int | None = Field(default=None, foreign_key="colony.id")
     colony: "Colony" = Relationship(back_populates="players")
+
+    #matches: list["Match"] = Relationship(back_populates="players", link_model=MatchPlayerLink)
+
+    #wins: list["Match"] = Relationship(back_populates="players", link_model=MatchPlayerLink)
 
 class CreatePlayer(BasePlayer):
     'For creating a Player'

@@ -15,7 +15,7 @@ def get_session():
         yield session
 
 session = Annotated[Session, Depends(get_session)]
-'yields a session; an alias of the `get_session` function -> dependable'
+'yields a session; an alias dependency of the `get_session` function'
 
 def get_or_create_colony(session: session):
     '''gets a colony with less than 10 PLAYERS of creates a new base colony.
@@ -40,5 +40,6 @@ def get_or_create_colony(session: session):
         return colony
 
 colony = Annotated[Colony, Depends(get_or_create_colony)]
-'''returns a Colony with less than 10 players, or returns a new BaseColony.\n
-An alias of the `get_or_create_colony` function'''
+'''returns a Colony with less than 10 players, or returns a new Colony.\n
+An alias dependency of the `get_or_create_colony` function'''
+

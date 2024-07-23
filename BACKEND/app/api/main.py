@@ -1,5 +1,5 @@
 from app.api.settings import app
-from fastapi import Body, Path, Query, status, HTTPException
+from fastapi import Body, Path, Query, Depends, status, HTTPException
 from app.models.users import CreateUser, User, UserInfo, EditUser
 from app.models.players import (Player, CreatePlayer, PlayerInfo,
                                 CreateCT, CursedTechnique,
@@ -7,17 +7,35 @@ from app.models.players import (Player, CreatePlayer, PlayerInfo,
 from app.models.colony import Colony, ColonyInfo
 from app.utils.dependencies import session, colony
 from typing import Annotated
-from app.utils.auth import PasswordAuth
+from app.auth.credentials import PasswordAuth, authenticate_user, create_access_token, get_user
+from app.auth.models import Token
+from app.auth.dependencies import active_user
 from app.utils.config import UserException, Tag
-from sqlmodel import select, or_, func
+from sqlmodel import select, or_
 from app.database.pgsql import create_db_tables
-from random import choice
+from fastapi.security import  OAuth2PasswordRequestForm
+
 
 # write you path functions here.
 
 @app.on_event('startup')
 def on_start():
     create_db_tables()
+
+# LOGIN
+@app.post("/token", response_model=Token, status_code=status.HTTP_200_OK,
+          tags=[Tag.auth], summary='creates a token', response_description='A Token')
+def create_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+                session: session):
+    user = authenticate_user(form_data.username, form_data.password, session)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+            )
+    access_token = create_access_token(data={"sub": user.username})
+    return Token(access_token=access_token, token_type="bearer")
 
 # USERS
 @app.post("/create-user", response_model=UserInfo, status_code=status.HTTP_201_CREATED,
@@ -61,31 +79,36 @@ def create_user(session: session,
         else:
             err_msg = f"passwords do not match"
             raise HTTPException(status.HTTP_412_PRECONDITION_FAILED, detail=err_msg)
-        
-@app.get('/users/{user_id}', response_model=UserInfo, response_description="A User",
-        tags=[Tag.user], summary="get a user with their ID.", status_code=status.HTTP_200_OK)
-def get_user(session: session,
-             user_id: Annotated[int, Path()]):
-    user = session.exec(select(User).where(User.id == user_id)).first()
-    if user:
-        return user
+
+@app.get("/users/me", response_model=UserInfo, response_description="A User",
+         tags=[Tag.user], summary="Get the logged in user", status_code=status.HTTP_200_OK)
+def current_user(current_user: active_user) -> User:
+    return current_user
+
+@app.get('/users/{user}', response_model=UserInfo, response_description="A User",
+        tags=[Tag.user], summary="Get a user.", status_code=status.HTTP_200_OK)
+def A_user(session: session,
+           user: Annotated[int | str, Path(description="The user's Id, Username, or Email")]):
+    userdb = get_user(session, user)
+    if userdb:
+        return userdb
     else:
-        err_msg = f"User ID '{user_id}' not found."
+        err_msg = f"User '{user}' not found."
         raise HTTPException(status.HTTP_404_NOT_FOUND, err_msg)
     
-@app.patch('/edit-user/{user_id}', response_model=UserInfo, response_description="Edited User",
-        tags=[Tag.user], summary="get a user with their ID.", status_code=status.HTTP_200_OK)
+@app.patch('/edit-user/{user}', response_model=UserInfo, response_description="Edited User",
+        tags=[Tag.user], summary="Edit a user.", status_code=status.HTTP_200_OK)
 def edit_user(session: session,
-              user_id: Annotated[int, Path()],
+              user: Annotated[int | str, Path(description="The user's Id, Username, or Email")],
               password: Annotated[str, Query()],
               edit_user: Annotated[EditUser, Body()]):
-    user = session.exec(select(User).where(User.id == user_id)).first()
-    if user:
-        correct_pw = PasswordAuth().verify_password(password, user.password)
+    userdb = get_user(session, user)
+    if userdb:
+        correct_pw = PasswordAuth().verify_password(password, userdb.password)
         if correct_pw:
             # get userdata, excluding unset
             edited_user_data = edit_user.model_dump(exclude_unset=True)
-            edited_user = user.sqlmodel_update(edited_user_data)
+            edited_user = userdb.sqlmodel_update(edited_user_data)
             session.add(edited_user)
             session.commit()
             session.refresh(edited_user)
@@ -94,39 +117,39 @@ def edit_user(session: session,
             err_msg = "password is incorrect"
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, err_msg)
     else:
-        err_msg = f"User ID '{user_id}' not found."
+        err_msg = f"User ID '{user}' not found."
         raise HTTPException(status.HTTP_404_NOT_FOUND, err_msg)
 
 
 # PLAYERS  
-@app.post('/create-player/{user_id}', response_model=PlayerInfo, tags=[Tag.player],
+@app.post('/create-player/{user}', response_model=PlayerInfo, tags=[Tag.player],
           response_description="New Player", summary="create a new player",
           status_code=status.HTTP_201_CREATED)
 def create_player(session: session, colony: colony,
-                  user_id: Annotated[str, Path()],
+                  user: Annotated[str | int, Path(description="The user's Id, Username, or Email")],
                   player: Annotated[CreatePlayer, Body()],
                   cursed_technique: Annotated[CreateCT, Body()],
                   applications: Annotated[list[CreateCTApp], Body(min_length=5, max_length=5)]
                 ):
-    user = session.get(User, user_id)
-    if user:
+    userdb = get_user(session, user)
+    if userdb:
         # check if user already has a player
-        if user.player:
-            err_msg = f"'{user.username} already has a player '{user.player.name}'. Edit player instead."
-            raise UserException(user, status.HTTP_409_CONFLICT, err_msg)
+        if userdb.player:
+            err_msg = f"{userdb.username} already has a player '{userdb.player.name}'. Edit player instead."
+            raise UserException(userdb, status.HTTP_409_CONFLICT, err_msg)
         else: # user has no player
             ct_apps_ins = [CTApp.model_validate(ct_app) for ct_app in applications] # ct app instances, for ct_ins
             update_ct = {"applications": ct_apps_ins}
             ct_ins = CursedTechnique.model_validate(cursed_technique, update=update_ct) # cursed technique instance
             update_player = {"cursed_technique": ct_ins,
-                            "user": user, "colony": colony}
+                            "user": userdb, "colony": colony}
             new_player = Player.model_validate(player, update=update_player)
             session.add(new_player)
             session.commit()
             session.refresh(new_player)
             return new_player      
     else: # no user found
-        err_msg = f"user ID '{user_id}' not found"
+        err_msg = f"User '{user}' not found"
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail=err_msg)
 
 @app.get('/player/{player_id}', response_model=PlayerInfo, status_code=status.HTTP_200_OK,
@@ -140,7 +163,8 @@ def get_player(player_id: Annotated[int, Path()], session: session):
         err_msg = f"player ID '{player_id}' not found"
         raise HTTPException(status.HTTP_404_NOT_FOUND, err_msg)
     
-@app.get("/player/colony/{player_id}", response_model=ColonyInfo)
+@app.get("/player/colony/{player_id}", response_model=ColonyInfo, status_code=status.HTTP_200_OK,
+         tags=[Tag.player], response_description="A Colony", summary="Get a player's colony")
 def get_player_colony(session: session, player_id: Annotated[int, Path()]):
     colony = session.exec(
         select(Colony).join(Player).where(Player.id == player_id)

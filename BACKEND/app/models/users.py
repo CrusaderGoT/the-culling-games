@@ -1,13 +1,12 @@
 #./api/models/users.py
 '''module for defining the `users` models that will be used to perform CRUD operations on the database and
 The models that will be used as schemas/response/request data in the API schema. All SQLModels'''
-from sqlmodel import Field, Relationship
+from sqlmodel import SQLModel, Field, Relationship
 from datetime import date
+from app.models.bases import *
 from typing import Union, TYPE_CHECKING
 if TYPE_CHECKING:
     from app.models.players import Player
-from app.models.bases import *
-
 
 # write your user models here
 
@@ -23,12 +22,14 @@ class CreateUser(BaseUser):
     password: str
     confirm_password: str
 
-class UserInfo(BaseUserInfo):
-    'The user info'
-    player: Union["BasePlayerInfo", None] = None
-
 class EditUser(SQLModel):
     'For editing a User'
     username: str | None = None
     email: EmailStr | None = None
     country: str | None = None
+
+# CLIENT SIDE RESPONSE MODELS
+class UserInfo(BaseUserInfo):
+    'The user info'
+    player: Union["BasePlayerInfo", None] = None
+
