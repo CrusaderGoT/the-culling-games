@@ -97,10 +97,10 @@ class BaseCTApp(SQLModel):
 
 class BaseCTAppInfo(BaseCTApp):
     '''
-    base model for cursed technique application info, without "id", "ct_id", "ct"\n
-    pass
+    base model for cursed technique application info, without "ct_id", "ct"\n
+    id: int
     '''
-    pass
+    id: int
 
 class Country(str, Enum):
     'the countries enum class'

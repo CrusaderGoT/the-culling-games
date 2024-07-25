@@ -1,4 +1,4 @@
-'''module for defining fastapi dependencies'''
+'''module for defining fastapi dependencies. Typically for codes that are repeated a lot and used in path operations'''
 from app.database.pgsql import engine
 from sqlmodel import Session, select, func
 from app.models.colony import Colony
@@ -6,7 +6,7 @@ from app.models.players import Player
 from app.models.bases import Country
 from random import choice
 from typing import Annotated
-from fastapi import Depends
+from fastapi import Depends, Path
 
 # Get Session Dependency
 def get_session():
@@ -35,7 +35,7 @@ def get_or_create_colony(session: session):
     else: # return new colony instance
         # select a random country
         countries = list(Country)
-        country = choice([cv.value for cv in countries])
+        country = choice([c for c in countries])
         colony = Colony(country=country)
         return colony
 
@@ -43,3 +43,6 @@ colony = Annotated[Colony, Depends(get_or_create_colony)]
 '''returns a Colony with less than 10 players, or returns a new Colony.\n
 An alias dependency of the `get_or_create_colony` function'''
 
+id_name_email = Annotated[int | str, Path(description="The user's Id, Username, or Email")]
+"""The user's Id, Username, or Email as a dependency alias.
+\nActually accepts any int or str. The name is for convention."""

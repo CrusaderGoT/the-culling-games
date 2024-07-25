@@ -5,12 +5,13 @@ from jwt.exceptions import InvalidTokenError
 from typing import Annotated
 from app.auth.models import TokenData
 from app.api.settings import SECRET_KEY, ALGORITHM
-from app.auth.credentials import get_user
+from app.utils.logic import get_user
 from app.models.users import User
 from app.utils.dependencies import session
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+'''A dependency of the OAuth2PasswordBearer class.'''
 
 def get_current_user(token: Annotated[str, Depends(oauth2_scheme)],
                      session: session):
@@ -21,7 +22,7 @@ def get_current_user(token: Annotated[str, Depends(oauth2_scheme)],
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
+        username = payload.get("username")
         if username is None:
             raise credentials_exception
         token_data = TokenData(username=username)

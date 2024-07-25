@@ -2,11 +2,9 @@
 import bcrypt
 from datetime import datetime, timedelta, timezone
 import jwt
-from sqlmodel import select
-from app.models.users import User
 from app.utils.dependencies import session
 from app.api.settings import SECRET_KEY, ALGORITHM
-from app.utils.config import usernamedb, is_valid_email
+from app.utils.logic import get_user
 
 #write your credential auths here.
 
@@ -46,7 +44,7 @@ class PasswordAuth:
         return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
 
 
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+ACCESS_TOKEN_EXPIRE_MINUTES = 0.1
 'constant for expiration of access token'
 
 def create_access_token(data: dict,
@@ -59,35 +57,6 @@ def create_access_token(data: dict,
     to_encode.update({"expires": expires_iso})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
-
-
-def get_user(session: session, user_name_id_email: str | int):
-    '''gets a user (using id, username, or email) from the database or returns none if user not found.
-    \nuser_name_id_email: `username`, `userid`, or `email`'''
-    # try to convert the str to int for id
-    try:
-        user_id = int(user_name_id_email)
-    except ValueError:
-        pass
-    else:
-        user_name_id_email = user_id
-
-    if isinstance(user_name_id_email, str):
-        # check if it is an email str
-        if is_valid_email(user_name_id_email):
-            statement = select(User).where(User.email == user_name_id_email)
-            user = session.exec(statement=statement).first()
-            return user
-        else: # a username then
-            username = usernamedb(user_name_id_email)
-            statement = select(User).where(User.username == username)
-            user = session.exec(statement=statement).first()
-            return user
-    elif isinstance(user_name_id_email, int):
-        user = session.get(User, user_name_id_email)
-        return user
-    else:
-        return None
 
 def authenticate_user(username: str, password: str, session: session):
     '''Authenticates a user using their username and password.
