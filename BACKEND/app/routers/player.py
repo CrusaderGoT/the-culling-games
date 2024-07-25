@@ -1,23 +1,21 @@
-from sqlmodel import select
+from sqlmodel import select, or_
 from app.utils.logic import get_user, get_player
 from app.models.colony import Colony, ColonyInfo
 from app.models.players import (CreatePlayer, CreateCT, CreateCTApp,
-                                CTApp, CursedTechnique, Player, PlayerInfo,
+                                CTApp, CursedTechnique, Player,
+                                PlayerInfo, BasePlayerInfo,
                                 EditPlayer, EditCT, EditCTApp)
 from app.utils.config import Tag, UserException
 from app.utils.dependencies import colony, session, id_name_email
 from ..auth.dependencies import oauth2_scheme, active_user
-
-
 from fastapi import APIRouter, Body, HTTPException, Path, status, Depends, Query
-
-
-from typing import Annotated
+from typing import Annotated, Union
 
 # PLAYERS 
 
 router = APIRouter(prefix="/player",
-                   dependencies=[Depends(oauth2_scheme)])
+                   dependencies=[Depends(oauth2_scheme)],
+                   tags=[Tag.player])
 
 
 @router.post('/create/{user}', response_model=PlayerInfo, tags=[Tag.player],
@@ -106,3 +104,34 @@ def edit_player(player_id: int, session: session, player: EditPlayer,
     else:
         raise HTTPException(status.HTTP_404_NOT_FOUND, f"Player with ID {player_id} not found")
 
+@router.delete('/delete/{player_id}', response_model=PlayerInfo)
+def delete_player(player_id: int, session: session, current_user: active_user):
+    playerdb = get_player(session, player_id)
+    if playerdb:
+        if playerdb.user_id == current_user.id: # logged in user matches players user
+            session.delete(playerdb)
+            session.commit()
+            return playerdb
+        else: # player user don't match
+            err_msg = f"Attempting to delete another player."
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, err_msg)
+    else:
+        err_msg = f"Player with ID '{player_id}' not found"
+        raise HTTPException(status.HTTP_404_NOT_FOUND, err_msg)
+    
+@router.get('/all/players', response_model=Union[list[PlayerInfo], list[BasePlayerInfo]])
+def get_players(session: session,
+                offset: Annotated[int, Query()] = 0,
+                limit: Annotated[int, Query(le=30)] = 10,
+                slim: Annotated[bool, Query(description="If true, minimal player info will be returned")] = True,
+                gender: Annotated[Player.Gender | None, Query()] = None,
+                age: Annotated[int | None, Query(ge=10, le=102)] = None,
+                role: Annotated[str | None, Query()] = None
+                ):
+    players = session.exec(
+        select(Player).offset(offset).limit(limit)
+        
+    )
+    if slim == True:
+        players = [BasePlayerInfo.model_validate(player) for player in players]
+    return players

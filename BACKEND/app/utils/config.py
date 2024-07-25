@@ -15,7 +15,8 @@ from enum import Enum
 class UserException(Exception):
     '''user custom exception; will convert the User to UserInfo'''
     def __init__(self, user:User, code:int=status.HTTP_406_NOT_ACCEPTABLE,
-                 err_msg:str | dict={'msg': 'An Error Occured with this User'},) -> None:
+                 err_msg:str | dict={'msg': 'An Error Occured with this User'},
+                 headers: dict[str, str] | None = None) -> None:
         self.user = UserInfo.model_validate(user)
         self.err_msg = err_msg
         self.code = code
@@ -23,6 +24,10 @@ class UserException(Exception):
 @app.exception_handler(UserException)
 async def user_exception_handler(request:Request, exc:UserException):
     return JSONResponse(status_code=exc.code, content=exc.err_msg)
+
+class PlayerException(Exception):
+    '''custom player exception'''
+    pass
 
 # 2. TAGS for openapi, used to group path operators
 class Tag(str, Enum):
