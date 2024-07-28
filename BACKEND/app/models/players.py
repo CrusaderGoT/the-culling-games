@@ -48,6 +48,7 @@ class CreateCT(BaseCT):
 class CTApp(BaseCTApp, table=True):
     'cursed technique application as stored in the database'
     id: int | None = Field(default=None, primary_key=True)
+    number: int = Field(ge=1, le=5)
     ct_id: int | None = Field(default=None, foreign_key="cursedtechnique.id")
     ct: CursedTechnique = Relationship(back_populates="applications")
 
@@ -82,5 +83,5 @@ class EditCT(SQLModel):
 
 class EditCTApp(SQLModel):
     'for editing a cursed technique application'
-    id: int | None = Field(default=None, ge=1, le=5)
-    application: str | None = None
+    number: int = Field(ge=1, le=5)
+    application: str

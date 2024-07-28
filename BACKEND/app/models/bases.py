@@ -56,7 +56,7 @@ class BasePlayer(SQLModel):
         nb = "non-binary"
     name: str
     gender: Gender
-    age: int | None = Field(default=None, gt=0, le=102)
+    age: int | None = Field(default=None, ge=10, le=102)
     role: str | None = None
 
 class BasePlayerInfo(BasePlayer):
@@ -100,7 +100,7 @@ class BaseCTAppInfo(BaseCTApp):
     base model for cursed technique application info, without "ct_id", "ct"\n
     id: int
     '''
-    id: int
+    number: int
 
 class Country(str, Enum):
     'the countries enum class'

@@ -13,9 +13,13 @@ if TYPE_CHECKING:
 class User(BaseUser, table=True):
     'The user as stored in the database'
     id: int | None = Field(default=None, primary_key=True)
+    usernamedb: str = Field(description="username as stored in the database. lowercase",
+                            index=True, unique=True)
+    'username as stored in the database. lowercase'
     created: date = Field(default=date.today())
     password: str = Field(description="the user's hashed password")
     player: Union["Player", None] = Relationship(back_populates="user")
+    is_superuser: bool = Field(default=False) # True for admins
     
 class CreateUser(BaseUser):
     'For creating a user'

@@ -39,7 +39,7 @@ def get_user(session: session, user_name_id_email: str | int):
             return user
         else: # a username then
             username = usernamedb(user_name_id_email)
-            statement = select(User).where(User.username == username)
+            statement = select(User).where(User.usernamedb == username)
             user = session.exec(statement=statement).first()
             return user
     elif isinstance(user_name_id_email, int):

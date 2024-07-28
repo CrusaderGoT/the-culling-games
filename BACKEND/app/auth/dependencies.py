@@ -22,10 +22,10 @@ def get_current_user(token: Annotated[str, Depends(oauth2_scheme)],
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username = payload.get("username")
-        if username is None:
+        usernamedb = payload.get("usernamedb")
+        if usernamedb is None:
             raise credentials_exception
-        token_data = TokenData(username=username)
+        token_data = TokenData(username=usernamedb)
     except InvalidTokenError:
         raise credentials_exception
     else:
