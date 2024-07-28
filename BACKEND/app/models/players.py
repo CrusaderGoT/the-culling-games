@@ -73,7 +73,7 @@ class EditPlayer(SQLModel):
     'For editing a Player'
     name: str | None = None
     gender: BasePlayer.Gender | None = None
-    age: int| None = Field(default=None, ge=12, le=102)
+    age: int| None = Field(default=None, ge=10, le=102)
     role: str | None = None
 
 class EditCT(SQLModel):

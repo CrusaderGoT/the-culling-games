@@ -30,7 +30,7 @@ class EditUser(SQLModel):
     'For editing a User'
     username: str | None = None
     email: EmailStr | None = None
-    country: str | None = None
+    country: Country| None = None
 
 # CLIENT SIDE RESPONSE MODELS
 class UserInfo(BaseUserInfo):

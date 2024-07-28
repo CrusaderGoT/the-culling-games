@@ -13,9 +13,7 @@ from typing import Annotated, Union
 # PLAYERS 
 
 router = APIRouter(prefix="/player",
-                   dependencies=[
-                       Depends(oauth2_scheme),
-                    ],
+                   dependencies=[Depends(oauth2_scheme)],
                    tags=[Tag.player])
 
 
@@ -95,22 +93,22 @@ def edit_player(*, player_id: int, session: session, current_user: active_user,
             if player is not None:
                 edit_player_data = player.model_dump(exclude_unset=True)
                 playerdb.sqlmodel_update(edit_player_data)
-            if cursed_technique is  not None:
+            if cursed_technique is not None:
                 edit_ct_data = cursed_technique.model_dump(exclude_unset=True)
                 playerdb.cursed_technique.sqlmodel_update(edit_ct_data)
             if applications is not None:
                 # get the list of ct apps to edit from db
-                app_ids = [app.number for app in applications]
+                app_numbers = [app.number for app in applications]
                 ctapps = session.exec(
                     select(CTApp)
                     .join(CursedTechnique)
                     .where(CTApp.ct_id == playerdb.ct_id)
-                    .where(CTApp.number in app_ids)
+                    .where(CTApp.number in app_numbers)
                 ).all()
                 for ct_app in ctapps:
                     for edit_ct_app in applications:
                         if edit_ct_app.number == ct_app.number:
-                            ct_app_data = edit_ct_app.model_dump()
+                            ct_app_data = edit_ct_app.model_dump(exclude_unset=True)
                             ct_app.sqlmodel_update(ct_app_data)
             # add playerdb to session, and commit to update infos
             session.add(playerdb)

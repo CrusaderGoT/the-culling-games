@@ -27,7 +27,7 @@ def on_start():
           tags=[Tag.auth], summary='creates a login token', response_description='A Token')
 def create_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
                 session: session):
-    user = authenticate_user(form_data.username, form_data.password, session)
+    user = authenticate_user(usernamedb(form_data.username), form_data.password, session)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -53,7 +53,7 @@ def create_user(session: session,
     ).first()
     if already_username_email: # a user with email or username exist
         # check which in username or email being used and inform client
-        if already_username_email.username == user.username:
+        if already_username_email.usernamedb == l_username:
             err_msg = f"'{user.username}' is already in use."
             raise HTTPException(status.HTTP_409_CONFLICT, detail=err_msg)
         elif already_username_email.email == user.email:
@@ -68,7 +68,7 @@ def create_user(session: session,
             pw_auth = PasswordAuth()
             hashed_pw = pw_auth.hash_password(user.password)
             update = {
-                "password": hashed_pw,
+                "password": hashed_pw, # store hashed password
                 "usernamedb": l_username, # strore the usernamedb in lowercase
             }
             new_user_db = User.model_validate(user, update=update)
