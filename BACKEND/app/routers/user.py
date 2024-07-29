@@ -1,4 +1,3 @@
-from app.auth.credentials import PasswordAuth
 from app.auth.dependencies import active_user
 from app.models.users import EditUser, User, UserInfo
 from app.utils.logic import get_user, get_player
@@ -6,7 +5,7 @@ from ..utils.config import Tag, UserException
 from ..utils.dependencies import session, id_name_email
 from ..utils.logic import usernamedb
 from ..auth.dependencies import oauth2_scheme
-from fastapi import APIRouter, Body, HTTPException, Path, Query, status, Depends
+from fastapi import APIRouter, Body, HTTPException, status, Depends
 from typing import Annotated
 
 # USERS
