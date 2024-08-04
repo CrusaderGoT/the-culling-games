@@ -35,7 +35,7 @@ def create_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
             headers={"WWW-Authenticate": "Bearer"},
             )
     access_token = create_access_token(data={"usernamedb": user.usernamedb})
-    return Token(access_token=access_token, token_type="bearer")
+    return Token(access_token=access_token, token_type="Bearer")
 
 # REGISTER
 @app.post("/signup", response_model=UserInfo, status_code=status.HTTP_201_CREATED,
