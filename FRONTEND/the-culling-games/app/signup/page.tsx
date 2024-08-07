@@ -1,4 +1,4 @@
-// for defining the components of the login page -> down to top.
+// for defining the components of the signup page -> down to top.
 "use client"
 import { createUser } from "./api/routes"
 import { roboto_mono, lusitana } from "../fonts";
@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useFormState, useFormStatus } from "react-dom";
 
 
-function UsernameInput() {
+export function UsernameInput() {
     return (
         <>
             <label htmlFor="usernameId">
@@ -18,7 +18,7 @@ function UsernameInput() {
     );
 }
 
-function EmailInput() {
+export function EmailInput() {
     return (
         <>
             <label htmlFor="emailId">
@@ -40,7 +40,7 @@ function CountryInput() {
     );
 }
 
-function PasswordInput() {
+export function PasswordInput() {
     return (
         <>
             <label htmlFor="passwordId">
@@ -64,10 +64,10 @@ function ConfirmPasswordInput() {
     );
 }
 
-function SubmitButton({title}: {title: string}) {
-    const pending = useFormStatus()
+export function SubmitButton({title}: {title: string}) {
+    const { pending } = useFormStatus()
     return (
-        <button type="submit" aria-disabled={pending} className="bg-yellow-400 hover:bg-yellow-300 text-sm active:bg-yellow-200 disabled:opacity-20 h-fit w-fit mt-3 p-1 rounded-md">{title}</button>
+        <button type="submit" disabled={pending} className="bg-yellow-400 hover:bg-yellow-300 text-sm active:bg-yellow-200 disabled:opacity-20 h-fit w-fit mt-3 p-1 rounded-md">{title}</button>
     );
 }
 
@@ -111,7 +111,7 @@ function Description() {
 
 export default function SignupPage() {
     return (
-        <main className="p-10 min-w-[300px]">
+        <main className="p-10 min-w-[300px] mx-auto my-auto min-h-screen w-screen">
             <div className={`dark:text-black ${roboto_mono.className} p-10 sm:pr-0 rounded-md bg-gradient-to-br from-slate-700 to-slate-300 shadow-lg dark:shadow-white dark:shadow-md`}>
                 <h3 className={`font-extrabold text-2xl mb-3`}>Register to Play</h3>
                 <div className="flex flex-col-reverse sm:flex-row justify-between">

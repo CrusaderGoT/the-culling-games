@@ -1,5 +1,6 @@
 // handles form actions for signup route
 "use server"
+import { login } from "@/app/login/api/routes";
 
 
 export async function createUser(prevState: any, formData: FormData) {
@@ -15,9 +16,14 @@ export async function createUser(prevState: any, formData: FormData) {
     });
     
     if (!res.ok) {
-        const errData = await res.json();
-        return errData;
-    } else { // log in new user after
-      return res.json();
+      const errData = await res.json();
+      return errData;
+
+    } else { // login in new user and store access token in cookie
+      // get the username and password as formdata
+      const loginFormData = new FormData();
+      loginFormData.append("username", rawFormData.username);
+      loginFormData.append("password", rawFormData.password);
+      await login(loginFormData); 
+      }   
     }   
-}

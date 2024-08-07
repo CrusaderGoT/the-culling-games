@@ -1,0 +1,26 @@
+.colonyCircle {
+    transition: background-color 0.5s ease-in-out;
+}
+
+.colonyText {
+    font-family:'Courier New', Courier, monospace;
+    transition: letter-spacing 1s ease-out,
+                top 1.4s ease-in-out;
+}
+.colonyCircle:hover .colonyText {
+    letter-spacing: 0.2em;
+    top: 1%;
+}
+
+.colonyWarn {
+    transition: bottom 1.3s ease;
+}
+.colonyCircle:hover .colonyWarn {
+    bottom: 50%;
+    
+}
+
+.colonyCircle:hover .colonyBtn {
+    opacity: 100%;
+    transition: opacity 5s ease-in;
+}
