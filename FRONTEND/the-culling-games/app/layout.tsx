@@ -15,7 +15,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.className} antialiased min-w-[200px] pt-[60px]`}>
+      <body className={`${inter.className} antialiased`}>
         <Header />
         {children}
       </body>
@@ -25,7 +25,11 @@ export default function RootLayout({
 
 function Header() {
   return (
-    <header className={`fixed bg-gradient-to-l dark:bg-gradient-to-r from-black via-gray-500 to-white top-0 z-20 w-full flex justify-center h-fit min-h-[50px] max-h-[60px] p-1`}>
+    <header className={
+      `absolute min-w-[250px] bg-gradient-to-b from-[hsla(0,0%,0%,50%)]
+      dark:from-[hsla(0,0%,0%,100%)] to-transparent
+      top-0 z-[100] w-full flex justify-center h-fit min-h-[50px]
+      max-h-[60px] p-1`}>
       <div className="flex w-[60%] items-center gap-3 justify-between">
 
         <KoganeImg />

@@ -7,7 +7,7 @@ import Image from "next/image";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
     return (
-			<main className="h-screen w-full my-auto flex flex-col md:flex-row">
+			<main className="min-w-[250px] relative sm:h-[100vh] w-full flex flex-col md:flex-row pt-[60px]">
 				<SideNav />
 				{children}
 			</main>
@@ -16,24 +16,29 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   function SideNav() {
 	const pathname = usePathname();
-	console.log(pathname)
 	return (
-			<div className="flex relative justify-around md:justify-normal gap-1 md:flex-col md:w-[25%] md:h-full overflow-hidden md:gap-2">
+			<div className="flex sticky top-[0px] justify-around z-20
+			md:justify-normal md:flex-col md:w-[25%] md:h-full backdrop-blur-xl
+			md:gap-4 gap-2 border-b border-slate-900">
 			{links.map((link) => {
 			return (
 				<Link
 					key={link.name}
+					title={link.name}
 					href={link.href}
-					className={`${link.name === "log out" ? "hidden md:flex absolute mb-2 bg-transparent bottom-0": ""} h-[40px] w-full flex justify-center md:justify-start items-center ${pathname === '/dashboard' ? 'absolukte' : ''} rounded-t-md md:rounded-md bg-slate-500 p-3 text-sm font-medium`}
+					className={`${link.name === "log out" ? "hidden md:flex absolute mb-2 bg-transparent bottom-0": ""}
+					flex max-h-[25px] items-center rounded-t-md md:rounded-md
+					p-1 md:p-2 text-sm font-medium bg-gradient-radial to-100% 
+					${link.href === pathname ? "from-orange-400 to-green-400" : "from-teal-400 to-red-400"}`}
 				>
 					<Image 
 					src={link.icon}
 					alt={link.name}
 					width={link.iconWidth}
 					height={link.iconHeight}
-					className="hidden md:block h-fit w-[20px] mr-1"
+					className="w-[20px] h-[20px]"
 					/>
-					<p className="h-fit text-end">{link.name}</p>
+					<p className="hidden md:block">{link.name}</p>
 				</Link>
 			);
 			})}

@@ -2,18 +2,26 @@
     transition: background-color 0.5s ease-in-out;
 }
 
+.colonyBarrier {
+    transition: background-color 0.5s ease-in;
+}
+.colonyCircle:hover .colonyBarrier {
+    background-color: hsla(0, 0%, 0%, 90%);
+
+}
+
 .colonyText {
     font-family:'Courier New', Courier, monospace;
-    transition: letter-spacing 1s ease-out,
+    transition: letter-spacing 1.4s ease-out,
                 top 1.4s ease-in-out;
 }
 .colonyCircle:hover .colonyText {
     letter-spacing: 0.2em;
-    top: 1%;
+    top: 5%;
 }
 
 .colonyWarn {
-    transition: bottom 1.3s ease;
+    transition: bottom 1s ease;
 }
 .colonyCircle:hover .colonyWarn {
     bottom: 50%;
