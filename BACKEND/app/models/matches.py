@@ -8,22 +8,37 @@ from app.models.bases import *
 from typing import TYPE_CHECKING, Union
 if TYPE_CHECKING:
     from app.models.players import Player
-    from app.models.colony import Colony
+    from app.models.colonies import Colony
 
 # MATCH
 class BaseMatch(SQLModel):
+    """Base match model
+    \nbegin: datetime
+    \nend: datetime"""
     begin: datetime
     end: datetime
+    part: int
+
+class CreateMatch(BaseMatch):
+    pass
 
 
 class Match(BaseMatch, table=True):
+    'a match as stored in the database'
     id: int | None = Field(default=None, primary_key=True)
+
+    colony_id: int = Field(foreign_key='colony.id')
+    colony: "Colony" = Relationship(back_populates="matches")
+
+    #typically will have only two unique players in a match
+    players: list["Player"] = Relationship(back_populates="matches", link_model=MatchPlayerLink)
+""" 
+
     location_id: int = Field(foreign_key='location.id')
     location: "Location" = Relationship(back_populates="matches")
-
-    #players: list["Player"] = Relationship(back_populates="matches", link_model=MatchPlayerLink)
     
-    #winner_id: int = Field(foreign_key='player.id', description="The winner of the match ID (player Id)")
+    
+    #winner_id: int | None = Field(foreign_key='player.id', description="The winner of the match ID (player Id)")
     #winner: Union["Player", None] = Relationship(back_populates="wins")
 
 class BaseLocation(SQLModel):
@@ -36,6 +51,8 @@ class Location(BaseLocation, table=True):
     id: int | None = Field(default=None, primary_key=True)
     colony_id: int = Field(foreign_key='colony.id')
     colony: "Colony" = Relationship(back_populates="locations")
+    # typically a location will have just one match
+    # the m_2_1 relation is a fallback for situations a location has to be used again
     matches: list["Match"] = Relationship(back_populates="location")
 
 
@@ -48,3 +65,4 @@ class MatchInfo(BaseMatchInfo):
 
 
 
+"""

@@ -1,7 +1,7 @@
 '''module for defining fastapi dependencies. Typically for codes that are repeated a lot and used in path operations'''
 from app.database.pgsql import engine
 from sqlmodel import Session, select, func
-from app.models.colony import Colony
+from app.models.colonies import Colony
 from app.models.players import Player
 from app.models.bases import Country
 from random import choice

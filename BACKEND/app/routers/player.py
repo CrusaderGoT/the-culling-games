@@ -156,7 +156,7 @@ def delete_player(player_id: int, session: session, current_user: active_user):
 def get_players(session: session,
                 offset: Annotated[int, Query(ge=0)] = 0,
                 limit: Annotated[int, Query(le=30)] = 10,
-                slim: Annotated[bool, Query(description="If true, minimal player info will be returned")] = True,
+                slim: Annotated[bool, Query(description="If true, minimal player info will be returned")] = False,
                 gender: Annotated[Player.Gender | None, Query()] = None,
                 age: Annotated[int | None, Query(ge=10, le=102)] = None,
                 role: Annotated[str | None, Query()] = None

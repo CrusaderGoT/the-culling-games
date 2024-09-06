@@ -1,10 +1,9 @@
 "use server"
-
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { permanentRedirect, redirect } from "next/navigation";
 
-export async function login(rawFormData: FormData) {
+export async function login(prevState: any, rawFormData: FormData) {
     // send login api call to fastapi
     // they have to be sent as form query format, because of the fastapi oauth
     const newFormQuery = new URLSearchParams();
@@ -12,7 +11,6 @@ export async function login(rawFormData: FormData) {
     const username = rawFormData.get('username') as string;
     newFormQuery.append('username', username)
     newFormQuery.append('password', password)
-    console.log(newFormQuery)
     // send request to get token
     const res = await fetch("http://localhost:8000/login", {
       method: "POST",
@@ -24,7 +22,8 @@ export async function login(rawFormData: FormData) {
     });
 
     if (!res.ok) {
-      redirect('/login')
+      const errData = await res.json();
+      return errData;
 
     } else {
       const tokenData = await res.json()
@@ -32,7 +31,7 @@ export async function login(rawFormData: FormData) {
       cookies().set('token', access_token);
       cookies().set('bearer', bearer)
       // will redirect/ revalidate to homepage, should modify using bind to redirect to the page the login was prompted
-      revalidatePath('/');
-      permanentRedirect('/');
+      revalidatePath('/dashboard');
+      permanentRedirect('/dashboard');
     }
 }

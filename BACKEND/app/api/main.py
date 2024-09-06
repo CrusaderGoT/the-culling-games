@@ -9,13 +9,14 @@ from app.auth.models import Token
 from app.utils.config import Tag
 from app.database.pgsql import create_db_tables
 from fastapi.security import  OAuth2PasswordRequestForm
-from app.routers import player, user
+from app.routers import player, user, match
 from ..utils.logic import usernamedb
 
 
 # ROUTERS
 app.include_router(user.router)
 app.include_router(player.router)
+app.include_router(match.router)
 
 
 @app.on_event('startup')

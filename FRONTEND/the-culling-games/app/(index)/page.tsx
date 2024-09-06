@@ -1,6 +1,8 @@
 "use server"
 import Image from "next/image";
 import index from "./index.module.css"
+import { checkLogin } from "./api/routes";
+
 
 
 
@@ -91,12 +93,13 @@ function ColonyWarning() {
 
 function EnterBtn() {
   return (
-    <button type="button" className={
-      `${index.colonyBtn} opacity-0 absolute bottom-[25%]
-      h-[12px] w-[32px] sm:h-[20px] sm:w-[50px] rounded-full
-      text-[9px] sm:text-[12px] md:text-base font-semibold
-      tracking-wider flex items-center justify-center
-      bg-gradient-conic from-slate-600 via-slate-900 to-black`
+    <button type="button"
+      className={
+        `${index.colonyBtn} opacity-0 absolute bottom-[25%]
+        h-[12px] w-[32px] sm:h-[20px] sm:w-[50px] rounded-full
+        text-[9px] sm:text-[12px] md:text-base font-semibold
+        tracking-wider flex items-center justify-center
+        bg-gradient-conic from-slate-600 via-slate-900 to-black`
       }>YES
     </button>
   )

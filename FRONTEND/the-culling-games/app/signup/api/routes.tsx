@@ -24,6 +24,6 @@ export async function createUser(prevState: any, formData: FormData) {
       const loginFormData = new FormData();
       loginFormData.append("username", rawFormData.username);
       loginFormData.append("password", rawFormData.password);
-      await login(loginFormData); 
+      await login(prevState, loginFormData); 
       }   
     }   

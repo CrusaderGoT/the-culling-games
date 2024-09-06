@@ -6,7 +6,7 @@ from app.models.bases import *
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from app.models.players import Player
-    from app.models.match import Location
+    from .matches import Match
 
 
 # write your colony models here
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 class Colony(BaseColony, table=True):
     id: int | None = Field(default=None, primary_key=True)
     players: list["Player"] | None = Relationship(back_populates="colony")
-    #locations: list["Location"] | None = Relationship(back_populates="colony")
+    matches: list["Match"] | None = Relationship(back_populates="colony")
 
 # CLIENT SIDE RESPONSE MODELS
 class ColonyInfo(BaseColonyInfo):

@@ -7,8 +7,8 @@ from app.models.bases import *
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from app.models.users import User
-    from app.models.colony import Colony
-    from app.models.match import Match
+    from app.models.colonies import Colony
+    from app.models.matches import Match
 
 
 # PLAYER
@@ -23,7 +23,7 @@ class Player(BasePlayer, table=True):
     colony_id: int | None = Field(default=None, foreign_key="colony.id")
     colony: "Colony" = Relationship(back_populates="players")
 
-    #matches: list["Match"] = Relationship(back_populates="players", link_model=MatchPlayerLink)
+    matches: list["Match"] = Relationship(back_populates="players", link_model=MatchPlayerLink)
 
     #wins: list["Match"] = Relationship(back_populates="players", link_model=MatchPlayerLink)
 

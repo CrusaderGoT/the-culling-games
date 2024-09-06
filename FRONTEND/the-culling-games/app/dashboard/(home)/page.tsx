@@ -18,7 +18,7 @@ function CurrentMatch() {
 				</div>
 			</div>
 		</div>
-	)
+	);
 }
 
 function PlayerCard() {
@@ -42,14 +42,13 @@ function PlayerCard() {
 			</div>
 		</div>
 	);
-	
 }
 
 function ColonyCard() {
 	// each colony has 10 players 100%
 	// make a logic that calculates where to place the red line depending on how many players are left
 	return (
-		<div className={`rounded-xl overflow-hidden border border-purple-800 flex justify-between h-fit text-nowrap`}>
+		<div className={`rounded-xl overflow-hidden border border-green-800 flex justify-between h-fit text-nowrap`}>
 			<div className={`bg-gradient-to-r w-[30%] flex items-center justify-center overflow-clip from-[hsla(0,100%,50%,100%)] h-full text-center text-xs`}> 3 dead</div>
 			<div className={`bg-gradient-to-l w-[70%] flex items-center justify-center overflow-clip text-xs from-[hsla(120,100%,50%,100%)] h-full`}>7 alive</div>
 		</div>
@@ -58,11 +57,9 @@ function ColonyCard() {
 
 function Chart() {
 	return (
-		
-			<canvas className="rounded-xl bg-stone-700 text-white
-			w-full max-h-[31%] lg:h-[50%] md:w-[200%] lg:w-full">
-			</canvas>
-		
+		<canvas className="rounded-xl bg-stone-700 text-white
+		w-full max-h-[31%] lg:h-[50%] md:w-[200%] lg:w-full
+		invert dark:invert-0"></canvas>		
 	);
 }
 
@@ -72,7 +69,7 @@ function SocialBoard() {
 			<h2 className="font-bold text-lg self-center underline underline-offset-2">Social Media Comments</h2>
 			<div className="h-full my-2">vvv</div>
 		</div>
-	)
+	);
 }
 
 

@@ -111,7 +111,7 @@ function Description() {
 
 export default function SignupPage() {
     return (
-        <main className="p-10 min-w-[300px] mx-auto my-auto min-h-screen w-screen">
+        <main className="p-10 pt-[100px] min-w-[250px] mx-auto my-auto min-h-screen w-screen">
             <div className={`dark:text-black ${roboto_mono.className} p-10 sm:pr-0 rounded-md bg-gradient-to-br from-slate-700 to-slate-300 shadow-lg dark:shadow-white dark:shadow-md`}>
                 <h3 className={`font-extrabold text-2xl mb-3`}>Register to Play</h3>
                 <div className="flex flex-col-reverse sm:flex-row justify-between">

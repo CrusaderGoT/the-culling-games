@@ -1,9 +1,11 @@
 from pydantic import EmailStr
 
+from app.models.matches import Match, MatchPlayerLink
+from ..models.colonies import Colony
 from app.models.users import User
 from ..models.players import Player
 from app.utils.dependencies import session
-from sqlmodel import select
+from sqlmodel import Session, and_, not_, select, exists
 
 
 def usernamedb(username: str):
@@ -14,7 +16,7 @@ def usernamedb(username: str):
 def is_valid_email(email: str) -> bool:
     'checks if a string is a valid email string'
     try:
-        EmailStr._validate(email)
+        EmailStr._validate(email) # type: ignore
         return True
     except Exception:
         return False
@@ -55,3 +57,61 @@ def get_player(session: session, player_id: int):
         return player
     else:
         return None
+
+
+# write you match api routes here
+def get_players_not_in_part(colony_id: int, part: int, session: Session):
+    """
+    Fetch players from a specified colony who haven't fought in a match for the given part.
+    """
+    # Subquery to get player IDs who have fought in the specified part
+    part_matches_subquery = (
+        select(MatchPlayerLink.player_id)
+        .join(Match, MatchPlayerLink.match_id == Match.id) # type: ignore
+        .where(Match.id == part)
+    )
+
+    part_matches_select = select(part_matches_subquery.c.player_id)
+
+    # Query to get players in the specified colony who haven't fought in the part
+    players_not_in_part_query = (
+        select(Player)
+        .where(
+            and_(
+                Player.colony_id == colony_id,
+                not_(Player.id.in_(part_matches_select)) # type: ignore
+            )
+        )
+    )
+
+    players_not_in_part = session.exec(players_not_in_part_query).all()
+
+    return players_not_in_part
+
+def select_players_fought_in_part(part: int):
+        'Subquery to get player IDs who have fought in the specified part\nreturns a select statement'
+        subquery = (
+            select(MatchPlayerLink.player_id)
+            .join(Match, MatchPlayerLink.match_id == Match.id) # type: ignore
+            .where(Match.id == part)
+        ).subquery(name=f"matches_in_part_{part}")
+        # Convert the subquery into a select() construct for use in the IN clause
+        subquery_select = select(subquery.c.player_id)
+        return subquery_select
+
+def colonies_with_players_available_for_part(session: session, part: int):
+    "#### Main query to get colonies IDs with at least one player who hasn't fought in the specified part"
+    subquery_select = select_players_fought_in_part(part=part)
+    statement = select(Colony.id).where(
+        exists(
+            select(Player.id)
+            .where(
+                and_(
+                    Player.colony_id == Colony.id,
+                    not_(Player.id.in_(subquery_select)) # type: ignore
+                )
+            )
+        )
+    )
+    result = session.exec(statement).all()
+    return result

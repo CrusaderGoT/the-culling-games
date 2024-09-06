@@ -12,8 +12,8 @@ export const links = [
     icon: "/images/Chizuru's_Kogane.png",
     iconHeight: 300,
     iconWidth: 300,
-    name: 'Player',
-    href: '/dashboard/player',
+    name: 'Players',
+    href: '/dashboard/players',
   },
   {
     icon: "/images/Chizuru's_Kogane.png",

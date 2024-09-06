@@ -12,7 +12,7 @@ from pydantic import EmailStr
 from typing import Union
 
 # write your base models here
-class MatchPlayerLink(SQLModel):
+class MatchPlayerLink(SQLModel, table=True):
     'link table model for a match and player M2M relation'
     match_id: int | None = Field(default=None, foreign_key="match.id", primary_key=True)
     player_id: int | None = Field(default=None, foreign_key="player.id", primary_key=True)
