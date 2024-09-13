@@ -64,11 +64,6 @@ class BasePlayerInfo(BasePlayer):
     Base model for player info, without cursed technique info and user info\n
     id: int
     created: date
-    \n + BasePlayer =
-    name: str
-    gender: Gender
-    age: int| None = Field(default=None, gt=0, le=102)
-    role: str | None = None
     '''
     id: int
     created: date
