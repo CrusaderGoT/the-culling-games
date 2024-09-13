@@ -1,9 +1,10 @@
 #./api/models/players.py
 '''module for defining the `players` `cursed technique` and `cursed technique applications` models that will be used to perform CRUD operation
 on the database and will be used as schemas/response/request data in the API schema. All SQLModels'''
-from sqlmodel import Field, Relationship
+from sqlmodel import Field, Relationship, SQLModel
 from datetime import date
-from app.models.bases import *
+from app.models.bases import (BasePlayer, BasePlayerInfo, BaseCT, BaseCTInfo,
+                              BaseCTApp, BaseUserInfo, BaseColonyInfo, MatchPlayerLink)
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from app.models.users import User

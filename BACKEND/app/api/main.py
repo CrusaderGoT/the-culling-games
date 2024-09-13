@@ -2,14 +2,14 @@ from sqlmodel import or_, select
 from app.api.settings import app
 from fastapi import Body, Depends, status, HTTPException
 from app.models.users import CreateUser, User, UserInfo
+from app.routers.admin import match
 from app.utils.dependencies import session
 from typing import Annotated
 from app.auth.credentials import PasswordAuth, authenticate_user, create_access_token
 from app.auth.models import Token
 from app.utils.config import Tag
-from app.database.pgsql import create_db_tables
 from fastapi.security import  OAuth2PasswordRequestForm
-from app.routers import player, user, match
+from app.routers import player, user
 from ..utils.logic import usernamedb
 
 
@@ -17,11 +17,6 @@ from ..utils.logic import usernamedb
 app.include_router(user.router)
 app.include_router(player.router)
 app.include_router(match.router)
-
-
-@app.on_event('startup')
-def on_start():
-    create_db_tables()
 
 # LOGIN
 @app.post("/login", response_model=Token, status_code=status.HTTP_200_OK,
