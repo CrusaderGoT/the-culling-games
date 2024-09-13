@@ -1,5 +1,5 @@
 from fastapi.middleware.cors import CORSMiddleware
-from api.settings import app
+from app.api.main import app
 
 
 # MIDDLEWARE

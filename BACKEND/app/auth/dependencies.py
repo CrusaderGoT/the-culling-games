@@ -4,7 +4,7 @@ import jwt
 from jwt.exceptions import InvalidTokenError
 from typing import Annotated
 from app.auth.models import TokenData
-from app.api.settings import SECRET_KEY, ALGORITHM
+from app.api.main import SECRET_KEY, ALGORITHM
 from app.utils.logic import get_user
 from app.models.users import User
 from app.utils.dependencies import session
