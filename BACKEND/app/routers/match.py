@@ -57,7 +57,7 @@ def create_match(part: Annotated[int, Query()], session: session):
         detail=f"No colony with players who haven't fought in part {part}. Begin/Try part {part+1}."
         raise HTTPException(404, detail=detail)
     
-router.get("/{match_id}", response_model=MatchInfo)
+@router.get("/{match_id}", response_model=MatchInfo)
 def get_match(match_id: int, session: session):
     stmt = select(Match).where(Match.id == match_id)
     result = session.exec(stmt).first()

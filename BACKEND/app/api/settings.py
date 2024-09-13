@@ -6,7 +6,6 @@ from dotenv import load_dotenv
 # load .env
 load_dotenv()
 
-global app
 app = FastAPI(title='The Culling Games API')
 '''The Global FastAPI app. To allow for use in multiple files.
 #### example:
