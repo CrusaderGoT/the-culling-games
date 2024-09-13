@@ -5,8 +5,10 @@ from sqlmodel import SQLModel, Field, Relationship
 from datetime import date
 from app.models.bases import *
 from typing import Union, TYPE_CHECKING
+from ..models.admins import SuperUser, AdminUser
 if TYPE_CHECKING:
     from app.models.players import Player
+    
 
 # write your user models here
 
@@ -19,7 +21,8 @@ class User(BaseUser, table=True):
     created: date = Field(default=date.today())
     password: str = Field(description="the user's hashed password")
     player: Union["Player", None] = Relationship(back_populates="user")
-    is_superuser: bool = Field(default=False) # True for admins
+    admin: Union["AdminUser", None] = Relationship(back_populates="user")
+    superuser: Union["SuperUser", None] = Relationship(back_populates="user")
     
 class CreateUser(BaseUser):
     'For creating a user'
@@ -36,4 +39,4 @@ class EditUser(SQLModel):
 class UserInfo(BaseUserInfo):
     'The user info'
     player: Union["BasePlayerInfo", None] = None
-
+    
