@@ -8,7 +8,7 @@ from app.models.bases import *
 from typing import TYPE_CHECKING, Union
 if TYPE_CHECKING:
     from app.models.players import Player
-    from app.models.colonies import Colony
+    from app.models.colonies import Colony, BaseColonyInfo
 
 # MATCH
 class BaseMatch(SQLModel):
@@ -32,6 +32,13 @@ class Match(BaseMatch, table=True):
 
     #typically will have only two unique players in a match
     players: list["Player"] = Relationship(back_populates="matches", link_model=MatchPlayerLink)
+
+   
+class MatchInfo(BaseMatch):
+    id: int
+    colony: "BaseColonyInfo"
+    players: list["BasePlayerInfo"]
+
 """ 
 
     location_id: int = Field(foreign_key='location.id')
@@ -54,15 +61,4 @@ class Location(BaseLocation, table=True):
     # typically a location will have just one match
     # the m_2_1 relation is a fallback for situations a location has to be used again
     matches: list["Match"] = Relationship(back_populates="location")
-
-
-class BaseMatchInfo(BaseMatch):
-    id: int
-    winner: BasePlayerInfo
-
-class MatchInfo(BaseMatchInfo):
-    players: list[BasePlayerInfo]
-
-
-
 """
