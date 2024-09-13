@@ -58,8 +58,6 @@ def get_player(session: session, player_id: int):
     else:
         return None
 
-
-# write you match api routes here
 def get_players_not_in_part(colony_id: int, part: int, session: Session):
     """
     Fetch players from a specified colony who haven't fought in a match for the given part.
@@ -100,7 +98,7 @@ def select_players_fought_in_part(part: int):
         return subquery_select
 
 def colonies_with_players_available_for_part(session: session, part: int):
-    "#### Main query to get colonies IDs with at least one player who hasn't fought in the specified part"
+    "Main query to get colonies IDs with at least one player who hasn't fought in the specified part"
     subquery_select = select_players_fought_in_part(part=part)
     statement = select(Colony.id).where(
         exists(
