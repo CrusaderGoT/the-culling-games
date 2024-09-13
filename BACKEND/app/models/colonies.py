@@ -12,7 +12,6 @@ if TYPE_CHECKING:
 # write your colony models here
 
 class Colony(BaseColony, table=True):
-    'colony as stored in the database'
     id: int | None = Field(default=None, primary_key=True)
     players: list["Player"] | None = Relationship(back_populates="colony")
     matches: list["Match"] | None = Relationship(back_populates="colony")
