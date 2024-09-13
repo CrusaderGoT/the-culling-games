@@ -23,7 +23,6 @@ def create_match(part: Annotated[int, Query()], session: session):
     ***admin only**\n
     path operation for creating a match, requires a part query.
     '''
-    print(id(session), id(router), '11111111111111111111111111')
     # fetch colonies that has atleast one player that hasn't fought in the specified part query
     result = colonies_with_players_available_for_part(session, part)
     if result and (colony_id := choice(result)) is not None: # list is not empty
@@ -58,9 +57,8 @@ def create_match(part: Annotated[int, Query()], session: session):
         detail=f"No colony with players who haven't fought in part {part}. Begin/Try part {part+1}."
         raise HTTPException(404, detail=detail)
     
-@router.get("/{match_id}", response_model=MatchInfo)
+router.get("/{match_id}", response_model=MatchInfo)
 def get_match(match_id: int, session: session):
-    print(id(session), id(router), '11111111111111111111111111')
     stmt = select(Match).where(Match.id == match_id)
     result = session.exec(stmt).first()
     if result:

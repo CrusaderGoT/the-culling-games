@@ -17,7 +17,6 @@ router = APIRouter(prefix="/users",
 @router.get("/me", response_model=UserInfo, response_description="A User",
             summary="Get the logged in user", status_code=status.HTTP_200_OK)
 def current_user(current_user: active_user) -> User:
-    print(id(session), id(router), '22222222222222222')
     return current_user
 
 
@@ -25,7 +24,6 @@ def current_user(current_user: active_user) -> User:
             summary="Get a user.", status_code=status.HTTP_200_OK)
 def a_user(session: session,
            user: id_name_email):
-    print(id(session), id(router), '22222222222222222')
     userdb = get_user(session, user)
     if userdb:
         return userdb

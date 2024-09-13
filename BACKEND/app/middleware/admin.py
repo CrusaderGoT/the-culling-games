@@ -1,5 +1,5 @@
 '''for the '''
-from ..api.main import app
+from ..api.settings import app
 from fastapi import Request, HTTPException, status
 import time
 

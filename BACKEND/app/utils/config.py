@@ -2,7 +2,7 @@
 1. path operation decorators args; e.g tags.
 2. custom exceptions.
 3. Common logic'''
-from app.api.main import app
+from app.api.settings import app
 from app.models.users import UserInfo, User
 from fastapi import status, Request
 from fastapi.responses import JSONResponse
