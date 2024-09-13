@@ -3,7 +3,7 @@ from app.utils.logic import get_players_not_in_part, colonies_with_players_avail
 from ..models.colonies import Colony
 from ..models.players import Player
 from ..models.matches import Match
-from ..models.matches import CreateMatch, Match, MatchPlayerLink, MatchInfo
+from ..models.matches import CreateMatch, Match, MatchPlayerLink
 from fastapi import APIRouter, Depends, Query, HTTPException, status
 from ..auth.dependencies import oauth2_scheme
 from..utils.dependencies import session
@@ -12,12 +12,10 @@ from sqlmodel import select
 from random import sample, choice
 from datetime import datetime, timedelta
 
-# write you match api routes here
-
 router = APIRouter(prefix='/match',
                    tags=['match'])
 
-@router.post('/create', status_code=status.HTTP_201_CREATED, response_model=MatchInfo)
+@router.post('/create', status_code=status.HTTP_201_CREATED)
 def create_match(part: Annotated[int, Query()], session: session):
     '''
     ***admin only**\n
@@ -55,12 +53,11 @@ def create_match(part: Annotated[int, Query()], session: session):
         session.refresh(new_match)
         return new_match
     else:
-        detail=f"No colony with players who haven't fought in part {part}. Begin/Try part {part+1}."
+        detail=f"no colony with players who haven't fought in part {part}".capitalize()
         raise HTTPException(404, detail=detail)
     
-@router.get("/{match_id}", response_model=MatchInfo)
+@router.get("/{match_id}")
 def get_match(match_id: int, session: session):
-    print(id(session), id(router), '11111111111111111111111111')
     stmt = select(Match).where(Match.id == match_id)
     result = session.exec(stmt).first()
     if result:
