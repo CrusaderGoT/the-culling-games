@@ -1,11 +1,11 @@
 from sqlmodel import select, or_
-from app.utils.logic import get_user, get_player
+from app.utils.logic import get_user, get_player, id_name_email
 from app.models.players import (CreatePlayer, CreateCT, CreateCTApp,
                                 CTApp, CursedTechnique, Player,
                                 PlayerInfo, BasePlayerInfo,
                                 EditPlayer, EditCT, EditCTApp)
 from app.utils.config import Tag, UserException
-from app.utils.dependencies import colony, session, id_name_email
+from app.utils.dependencies import colony, session
 from ..auth.dependencies import oauth2_scheme, active_user
 from fastapi import APIRouter, Body, HTTPException, Path, status, Depends, Query
 from typing import Annotated, Union
@@ -63,7 +63,7 @@ def my_player(session: session, current_user: active_user):
             raise UserException(current_user, status.HTTP_404_NOT_FOUND, err_msg)
     else:
         err_msg = f"{current_user.username} has no player. Create player."
-        raise UserException(current_user, status.HTTP_404_NOT_FOUND, err_msg=err_msg)
+        raise UserException(current_user, status.HTTP_404_NOT_FOUND, detail=err_msg)
 
 @router.get('/{player_id}', response_model=PlayerInfo, status_code=status.HTTP_200_OK,
             response_description="A Player", summary="Get a player with their ID")
@@ -88,7 +88,7 @@ def edit_player(*, player_id: int, session: session, current_user: active_user,
     playerdb = get_player(session, player_id)
     if playerdb:
         if playerdb.user_id != current_user.id:
-            raise UserException(current_user, err_msg=f"Can only edit your own player.")
+            raise UserException(current_user, detail=f"Can only edit your own player.")
         else: # update database infos
             if player is not None:
                 edit_player_data = player.model_dump(exclude_unset=True)
@@ -134,7 +134,6 @@ def delete_player(player_id: int, session: session, current_user: active_user):
             else: # after for loop
                 session.delete(playerdb.cursed_technique)
                 session.delete(playerdb)
-                print(session.deleted, 'deleted')
                 session.commit()
             # create a new player info. This is done because after player is deleted
             # it is removed from the session(detached state), and returning the playerdb

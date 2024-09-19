@@ -15,10 +15,10 @@ from enum import Enum
 class UserException(Exception):
     '''user custom exception; will convert the User to UserInfo'''
     def __init__(self, user:User, code:int=status.HTTP_406_NOT_ACCEPTABLE,
-                 err_msg:str | dict={'msg': 'An Error Occured with this User'},
+                 detail: str | dict={'msg': 'An Error Occured with this User'},
                  headers: dict[str, str] | None = None) -> None:
         self.user = UserInfo.model_validate(user)
-        self.err_msg = err_msg
+        self.err_msg = detail
         self.code = code
 
 @app.exception_handler(UserException)

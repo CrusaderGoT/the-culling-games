@@ -6,7 +6,7 @@ from app.models.players import Player
 from app.models.bases import Country
 from random import choice
 from typing import Annotated
-from fastapi import Depends, Path
+from fastapi import Depends
 
 # Get Session Dependency
 def get_session():
@@ -42,7 +42,3 @@ def get_or_create_colony(session: session):
 colony = Annotated[Colony, Depends(get_or_create_colony)]
 '''returns a Colony with less than 10 players, or returns a new Colony.\n
 An alias dependency of the `get_or_create_colony` function'''
-
-id_name_email = Annotated[int | str, Path(description="The user's Id, Username, or Email")]
-"""The user's Id, Username, or Email as a dependency alias.
-\nActually accepts any int or str. The name is for convention."""

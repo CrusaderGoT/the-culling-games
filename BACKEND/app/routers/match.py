@@ -1,10 +1,10 @@
 '''module for the match routers'''
 from app.utils.logic import get_players_not_in_part, colonies_with_players_available_for_part
-from ...models.players import Player
-from ...models.matches import Match, MatchInfo
+from ..models.players import Player
+from ..models.matches import Match, MatchInfo
 from fastapi import APIRouter, Depends, Query, HTTPException, status
-from ...auth.dependencies import oauth2_scheme
-from...utils.dependencies import session
+from ..auth.dependencies import oauth2_scheme
+from..utils.dependencies import session
 from typing import Annotated
 from sqlmodel import select
 from random import sample, choice

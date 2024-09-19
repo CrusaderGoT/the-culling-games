@@ -23,6 +23,7 @@ from app.models.colonies import *
 from app.models.users import *
 from app.models.players import *
 from app.models.matches import *
+from app.models.admins import *
 # target_metadata = mymodel.Base.metadata
 target_metadata = SQLModel.metadata
 

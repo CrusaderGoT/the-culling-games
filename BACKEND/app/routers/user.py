@@ -1,8 +1,8 @@
 from app.auth.dependencies import active_user
 from app.models.users import EditUser, User, UserInfo
-from app.utils.logic import get_user, get_player
+from app.utils.logic import get_user, get_player, id_name_email
 from ..utils.config import Tag, UserException
-from ..utils.dependencies import session, id_name_email
+from ..utils.dependencies import session
 from ..utils.logic import usernamedb
 from ..auth.dependencies import oauth2_scheme
 from fastapi import APIRouter, Body, HTTPException, status, Depends
@@ -57,7 +57,7 @@ def edit_user(session: session,
             session.refresh(edited_user)
             return edited_user
     else:
-        err_msg = f"User ID '{user}' not found."
+        err_msg = f"User '{user}' not found."
         raise HTTPException(status.HTTP_404_NOT_FOUND, err_msg)
     
 @router.delete("/delete/{user}", response_model=UserInfo, response_description="Deleted User",
@@ -81,4 +81,5 @@ def delete_user(session: session, user: id_name_email, current_user: active_user
             session.commit()
             return userdb
     else:
-        return HTTPException(status.HTTP_404_NOT_FOUND, "User not Found")
+        err_msg = f"User '{user}' not found."
+        return HTTPException(status.HTTP_404_NOT_FOUND, err_msg)

@@ -1,3 +1,5 @@
+from fastapi import Path
+from typing import Annotated
 from pydantic import EmailStr
 
 from app.models.matches import Match, MatchPlayerLink
@@ -86,12 +88,13 @@ def get_players_not_in_part(colony_id: int, part: int, session: Session):
 
     return players_not_in_part
 
-def select_players_fought_in_part(part: int):
-        'Subquery to get player IDs who have fought in the specified part\nreturns a select statement'
+def select_players_fought_in_part(session: session,part: int):
+        '''Subquery to get player IDs who have fought in the specified part\n
+        returns a select statement'''
         subquery = (
             select(MatchPlayerLink.player_id)
             .join(Match, MatchPlayerLink.match_id == Match.id) # type: ignore
-            .where(Match.id == part)
+            .where(Match.part == part)
         ).subquery(name=f"matches_in_part_{part}")
         # Convert the subquery into a select() construct for use in the IN clause
         subquery_select = select(subquery.c.player_id)
@@ -99,17 +102,22 @@ def select_players_fought_in_part(part: int):
 
 def colonies_with_players_available_for_part(session: session, part: int):
     "Main query to get colonies IDs with at least one player who hasn't fought in the specified part"
-    subquery_select = select_players_fought_in_part(part=part)
+    subquery_select = select_players_fought_in_part(session=session,part=part)
     statement = select(Colony.id).where(
         exists(
             select(Player.id)
             .where(
                 and_(
                     Player.colony_id == Colony.id,
-                    not_(Player.id.in_(subquery_select)) # type: ignore
+                    not_(Player.id.in_(subquery_select))
                 )
             )
         )
     )
     result = session.exec(statement).all()
     return result
+
+
+id_name_email = Annotated[int | str, Path(description="The user's Id, Username, or Email")]
+"""The user's Id, Username, or Email.
+\nActually accepts any int or str. The name is for convention."""

@@ -2,10 +2,9 @@
 '''module for defining the `match` `location` and `vote` models that will be used to perform CRUD operation
 on the database and will be used as schemas/response/request data in the API schema. All SQLModels'''
 from sqlmodel import SQLModel, Field, Relationship
-from pydantic import FileUrl, FilePath
 from datetime import datetime
 from app.models.bases import MatchPlayerLink, BaseColonyInfo, BasePlayerInfo
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from app.models.players import Player 
     from app.models.colonies import Colony
@@ -22,10 +21,8 @@ class BaseMatch(SQLModel):
 class Match(BaseMatch, table=True):
     'a match as stored in the database'
     id: int | None = Field(default=None, primary_key=True)
-
-    colony_id: int = Field(foreign_key='colony.id')
+    colony_id: int | None = Field(foreign_key='colony.id')
     colony: "Colony" = Relationship(back_populates="matches")
-
     #typically will have only two unique players in a match
     players: list["Player"] = Relationship(back_populates="matches", link_model=MatchPlayerLink)
 

@@ -6,12 +6,13 @@ write attributes in class string definition, for easier understanding of their s
 should be imported only in other model modules.\n
 '''
 from sqlmodel import SQLModel, Field
-from enum import Enum
+from enum import Enum, IntEnum
 from datetime import date
 from pydantic import EmailStr
 from typing import Union
 
 # write your base models here
+
 class MatchPlayerLink(SQLModel, table=True):
     'link table model for a match and player M2M relation'
     match_id: int | None = Field(default=None, foreign_key="match.id", primary_key=True)
@@ -312,3 +313,30 @@ class BaseColonyInfo(BaseColony):
     id: int
     '''
     id: int
+
+
+class BasePermission(SQLModel):
+    'the base class for a permission'
+    class PermissionLevel(IntEnum):
+        ALL = 0
+        READ = 1
+        CREATE = 2
+        UPDATE = 3
+        DELETE = 4
+    model: str = Field(description="The model the permission applies to")
+
+
+class BasePermissionInfo(BasePermission):
+    'base permission data, without id'
+    name: str = Field(description="Permission name")
+    level: BasePermission.PermissionLevel
+
+
+class BaseAdminInfo(SQLModel):
+    '''
+    base admin info without the user info\n
+    `is_superuser: bool | None`
+    `permissions: list[BasePermissionInfo]`
+    '''
+    is_superuser: bool
+    permissions: list[BasePermissionInfo]
