@@ -7,7 +7,7 @@ should be imported only in other model modules.\n
 '''
 from sqlmodel import SQLModel, Field
 from enum import Enum, IntEnum
-from datetime import date
+from datetime import date, datetime
 from pydantic import EmailStr
 from typing import Union
 
@@ -23,9 +23,9 @@ class MatchPlayerLink(SQLModel, table=True):
 class BaseUser(SQLModel):
     '''
     Base class for a user, containing common attributes.\n
-    username: str = Field(index=True, unique=True)
-    email: EmailStr = Field(index=True, unique=True)
-    country: str | None = None
+    `username: str = Field(index=True, unique=True)`
+    `email: EmailStr = Field(index=True, unique=True)`
+    `country: str | None = None`
     '''
     username: str = Field(index=True, unique=True)
     email: EmailStr = Field(index=True, unique=True)
@@ -34,8 +34,8 @@ class BaseUser(SQLModel):
 class BaseUserInfo(BaseUser):
     '''
     Base model for user info, without player info\n
-    id: int
-    created: date
+    `id: int`
+    `created: date`
     '''
     id: int
     created: date
@@ -45,10 +45,10 @@ class BaseUserInfo(BaseUser):
 class BasePlayer(SQLModel):
     '''
     The base player, without cursed technique\n
-    name: str
-    gender: Gender
-    age: int| None = Field(default=None, gt=0, le=102)
-    role: str | None = None
+    `name: str`
+    `gender: Gender`
+    `age: int| None = Field(default=None, gt=0, le=102)`
+    `role: str | None = None`
     '''
     class Gender(str, Enum):
         'the player gender options'
@@ -63,8 +63,8 @@ class BasePlayer(SQLModel):
 class BasePlayerInfo(BasePlayer):
     '''
     Base model for player info, without cursed technique info and user info\n
-    id: int
-    created: date
+    `id: int`
+    `created: date`
     '''
     id: int
     created: date
@@ -73,8 +73,8 @@ class BasePlayerInfo(BasePlayer):
 class BaseCT(SQLModel):
     '''
     The base cursed technique
-    name: str
-    definition: str
+    `name: str`
+    `definition: str`
     '''
     name: str
     definition: str
@@ -316,7 +316,15 @@ class BaseColonyInfo(BaseColony):
 
 
 class BasePermission(SQLModel):
-    'the base class for a permission'
+    '''the base class for a permission\n
+    >>> class PermissionLevel(IntEnum):
+        ALL = 0
+        READ = 1
+        CREATE = 2
+        UPDATE = 3
+        DELETE = 4
+    model: str = Field(description="The model the permission applies to")
+    '''
     class PermissionLevel(IntEnum):
         ALL = 0
         READ = 1
@@ -327,7 +335,9 @@ class BasePermission(SQLModel):
 
 
 class BasePermissionInfo(BasePermission):
-    'base permission data, without id'
+    '''base permission data, without id
+    \n`name: str = Field(description="Permission name")`
+    \n`level: BasePermission.PermissionLevel`'''
     name: str = Field(description="Permission name")
     level: BasePermission.PermissionLevel
 
@@ -340,3 +350,29 @@ class BaseAdminInfo(SQLModel):
     '''
     is_superuser: bool
     permissions: list[BasePermissionInfo]
+
+
+class AdminPermissionLink(SQLModel, table=True):
+    'the m2m link table for an admin and permission(s)'
+    admin_id: int | None = Field(default=None, foreign_key="adminuser.id", primary_key=True)
+    permission_id: int | None = Field(default=None, foreign_key="permission.id", primary_key=True)
+
+
+class BaseMatch(SQLModel):
+    """Base match model\n
+    begin: datetime
+    end: datetime
+    part: int
+    """
+    begin: datetime
+    end: datetime
+    part: int
+
+
+class BaseMatchInfo(BaseMatch):
+    '''base match info with the `winner`, but without players and colony infos.\n
+    `id: int`
+    `winner: Union[BasePlayerInfo, None]`
+    '''
+    id: int
+    winner: Union[BasePlayerInfo, None]

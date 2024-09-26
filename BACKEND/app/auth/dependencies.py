@@ -43,7 +43,7 @@ def get_admin_user(token: Annotated[str, Depends(oauth2_scheme)],
                      session: session):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
+        detail="Could not validate credentials, you are not an admin.",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:

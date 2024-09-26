@@ -1,23 +1,16 @@
 #./api/models/match.py
 '''module for defining the `match` `location` and `vote` models that will be used to perform CRUD operation
 on the database and will be used as schemas/response/request data in the API schema. All SQLModels'''
-from sqlmodel import SQLModel, Field, Relationship
-from datetime import datetime
-from app.models.bases import MatchPlayerLink, BaseColonyInfo, BasePlayerInfo
-from typing import TYPE_CHECKING
+from sqlmodel import Field, Relationship, SQLModel
+from app.models.bases import BaseMatch, BaseMatchInfo, MatchPlayerLink, BaseColonyInfo, BasePlayerInfo
+from typing import TYPE_CHECKING, Union
+from datetime import time
 if TYPE_CHECKING:
-    from app.models.players import Player 
+    from app.models.players import Player, CTApp
     from app.models.colonies import Colony
+    from .users import User
 
 # MATCH
-class BaseMatch(SQLModel):
-    """Base match model
-    \nbegin: datetime
-    \nend: datetime"""
-    begin: datetime
-    end: datetime
-    part: int
-
 class Match(BaseMatch, table=True):
     'a match as stored in the database'
     id: int | None = Field(default=None, primary_key=True)
@@ -25,15 +18,56 @@ class Match(BaseMatch, table=True):
     colony: "Colony" = Relationship(back_populates="matches")
     #typically will have only two unique players in a match
     players: list["Player"] = Relationship(back_populates="matches", link_model=MatchPlayerLink)
+    winner_id: int | None = Field(default=None, foreign_key='player.id', description="The winner of the match ID (player Id)")
+    winner: Union["Player", None] = Relationship(back_populates="wins")
 
-class BaseMatchInfo(BaseMatch):
-    'base match info, without player, colony infos.'
-    id: int
+    votes: list["Vote"] = Relationship(back_populates="match")
 
 class MatchInfo(BaseMatchInfo):
     'match info for client side'
     players: list["BasePlayerInfo"]
     colony: "BaseColonyInfo"
+
+# the vote system
+    
+class BaseVote(SQLModel):
+    '''
+    the base class for a vote
+    `user_id: int | None = Field(foreign_key="user.id", ondelete="SET NULL")`
+    `match_id : int = Field(foreign_key="match.id", ondelete="CASCADE")`
+    `player_id: int = Field(foreign_key="player.id", ondelete="RESTRICT")`
+    `ct_app_id: int = Field(foreign_key="ctapp.id", ondelete="RESTRICT")`
+    '''
+    user_id: int | None = Field(foreign_key="user.id", ondelete="SET NULL")
+    match_id : int = Field(foreign_key="match.id", ondelete="CASCADE")
+    player_id: int = Field(foreign_key="player.id", ondelete="RESTRICT")
+    ct_app_id: int = Field(foreign_key="ctapp.id", ondelete="RESTRICT")
+
+    domain_expansion: bool = Field(default=False, description="the player's domain expansion")
+    binding_vow: bool = Field(default=False, description="the player's binding vow")
+    simple_domain: bool = Field(default=False, description="the player's simple domain")
+
+    
+class Vote(BaseVote, table=True):
+    'a vote as stored in a database'
+    id: int | None = Field(default=None, primary_key=True)
+    
+    user: "User" = Relationship(back_populates="votes") # the user casting their votes
+    
+    match: Match = Relationship(back_populates="votes") # the match the vote takes place
+
+    player: "Player" = Relationship(back_populates="votes") # the player being voted for
+
+    ct_app: "CTApp" = Relationship(back_populates="votes") # the cursed application being voted for
+
+    # the times are useful for know when to deactivate the techniques
+    de_time: time | None = Field(default=None, description="the time a player cast their domain")
+    bv_time: time | None = Field(default=None, description="the time a player cast their binding_vow")
+    sd_time: time | None = Field(default=None, description="the time a player cast their simple_domain")
+    
+class CastVote(BaseVote):
+    'model for collecting data to cast a vote'
+    pass
 
 
 """ 
@@ -42,8 +76,7 @@ class MatchInfo(BaseMatchInfo):
     location: "Location" = Relationship(back_populates="matches")
     
     
-    #winner_id: int | None = Field(foreign_key='player.id', description="The winner of the match ID (player Id)")
-    #winner: Union["Player", None] = Relationship(back_populates="wins")
+    
 
 class BaseLocation(SQLModel):
     latitude: float | None = Field(default=None)

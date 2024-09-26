@@ -35,3 +35,5 @@ class Tag(str, Enum):
     user = 'users'
     player = 'players'
     auth = 'authentication'
+    match = 'matches'
+    admin = 'admin'

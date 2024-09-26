@@ -5,12 +5,12 @@ from typing import Annotated
 from ..models.admins import AdminUser, Permission, AdminInfo, CreatePermission
 from ..utils.logic import get_user, id_name_email
 from ..utils.dependencies import session
-from ..utils.config import UserException
+from ..utils.config import UserException, Tag
 from ..auth.dependencies import admin_user
 
 # create your api routes here
 
-router = APIRouter(prefix='/admin')
+router = APIRouter(prefix='/admin', tags=[Tag.admin])
 
 @router.post('/create-admin/{user}', response_model=AdminInfo)
 def create_admin(
@@ -25,9 +25,9 @@ def create_admin(
         if userdb == p_admin.user: # check if p_admin and potential new admin are the same 
             err_msg = f"cannot make yourself an admin, again."
             raise UserException(p_admin.user, status.HTTP_409_CONFLICT, err_msg)
-        #elif userdb.admin is not None: # check if userdb is already an admin
-            #err_msg = f"{userdb.username} is already an admin, edit their profile instead"
-            #raise UserException(userdb, status.HTTP_417_EXPECTATION_FAILED, detail=err_msg)
+        elif userdb.admin is not None: # check if userdb is already an admin
+            err_msg = f"{userdb.username} is already an admin, edit their admin profile instead"
+            raise UserException(userdb, status.HTTP_417_EXPECTATION_FAILED, detail=err_msg)
         # check if the user attempting to create an admin is a superuser or admin
         # if they are superuser, create the admin with no restrictions on permissions sent from client-side
         elif p_admin.is_superuser == True:

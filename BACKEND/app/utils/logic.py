@@ -18,7 +18,7 @@ def usernamedb(username: str):
 def is_valid_email(email: str) -> bool:
     'checks if a string is a valid email string'
     try:
-        EmailStr._validate(email) # type: ignore
+        EmailStr._validate(email)
         return True
     except Exception:
         return False
@@ -67,7 +67,7 @@ def get_players_not_in_part(colony_id: int, part: int, session: Session):
     # Subquery to get player IDs who have fought in the specified part
     part_matches_subquery = (
         select(MatchPlayerLink.player_id)
-        .join(Match, MatchPlayerLink.match_id == Match.id) # type: ignore
+        .join(Match, MatchPlayerLink.match_id == Match.id)
         .where(Match.id == part)
     )
 
@@ -79,7 +79,7 @@ def get_players_not_in_part(colony_id: int, part: int, session: Session):
         .where(
             and_(
                 Player.colony_id == colony_id,
-                not_(Player.id.in_(part_matches_select)) # type: ignore
+                not_(Player.id.in_(part_matches_select))
             )
         )
     )
@@ -88,12 +88,12 @@ def get_players_not_in_part(colony_id: int, part: int, session: Session):
 
     return players_not_in_part
 
-def select_players_fought_in_part(session: session,part: int):
+def select_players_fought_in_part(part: int):
         '''Subquery to get player IDs who have fought in the specified part\n
         returns a select statement'''
         subquery = (
             select(MatchPlayerLink.player_id)
-            .join(Match, MatchPlayerLink.match_id == Match.id) # type: ignore
+            .join(Match, MatchPlayerLink.match_id == Match.id)
             .where(Match.part == part)
         ).subquery(name=f"matches_in_part_{part}")
         # Convert the subquery into a select() construct for use in the IN clause
@@ -102,7 +102,7 @@ def select_players_fought_in_part(session: session,part: int):
 
 def colonies_with_players_available_for_part(session: session, part: int):
     "Main query to get colonies IDs with at least one player who hasn't fought in the specified part"
-    subquery_select = select_players_fought_in_part(session=session,part=part)
+    subquery_select = select_players_fought_in_part(part=part)
     statement = select(Colony.id).where(
         exists(
             select(Player.id)
@@ -119,5 +119,5 @@ def colonies_with_players_available_for_part(session: session, part: int):
 
 
 id_name_email = Annotated[int | str, Path(description="The user's Id, Username, or Email")]
-"""The user's Id, Username, or Email.
+"""The user's Id, Username, or Email as a Path parameter.
 \nActually accepts any int or str. The name is for convention."""

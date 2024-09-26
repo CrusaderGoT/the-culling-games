@@ -103,7 +103,7 @@ def edit_player(*, player_id: int, session: session, current_user: active_user,
                     select(CTApp)
                     .join(CursedTechnique)
                     .where(CTApp.ct_id == playerdb.ct_id)
-                    .where(CTApp.number in app_numbers)
+                    .where(CTApp.number.in_(app_numbers))
                 ).all()
                 for ct_app in ctapps:
                     for edit_ct_app in applications:
@@ -169,7 +169,7 @@ def get_players(session: session,
     if role is not None:
         statement = statement.where(or_(Player.role == role))
     # execute
-    players = session.exec(statement)
+    players = session.exec(statement).all()
     # if slim return info without cursed technique info and user info
     if slim == True: 
         players = [BasePlayerInfo.model_validate(player) for player in players]
