@@ -3,7 +3,7 @@
 2. custom exceptions.
 3. Common logic'''
 from app.api.settings import app
-from app.models.users import UserInfo, User
+from app.models.user import UserInfo, User
 from fastapi import status, Request
 from fastapi.responses import JSONResponse
 from enum import Enum

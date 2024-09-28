@@ -1,23 +1,23 @@
 from sqlmodel import or_, select
 from app.api.settings import app
 from fastapi import Body, Depends, status, HTTPException
-from app.models.users import CreateUser, User, UserInfo
+from app.models.user import CreateUser, User, UserInfo
 from app.utils.dependencies import session
 from typing import Annotated
 from app.auth.credentials import PasswordAuth, authenticate_user, create_access_token
 from app.auth.models import Token
 from app.utils.config import Tag
 from fastapi.security import  OAuth2PasswordRequestForm
-from app.routers import match, player, user, admin
+from app.routers import admins, matches, players, users
 from ..utils.logic import usernamedb
 #from ..models.admins import AdminUser
 
 
 # ROUTERS
-app.include_router(user.router)
-app.include_router(player.router)
-app.include_router(match.router)
-app.include_router(admin.router)
+app.include_router(users.router)
+app.include_router(players.router)
+app.include_router(matches.router)
+app.include_router(admins.router)
 
 # LOGIN
 @app.post("/login", response_model=Token, status_code=status.HTTP_200_OK,
@@ -70,9 +70,6 @@ def create_user(session: session,
                 #"admin": AdminUser(is_superuser=True)
             }
             new_user_db = User.model_validate(user, update=update)
-            # for creating a super user
-            #su = SuperUser(user=new_user_db)
-            #session.add(su)
             session.add(new_user_db)
             session.commit()
             session.refresh(new_user_db)

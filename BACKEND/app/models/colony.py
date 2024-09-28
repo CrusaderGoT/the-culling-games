@@ -2,11 +2,11 @@
 '''module for defining the `colony` models that will be used to perform CRUD operations on the database and
 The models that will be used as schemas/response/request data in the API schema. All SQLModels'''
 from sqlmodel import Field, Relationship
-from app.models.bases import BaseColony, BaseColonyInfo, BasePlayerInfo
+from app.models.base import BaseColony, BaseColonyInfo, BasePlayerInfo
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from app.models.players import Player
-    from .matches import Match
+    from app.models.player import Player
+    from .match import Match
 
 
 # write your colony models here

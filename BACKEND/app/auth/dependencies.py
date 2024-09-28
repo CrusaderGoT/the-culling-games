@@ -6,8 +6,8 @@ from typing import Annotated
 from app.auth.models import TokenData
 from app.api.settings import SECRET_KEY, ALGORITHM
 from app.utils.logic import get_user
-from app.models.users import User
-from ..models.admins import AdminUser
+from app.models.user import User
+from ..models.admin import AdminUser
 from app.utils.dependencies import session
 
 

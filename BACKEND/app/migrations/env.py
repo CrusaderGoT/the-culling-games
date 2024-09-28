@@ -19,11 +19,11 @@ if config.config_file_name is not None:
 # add your model's MetaData object here
 # for 'autogenerate' support
 # from myapp import mymodel
-from app.models.colonies import *
-from app.models.users import *
-from app.models.players import *
-from app.models.matches import *
-from app.models.admins import *
+from app.models.colony import *
+from app.models.user import *
+from app.models.player import *
+from app.models.match import *
+from app.models.admin import *
 # target_metadata = mymodel.Base.metadata
 target_metadata = SQLModel.metadata
 

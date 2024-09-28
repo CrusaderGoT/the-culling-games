@@ -2,7 +2,7 @@
 from fastapi import APIRouter, status, Body
 from sqlmodel import select
 from typing import Annotated
-from ..models.admins import AdminUser, Permission, AdminInfo, CreatePermission
+from ..models.admin import AdminUser, Permission, AdminInfo, CreatePermission
 from ..utils.logic import get_user, id_name_email
 from ..utils.dependencies import session
 from ..utils.config import UserException, Tag

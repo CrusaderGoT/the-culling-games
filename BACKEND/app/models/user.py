@@ -4,12 +4,12 @@ The models that will be used as schemas/response/request data in the API schema.
 from sqlmodel import SQLModel, Field, Relationship
 from pydantic import EmailStr
 from datetime import date
-from app.models.bases import (BaseUser, BaseUserInfo, Country, BasePlayerInfo, BaseAdminInfo)
+from app.models.base import (BaseUser, BaseUserInfo, Country, BasePlayerInfo, BaseAdminInfo)
 from typing import Union, TYPE_CHECKING
 if TYPE_CHECKING:
-    from app.models.players import Player
-    from .matches import Vote
-    from .admins import AdminUser
+    from app.models.player import Player
+    from .match import Vote
+    from .admin import AdminUser
 
 
 # write your user models here
@@ -24,7 +24,6 @@ class User(BaseUser, table=True):
     password: str = Field(description="the user's hashed password")
     player: Union["Player", None] = Relationship(back_populates="user") # no cascade_delete, default behaviour required
     admin: Union["AdminUser", None] = Relationship(back_populates="user", cascade_delete=True)
-
     votes: list["Vote"] = Relationship(back_populates="user")
 
 class CreateUser(BaseUser):

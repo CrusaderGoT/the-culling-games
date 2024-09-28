@@ -1,6 +1,6 @@
 from sqlmodel import select, or_
 from app.utils.logic import get_user, get_player, id_name_email
-from app.models.players import (CreatePlayer, CreateCT, CreateCTApp,
+from app.models.player import (CreatePlayer, CreateCT, CreateCTApp,
                                 CTApp, CursedTechnique, Player,
                                 PlayerInfo, BasePlayerInfo,
                                 EditPlayer, EditCT, EditCTApp)

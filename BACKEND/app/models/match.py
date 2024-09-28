@@ -2,13 +2,13 @@
 '''module for defining the `match` `location` and `vote` models that will be used to perform CRUD operation
 on the database and will be used as schemas/response/request data in the API schema. All SQLModels'''
 from sqlmodel import Field, Relationship, SQLModel
-from app.models.bases import BaseMatch, BaseMatchInfo, MatchPlayerLink, BaseColonyInfo, BasePlayerInfo
+from app.models.base import BaseMatch, BaseMatchInfo, MatchPlayerLink, BaseColonyInfo, BasePlayerInfo
 from typing import TYPE_CHECKING, Union
 from datetime import time
 if TYPE_CHECKING:
-    from app.models.players import Player, CTApp
-    from app.models.colonies import Colony
-    from .users import User
+    from app.models.player import Player, CTApp
+    from app.models.colony import Colony
+    from .user import User
 
 # MATCH
 class Match(BaseMatch, table=True):
@@ -33,15 +33,11 @@ class MatchInfo(BaseMatchInfo):
 class BaseVote(SQLModel):
     '''
     the base class for a vote
-    `user_id: int | None = Field(foreign_key="user.id", ondelete="SET NULL")`
-    `match_id : int = Field(foreign_key="match.id", ondelete="CASCADE")`
     `player_id: int = Field(foreign_key="player.id", ondelete="RESTRICT")`
     `ct_app_id: int = Field(foreign_key="ctapp.id", ondelete="RESTRICT")`
     '''
-    user_id: int | None = Field(foreign_key="user.id", ondelete="SET NULL")
-    match_id : int = Field(foreign_key="match.id", ondelete="CASCADE")
-    player_id: int = Field(foreign_key="player.id", ondelete="RESTRICT")
-    ct_app_id: int = Field(foreign_key="ctapp.id", ondelete="RESTRICT")
+    player_id: int | None = Field(default=None, foreign_key="player.id", ondelete="RESTRICT")
+    ct_app_id: int | None = Field(default=None, foreign_key="ctapp.id", ondelete="RESTRICT")
 
     domain_expansion: bool = Field(default=False, description="the player's domain expansion")
     binding_vow: bool = Field(default=False, description="the player's binding vow")
@@ -52,6 +48,8 @@ class Vote(BaseVote, table=True):
     'a vote as stored in a database'
     id: int | None = Field(default=None, primary_key=True)
     
+    user_id: int | None = Field(default=None, foreign_key="user.id", ondelete="SET NULL")
+    match_id : int | None = Field(default=None, foreign_key="match.id", ondelete="CASCADE")
     user: "User" = Relationship(back_populates="votes") # the user casting their votes
     
     match: Match = Relationship(back_populates="votes") # the match the vote takes place

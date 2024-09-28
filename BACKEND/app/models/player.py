@@ -3,13 +3,13 @@
 on the database and will be used as schemas/response/request data in the API schema. All SQLModels'''
 from sqlmodel import Field, Relationship, SQLModel
 from datetime import date
-from app.models.bases import (BaseMatchInfo, BasePlayer, BasePlayerInfo, BaseCT, BaseCTInfo,
+from app.models.base import (BaseMatchInfo, BasePlayer, BasePlayerInfo, BaseCT, BaseCTInfo,
                               BaseCTApp, BaseUserInfo, BaseColonyInfo, MatchPlayerLink)
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from app.models.users import User
-    from app.models.colonies import Colony
-    from app.models.matches import Match, Vote
+    from app.models.user import User
+    from app.models.colony import Colony
+    from app.models.match import Match, Vote
 
 
 # PLAYER

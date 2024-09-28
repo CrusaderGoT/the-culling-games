@@ -2,9 +2,9 @@
 '''module for defining the `admin` models that will be used to perform ***special** CRUD operations on the database. All SQLModels'''
 from sqlmodel import SQLModel, Field, Relationship
 from typing import TYPE_CHECKING
-from app.models.bases import AdminPermissionLink, BaseAdminInfo, BasePermission, BaseUserInfo
+from app.models.base import AdminPermissionLink, BaseAdminInfo, BasePermission, BaseUserInfo
 if TYPE_CHECKING:
-    from .users import User
+    from .user import User
 
 
 # write your admin models here

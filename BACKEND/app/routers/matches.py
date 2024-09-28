@@ -1,11 +1,12 @@
 '''module for the match routers'''
 from app.utils.logic import get_players_not_in_part, colonies_with_players_available_for_part
-from ..models.players import Player
-from ..models.matches import Match, MatchInfo, CastVote, Vote
+from ..models.player import Player, CTApp
+from ..models.match import Match, MatchInfo, CastVote, Vote
+from ..models.user import User
 from fastapi import APIRouter, Depends, Query, HTTPException, status, Path, Body
-from ..auth.dependencies import oauth2_scheme, admin_user
+from ..auth.dependencies import oauth2_scheme, admin_user, active_user
 from ..utils.dependencies import session
-from ..utils.logic import id_name_email, get_user
+from ..utils.logic import id_name_email, get_user, get_match, ongoing_match
 from ..utils.config import Tag
 from typing import Annotated
 from sqlmodel import select
@@ -73,32 +74,59 @@ def get_matches(session: session,
     else:
         raise HTTPException(status.HTTP_404_NOT_FOUND, f"No matches yet...")
     
-@router.post("/vote/{match_id}/{user_id}")
-def vote(session: session, match_id: Annotated[int, Path()], user_id: id_name_email, votes: Annotated[list[CastVote], Body(min_length=1 ,max_length=5)]):
+@router.post("/vote/{match_id}")
+def vote(
+    session: session,
+    match_id: Annotated[int, Path()],
+    voter: active_user,
+    votes: Annotated[list[CastVote],
+                    Body(min_length=1 ,max_length=5)]
+):
     "function for casting votes"
     # first check if match and user exists
-    def match_user_exists():
-        'function for check if both `match` and `user` exist. raises a HTTPException otherwise.'
-        match = session.exec(
-            select(Match).where(Match.id == match_id)
-        ).first()
-        user = get_user(session, user_id)
+    match = get_match(session, match_id)
+    if match is not None:
+        # check if match still ongoing
+        if ongoing_match(match) == True:
+            # check if user has voted before
+            prev_votes = session.exec(
+                select(Vote)
+                .join(User, User.id == voter.id)
+                .where(Vote.match_id == match_id)
+            ).all()
+            if len(prev_votes) == 5: # if it has exceeded 5 votes, no more votes
+                raise HTTPException(status.HTTP_423_LOCKED, "vote limit reached")
+            else:
+                # get the players fighting, and their ct apps
+                fighters_id = session.exec(
+                    select(Player.id, CTApp.id)
+                    .join(Player.matches)  # Joining on the matches relationship
+                    .join(CTApp, CTApp.ct_id == Player.ct_id) # join on the ct app that belongs to the players
+                    .where(Match.id == match.id)  # Matching the specific match
+                ).all()
+                vote_list: list[Vote] = list() # votes to be added and commited to session
+                print(prev_votes, 'ppppppppvotes', fighters_id)
+                # now iterate over the votes and cast them for correct player ct app
+                for vote in votes:
+                    for player_id, ct_app_id in fighters_id: # this loops runs 20 times, should be impored to only run 5 times
+                        if vote.player_id == player_id and vote.ct_app_id == ct_app_id: # vote matches intended player and ct app
+                            # create vote instance
+                            update_vote = {"user": voter, "match": match}
+                            casted = Vote.model_validate(vote, update=update_vote)
+                            if (casted.ct_app_id not in [i.ct_app_id for i in vote_list] and # checks if vote already in list
+                                # use prev vote to cross check any new votes to avoid duplicates
+                                casted.ct_app_id not in [i.ct_app_id for i in prev_votes]
+                            ):
+                                vote_list.append(casted)
+                            else:
+                                continue # go back to top
+                print(vote_list, "listttttttttt")
+                session.add_all(vote_list)
+                session.commit()
+                [session.refresh(v) for v in vote_list]
+                return vote_list
 
-        if match is None: # match does't exist
-            raise HTTPException(status.HTTP_404_NOT_FOUND, f"match with id {match_id} not found")
-        elif user is None: # user doesn't exists
-            raise HTTPException(status.HTTP_404_NOT_FOUND, f"match with id {match_id} not found")
-        return match, user
-    match, user = match_user_exists() # both match and user exist
-    # check if match still ongoing
-    def ongoing_match(match: Match):
-        'checks if a match is still ongoing, returns false if match is over, otherwise true'
-        time_now = datetime.now()
-        end_time = match.end
-        ongoing = time_now < end_time
-        return ongoing
-    print(ongoing_match(match), 'hereeeeeeeeeeeeee')
-    if ongoing_match(match) == True:
-        return "voted"
-    else: # match has ended
-        raise HTTPException(status.HTTP_304_NOT_MODIFIED, detail=f"match has ended", headers={"redirect_reason": 'match has ended'})
+        else: # match has ended
+            raise HTTPException(status.HTTP_304_NOT_MODIFIED, detail=f"match has ended", headers={"redirect_reason": 'match has ended'})
+    else: # match doesn't exist
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "match doesn't exist")

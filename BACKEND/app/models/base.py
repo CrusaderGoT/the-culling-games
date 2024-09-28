@@ -100,7 +100,9 @@ class BaseCTAppInfo(BaseCTApp):
     '''
     base model for cursed technique application info, without "ct_id", "ct"\n
     id: int
+    number: int
     '''
+    id: int
     number: int
 
 class Country(str, Enum):

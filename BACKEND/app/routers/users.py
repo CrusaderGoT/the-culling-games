@@ -1,4 +1,4 @@
-from app.models.users import EditUser, User, UserInfo
+from app.models.user import EditUser, User, UserInfo
 from app.utils.logic import get_user, get_player, id_name_email
 from ..utils.config import Tag, UserException
 from ..utils.dependencies import session
