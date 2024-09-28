@@ -2,7 +2,9 @@
 '''module for defining the `match` `location` and `vote` models that will be used to perform CRUD operation
 on the database and will be used as schemas/response/request data in the API schema. All SQLModels'''
 from sqlmodel import Field, Relationship, SQLModel
-from app.models.base import BaseMatch, BaseMatchInfo, MatchPlayerLink, BaseColonyInfo, BasePlayerInfo
+from app.models.base import (BaseMatch, BaseMatchInfo, MatchPlayerLink,
+                             BaseColonyInfo, BasePlayerInfo, BaseUserInfo,
+                             BaseCTAppInfo)
 from typing import TYPE_CHECKING, Union
 from datetime import time
 if TYPE_CHECKING:
@@ -32,9 +34,13 @@ class MatchInfo(BaseMatchInfo):
     
 class BaseVote(SQLModel):
     '''
-    the base class for a vote
+    ### The base class for a vote
     `player_id: int = Field(foreign_key="player.id", ondelete="RESTRICT")`
     `ct_app_id: int = Field(foreign_key="ctapp.id", ondelete="RESTRICT")`
+
+    `domain_expansion: bool = Field(default=False, description="the player's domain expansion")`
+    `binding_vow: bool = Field(default=False, description="the player's binding vow")`
+    `simple_domain: bool = Field(default=False, description="the player's simple domain")`
     '''
     player_id: int | None = Field(default=None, foreign_key="player.id", ondelete="RESTRICT")
     ct_app_id: int | None = Field(default=None, foreign_key="ctapp.id", ondelete="RESTRICT")
@@ -66,6 +72,14 @@ class Vote(BaseVote, table=True):
 class CastVote(BaseVote):
     'model for collecting data to cast a vote'
     pass
+
+class VoteInfo(SQLModel):
+    'the vote info for client-side'
+    id: int
+    user: "BaseUserInfo"
+    player: "BasePlayerInfo"
+    ct_app: "BaseCTAppInfo"
+
 
 
 """ 

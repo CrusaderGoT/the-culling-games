@@ -1,7 +1,7 @@
 '''module for the match routers'''
 from app.utils.logic import get_players_not_in_part, colonies_with_players_available_for_part
 from ..models.player import Player, CTApp
-from ..models.match import Match, MatchInfo, CastVote, Vote
+from ..models.match import Match, MatchInfo, CastVote, Vote, VoteInfo
 from ..models.user import User
 from fastapi import APIRouter, Depends, Query, HTTPException, status, Path, Body
 from ..auth.dependencies import oauth2_scheme, admin_user, active_user
@@ -74,7 +74,7 @@ def get_matches(session: session,
     else:
         raise HTTPException(status.HTTP_404_NOT_FOUND, f"No matches yet...")
     
-@router.post("/vote/{match_id}")
+@router.post("/vote/{match_id}", response_model=list[VoteInfo])
 def vote(
     session: session,
     match_id: Annotated[int, Path()],
@@ -91,9 +91,11 @@ def vote(
             # check if user has voted before
             prev_votes = session.exec(
                 select(Vote)
-                .join(User, User.id == voter.id)
+                .join(User, User.id == Vote.user_id)
                 .where(Vote.match_id == match_id)
+                .where(User.id == voter.id)
             ).all()
+            print(prev_votes, 'ppppppppvotes')
             if len(prev_votes) == 5: # if it has exceeded 5 votes, no more votes
                 raise HTTPException(status.HTTP_423_LOCKED, "vote limit reached")
             else:
@@ -105,7 +107,6 @@ def vote(
                     .where(Match.id == match.id)  # Matching the specific match
                 ).all()
                 vote_list: list[Vote] = list() # votes to be added and commited to session
-                print(prev_votes, 'ppppppppvotes', fighters_id)
                 # now iterate over the votes and cast them for correct player ct app
                 for vote in votes:
                     for player_id, ct_app_id in fighters_id: # this loops runs 20 times, should be impored to only run 5 times
