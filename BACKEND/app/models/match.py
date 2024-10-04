@@ -16,11 +16,11 @@ if TYPE_CHECKING:
 class Match(BaseMatch, table=True):
     'a match as stored in the database'
     id: int | None = Field(default=None, primary_key=True)
-    colony_id: int | None = Field(foreign_key='colony.id')
+    colony_id: int | None = Field(foreign_key='colony.id', index=True)
     colony: "Colony" = Relationship(back_populates="matches")
     #typically will have only two unique players in a match
     players: list["Player"] = Relationship(back_populates="matches", link_model=MatchPlayerLink)
-    winner_id: int | None = Field(default=None, foreign_key='player.id', description="The winner of the match ID (player Id)")
+    winner_id: int | None = Field(default=None, foreign_key='player.id', index=True, description="The winner of the match ID (player Id)")
     winner: Union["Player", None] = Relationship(back_populates="wins")
 
     votes: list["Vote"] = Relationship(back_populates="match")
@@ -54,8 +54,8 @@ class Vote(BaseVote, table=True):
     'a vote as stored in a database'
     id: int | None = Field(default=None, primary_key=True)
     
-    user_id: int | None = Field(default=None, foreign_key="user.id", ondelete="SET NULL")
-    match_id : int | None = Field(default=None, foreign_key="match.id", ondelete="CASCADE")
+    user_id: int | None = Field(default=None, foreign_key="user.id", ondelete="SET NULL", index=True)
+    match_id : int | None = Field(default=None, foreign_key="match.id", ondelete="CASCADE", index=True)
     user: "User" = Relationship(back_populates="votes") # the user casting their votes
     
     match: Match = Relationship(back_populates="votes") # the match the vote takes place
@@ -64,10 +64,23 @@ class Vote(BaseVote, table=True):
 
     ct_app: "CTApp" = Relationship(back_populates="votes") # the cursed application being voted for
 
+class BarrierTech(SQLModel):
+    '''
+    This is the class for any buffs to a vote.\n
+    This includes, `domain expansion, simple domain, binding vow`, etc.\n
+    It is called `BarrierTech` cos it sounds cool.
+    '''
+    id: int | None = Field(default=None, primary_key=True)
+    player: "Player"
+
+    domain_expansion: bool
+    binding_vow: bool
+    simple_domain: bool
     # the times are useful for know when to deactivate the techniques
     de_time: time | None = Field(default=None, description="the time a player cast their domain")
     bv_time: time | None = Field(default=None, description="the time a player cast their binding_vow")
     sd_time: time | None = Field(default=None, description="the time a player cast their simple_domain")
+
     
 class CastVote(BaseVote):
     'model for collecting data to cast a vote'
@@ -76,9 +89,9 @@ class CastVote(BaseVote):
 class VoteInfo(SQLModel):
     'the vote info for client-side'
     id: int
-    user: "BaseUserInfo"
-    player: "BasePlayerInfo"
-    ct_app: "BaseCTAppInfo"
+    user: "BaseUserInfo" = Field(description='the user that casted their votes')
+    player: "BasePlayerInfo" = Field(description='the player voted')
+    ct_app: "BaseCTAppInfo" = Field(description="the player's cursed technique application voted")
 
 
 

@@ -27,9 +27,9 @@ class BaseUser(SQLModel):
     `email: EmailStr = Field(index=True, unique=True)`
     `country: str | None = None`
     '''
-    username: str = Field(index=True, unique=True)
-    email: EmailStr = Field(index=True, unique=True)
-    country: Union["Country", None] = None
+    username: str = Field(index=True, unique=True, description="the unique username of the user")
+    email: EmailStr = Field(index=True, unique=True, description="the email address of the user")
+    country: Union["Country", None] = Field(default=None, description="the country of origin of the user")
 
 class BaseUserInfo(BaseUser):
     '''
@@ -38,7 +38,7 @@ class BaseUserInfo(BaseUser):
     `created: date`
     '''
     id: int
-    created: date
+    created: date = Field(description="the date the account was created")
 
 
 # PLayer

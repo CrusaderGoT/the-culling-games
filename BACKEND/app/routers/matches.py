@@ -74,7 +74,7 @@ def get_matches(session: session,
     else:
         raise HTTPException(status.HTTP_404_NOT_FOUND, f"No matches yet...")
     
-@router.post("/vote/{match_id}", response_model=list[VoteInfo])
+@router.post("/vote/{match_id}", response_model=dict[str, list[Vote] | str])
 def vote(
     session: session,
     match_id: Annotated[int, Path()],
@@ -82,8 +82,11 @@ def vote(
     votes: Annotated[list[CastVote],
                     Body(min_length=1 ,max_length=5)]
 ):
-    "function for casting votes"
-    # first check if match and user exists
+    """function for casting votes\n
+    - a match id is required
+    - if invalid vote cursed application id or player id is submitted, they are ignored.
+    """
+    # first check if match exists
     match = get_match(session, match_id)
     if match is not None:
         # check if match still ongoing
@@ -91,12 +94,12 @@ def vote(
             # check if user has voted before
             prev_votes = session.exec(
                 select(Vote)
-                .join(User, User.id == Vote.user_id)
+                .join(User)
+                .join(Match)
                 .where(Vote.match_id == match_id)
                 .where(User.id == voter.id)
             ).all()
-            print(prev_votes, 'ppppppppvotes')
-            if len(prev_votes) == 5: # if it has exceeded 5 votes, no more votes
+            if len(prev_votes) >= 5: # if it has exceeded 5 votes, no more votes
                 raise HTTPException(status.HTTP_423_LOCKED, "vote limit reached")
             else:
                 # get the players fighting, and their ct apps
@@ -106,26 +109,28 @@ def vote(
                     .join(CTApp, CTApp.ct_id == Player.ct_id) # join on the ct app that belongs to the players
                     .where(Match.id == match.id)  # Matching the specific match
                 ).all()
-                vote_list: list[Vote] = list() # votes to be added and commited to session
+                new_votes: list[Vote] = list() # votes to be added and commited to session
                 # now iterate over the votes and cast them for correct player ct app
                 for vote in votes:
                     for player_id, ct_app_id in fighters_id: # this loops runs 20 times, should be impored to only run 5 times
                         if vote.player_id == player_id and vote.ct_app_id == ct_app_id: # vote matches intended player and ct app
-                            # create vote instance
-                            update_vote = {"user": voter, "match": match}
-                            casted = Vote.model_validate(vote, update=update_vote)
-                            if (casted.ct_app_id not in [i.ct_app_id for i in vote_list] and # checks if vote already in list
+                            if (# checks if cursed application vote already added in new votes
+                                vote.ct_app_id not in [i.ct_app_id for i in new_votes] and
                                 # use prev vote to cross check any new votes to avoid duplicates
-                                casted.ct_app_id not in [i.ct_app_id for i in prev_votes]
+                                vote.ct_app_id not in [i.ct_app_id for i in prev_votes]
                             ):
-                                vote_list.append(casted)
+                                # create vote instance
+                                update_vote = {"user": voter, "match": match}
+                                casted = Vote.model_validate(vote, update=update_vote)
+                                new_votes.append(casted)
                             else:
                                 continue # go back to top
-                print(vote_list, "listttttttttt")
-                session.add_all(vote_list)
+                session.add_all(new_votes)
                 session.commit()
-                [session.refresh(v) for v in vote_list]
-                return vote_list
+                [session.refresh(v) for v in new_votes]
+                msg = f"{len(new_votes)} out of {len(votes)} was successful"
+                info = {"message": msg, "votes": new_votes}
+                return info
 
         else: # match has ended
             raise HTTPException(status.HTTP_304_NOT_MODIFIED, detail=f"match has ended", headers={"redirect_reason": 'match has ended'})
