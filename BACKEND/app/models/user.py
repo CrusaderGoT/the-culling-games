@@ -2,10 +2,11 @@
 '''module for defining the `users` models that will be used to perform CRUD operations on the database and
 The models that will be used as schemas/response/request data in the API schema. All SQLModels'''
 from sqlmodel import SQLModel, Field, Relationship
-from pydantic import EmailStr
+from pydantic import EmailStr, StringConstraints, ValidationInfo, field_validator
 from datetime import date
 from app.models.base import (BaseUser, BaseUserInfo, Country, BasePlayerInfo, BaseAdminInfo)
-from typing import Union, TYPE_CHECKING
+from typing import Union, TYPE_CHECKING, Annotated
+from .base import username_pydantic_regex
 if TYPE_CHECKING:
     from app.models.player import Player
     from .match import Vote
@@ -28,12 +29,25 @@ class User(BaseUser, table=True):
 
 class CreateUser(BaseUser):
     'For creating a user'
-    password: str
-    confirm_password: str
+    password: Annotated[
+        str, StringConstraints(
+            pattern=r"^[A-Z][A-Za-z\d!@#$%^&*()_\-+=]{7,}$")
+        ] = Field(description="the user's password", schema_extra={"examples": ["K*jqQK)m3G+D4keP7DxCX(rhOvcp%YQ0rq#jdB$55i"]})
+    confirm_password: Annotated[
+        str, StringConstraints(
+            pattern=r"^[A-Z][A-Za-z\d!@#$%^&*()_\-+=]{7,}$")
+        ] = Field(description="the user's password", schema_extra={"examples": ["K*jqQK)m3G+D4keP7DxCX(rhOvcp%YQc0rq#jdB$55i"]})
+    # Ensure password and confirm_password match
+    @field_validator('confirm_password')
+    @classmethod
+    def passwords_match(cls, confirm_password: str, valid_info:ValidationInfo):
+            if confirm_password != valid_info.data["password"]:
+                raise ValueError("passwords do not match".title())
+            return valid_info.field_name
 
 class EditUser(SQLModel):
     'For editing a User'
-    username: str | None = None
+    username: username_pydantic_regex | None = None
     email: EmailStr | None = None
     country: Country| None = None
 

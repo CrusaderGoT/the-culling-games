@@ -1,6 +1,6 @@
 '''module for creating base classes/data models for other models.
 \nrules:\n
-should not import any class or object directly from any other model module.\n
+should not import any class or object directly from any other model module or a module that imports from a model module.\n
 base classes defined here cannot have fields annotated with any models outside this module.\n
 write attributes in class string definition, for easier understanding of their structure when imported to other files.\n
 should be imported only in other model modules.\n
@@ -8,8 +8,9 @@ should be imported only in other model modules.\n
 from sqlmodel import SQLModel, Field
 from enum import Enum, IntEnum
 from datetime import date, datetime
-from pydantic import EmailStr
-from typing import Union
+from pydantic import EmailStr, StringConstraints
+from typing import Annotated, Union
+
 
 # write your base models here
 
@@ -18,6 +19,10 @@ class MatchPlayerLink(SQLModel, table=True):
     match_id: int | None = Field(default=None, foreign_key="match.id", primary_key=True)
     player_id: int | None = Field(default=None, foreign_key="player.id", primary_key=True)
 
+username_pydantic_regex = Annotated[
+        str, StringConstraints(strip_whitespace=True, pattern=r'^[a-zA-Z0-9_-]{3,20}$')
+    ]
+'username must be alpha-numeric characters, no spaces, only underscore or/and dashes.'
 
 # USER
 class BaseUser(SQLModel):
@@ -27,7 +32,10 @@ class BaseUser(SQLModel):
     `email: EmailStr = Field(index=True, unique=True)`
     `country: str | None = None`
     '''
-    username: str = Field(index=True, unique=True, description="the unique username of the user")
+    username: username_pydantic_regex = Field(
+        index=True, unique=True, description="the username of the user",
+        schema_extra={"examples": ["username_pattern", "1AboveAll", "Gojo-Senpai"]}
+        )
     email: EmailStr = Field(index=True, unique=True, description="the email address of the user")
     country: Union["Country", None] = Field(default=None, description="the country of origin of the user")
 
