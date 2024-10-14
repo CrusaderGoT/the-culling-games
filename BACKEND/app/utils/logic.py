@@ -147,3 +147,17 @@ def ongoing_match(match: Match):
         return ongoing
 
 
+def points_required_for_upgrade(grade: Player.Grade):
+    'returns the points required for an upgrade'
+    points_dict = dict(
+        [
+            (4, 10),
+            (3, 15),
+            (2, 20),
+            (1, 25),
+            (0, 35),
+        ]
+    )
+    return points_dict[grade.value]
+
+

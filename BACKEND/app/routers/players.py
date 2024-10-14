@@ -6,6 +6,7 @@ from app.models.player import (CreatePlayer, CreateCT, CreateCTApp,
                                 EditPlayer, EditCT, EditCTApp, BarrierTech)
 from app.utils.config import Tag, UserException
 from app.utils.dependencies import colony, session
+from app.utils.logic import points_required_for_upgrade
 from ..auth.dependencies import oauth2_scheme, active_user
 from fastapi import APIRouter, Body, HTTPException, Path, status, Depends, Query
 from typing import Annotated, Union, Literal
@@ -179,45 +180,42 @@ def get_players(session: session,
 @router.post("/upgrade/{player_id}", response_model=PlayerInfo)
 def upgrade_player(player_id: Annotated[int, Path(description="the player id")],
                    session: session,
-                   grade_up: Annotated[Player.Grade, Query(description="specified upgrade")]):
+                   grade_up: Annotated[Player.Grade, Query(description="specified upgrade")],
+                   current_user: active_user):
     '''function for uprading the grade of a player.\n
     **points required.**'''
     player = session.get(Player, player_id)
     if player is not None:
-        # first get the current grade
-        current_grade = player.grade
-        # check if it is less or equal to grade_up
-        if (cg := current_grade.value) <= (gu := grade_up.value):
-            msg = f"grade to promote to value: '{gu}', should be less than current grade value: '{cg}'"
-            raise HTTPException(status.HTTP_417_EXPECTATION_FAILED, msg)
+        if player != current_user.player:
+            msg = f"cannot upgrade another player; wrong player id"
+            raise UserException(current_user, status.HTTP_401_UNAUTHORIZED, msg)
         else:
-            player_points = player.points
-            # get the required points for upgrade
-            needed_points = points_required_for_upgrade(grade_up)
-            #check if player points is enough
-            if player_points >= needed_points: # there is enough
-                # upgrade and deduct points
-                player.grade = grade_up
-                # deduct points used
-                player.points -= needed_points
-                session.add(player)
-                session.commit()
-                session.refresh(player)
-            else: # not enough
-                msg = f"not enough points; current points: {player_points}; needed points: {needed_points}"
-                raise HTTPException(status.HTTP_412_PRECONDITION_FAILED, msg)
+            # get the current grade
+            current_grade = player.grade
+            # check if it is less or equal to grade_up
+            if (cg := current_grade.value) <= (gu := grade_up.value):
+                if cg == 0:
+                    msg = f"Already Grade {cg}; Grade {cg} is the highest grade attainable."
+                else:
+                    msg = f"grade to promote to value: '{gu}', should be less than current grade value: '{cg}'"
+                raise HTTPException(status.HTTP_417_EXPECTATION_FAILED, msg)
+            else:
+                player_points = player.points
+                # get the required points for upgrade
+                needed_points = points_required_for_upgrade(grade_up)
+                #check if player points is enough
+                if player_points >= needed_points: # there is enough
+                    # upgrade and deduct points
+                    player.grade = grade_up
+                    # deduct points used
+                    player.points -= needed_points
+                    session.add(player)
+                    session.commit()
+                    session.refresh(player)
+                    return player
+                else: # not enough points
+                    msg = f"not enough points; current points: {player_points}; needed points: {needed_points}"
+                    raise HTTPException(status.HTTP_412_PRECONDITION_FAILED, msg)
     else: # player does not exist
         raise HTTPException(status.HTTP_404_NOT_FOUND, f"player {player_id}, does not exist")
 
-def points_required_for_upgrade(grade: Player.Grade):
-    'returns the points required for an upgrade'
-    points_dict = dict(
-        [
-            (4, 10),
-            (3, 15),
-            (2, 20),
-            (1, 25),
-            (0, 35),
-        ]
-    )
-    return points_dict[grade.value]

@@ -35,10 +35,13 @@ class Player(BasePlayer, table=True):
     wins: list["Match"] = Relationship(back_populates="winner")
     votes: list["Vote"] = Relationship(back_populates="player")
 
-    @field_validator('points')
-    @classmethod
-    def round_points(cls, points:float):
-        return round(points, 1)
+    @property
+    def point(self) -> float:
+        return round(self._points, 1)
+
+    @point.setter
+    def set_point(self, value: float):
+        self._points = round(value, 1)
 
 class CreatePlayer(BasePlayer):
     'For creating a Player'

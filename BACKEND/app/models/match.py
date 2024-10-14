@@ -2,7 +2,7 @@
 '''module for defining the `match` `location` and `vote` models that will be used to perform CRUD operation
 on the database and will be used as schemas/response/request data in the API schema. All SQLModels'''
 from sqlmodel import Field, Relationship, SQLModel
-from app.models.base import (BaseMatch, BaseMatchInfo, MatchPlayerLink,
+from app.models.base import (BaseMatch, BaseMatchInfo, BaseVote, MatchPlayerLink,
                              BaseColonyInfo, BasePlayerInfo, BaseUserInfo,
                              BaseCTAppInfo)
 from typing import TYPE_CHECKING, Union
@@ -31,21 +31,6 @@ class MatchInfo(BaseMatchInfo):
 
 # the vote system
     
-class BaseVote(SQLModel):
-    '''
-    ### The base class for a vote
-    `player_id: int = Field(foreign_key="player.id", ondelete="RESTRICT")`
-    `ct_app_id: int = Field(foreign_key="ctapp.id", ondelete="RESTRICT")`
-
-    `domain_expansion: bool = Field(default=False, description="the player's domain expansion")`
-    `binding_vow: bool = Field(default=False, description="the player's binding vow")`
-    `simple_domain: bool = Field(default=False, description="the player's simple domain")`
-    '''
-    player_id: int | None = Field(default=None, foreign_key="player.id", ondelete="RESTRICT")
-    ct_app_id: int | None = Field(default=None, foreign_key="ctapp.id", ondelete="RESTRICT")
-
-    
-    
 class Vote(BaseVote, table=True):
     'a vote as stored in a database'
     id: int | None = Field(default=None, primary_key=True)
@@ -60,9 +45,10 @@ class Vote(BaseVote, table=True):
 
     ct_app: "CTApp" = Relationship(back_populates="votes") # the cursed application being voted for
 
-class CastVote(BaseVote):
+class CastVote(SQLModel):
     'model for collecting data to cast a vote'
-    pass
+    player_id: int
+    ct_app_id: int
 
 class VoteInfo(SQLModel):
     'the vote info for client-side'

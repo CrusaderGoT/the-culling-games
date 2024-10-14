@@ -410,3 +410,13 @@ class BaseBarrierTech(SQLModel):
     domain_expansion: bool = Field(default=False, description="the player's domain expansion")
     binding_vow: bool = Field(default=False, description="the player's binding vow")
     simple_domain: bool = Field(default=False, description="the player's simple domain")
+
+
+class BaseVote(SQLModel):
+    '''
+    ### The base class for a vote
+    `player_id: int = Field(foreign_key="player.id", ondelete="RESTRICT")`
+    `ct_app_id: int = Field(foreign_key="ctapp.id", ondelete="RESTRICT")`
+    '''
+    player_id: int | None = Field(default=None, foreign_key="player.id", ondelete="RESTRICT")
+    ct_app_id: int | None = Field(default=None, foreign_key="ctapp.id", ondelete="RESTRICT")
