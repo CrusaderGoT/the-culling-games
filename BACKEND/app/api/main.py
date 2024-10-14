@@ -62,6 +62,7 @@ def create_user(session: session,
             raise HTTPException(status.HTTP_409_CONFLICT, detail=err_msg)
     else: # user not already in DATABASE
         # check if user password matches
+        print(user.password, user.confirm_password)
         if user.password == user.confirm_password:
             pw_auth = PasswordAuth()
             hashed_pw = pw_auth.hash_password(user.password)

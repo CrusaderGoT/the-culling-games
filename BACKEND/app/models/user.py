@@ -31,19 +31,19 @@ class CreateUser(BaseUser):
     'For creating a user'
     password: Annotated[
         str, StringConstraints(
-            pattern=r"^[A-Z][A-Za-z\d!@#$%^&*()_\-+=]{7,}$")
-        ] = Field(description="the user's password", schema_extra={"examples": ["K*jqQK)m3G+D4keP7DxCX(rhOvcp%YQ0rq#jdB$55i"]})
+            pattern=r"^([A-Z])([A-Za-z\d@$!%*?&\S]{7,})$")
+        ] = Field(description="the user's password")
     confirm_password: Annotated[
         str, StringConstraints(
-            pattern=r"^[A-Z][A-Za-z\d!@#$%^&*()_\-+=]{7,}$")
-        ] = Field(description="the user's password", schema_extra={"examples": ["K*jqQK)m3G+D4keP7DxCX(rhOvcp%YQc0rq#jdB$55i"]})
+            pattern=r"^([A-Z])([A-Za-z\d@$!%*?&\S]{7,})$")
+        ] = Field(description="the user's password")
     # Ensure password and confirm_password match
     @field_validator('confirm_password')
     @classmethod
     def passwords_match(cls, confirm_password: str, valid_info:ValidationInfo):
-            if confirm_password != valid_info.data["password"]:
+            if confirm_password != valid_info.data.get("password"):
                 raise ValueError("passwords do not match".title())
-            return valid_info.field_name
+            return confirm_password
 
 class EditUser(SQLModel):
     'For editing a User'
@@ -56,4 +56,6 @@ class UserInfo(BaseUserInfo):
     'The user info'
     player: Union["BasePlayerInfo", None] = None
     admin: Union["BaseAdminInfo", None] = None
+
+    
 
