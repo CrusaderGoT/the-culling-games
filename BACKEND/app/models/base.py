@@ -10,6 +10,7 @@ from enum import Enum, IntEnum
 from datetime import date, datetime
 from pydantic import EmailStr, StringConstraints
 from typing import Annotated, Union
+import json
 
 
 # write your base models here
@@ -18,7 +19,7 @@ class MatchPlayerLink(SQLModel, table=True):
     'link table model for a match and player M2M relation'
     match_id: int | None = Field(default=None, foreign_key="match.id", primary_key=True)
     player_id: int | None = Field(default=None, foreign_key="player.id", primary_key=True)
-
+ 
 username_pydantic_regex = Annotated[
         str, StringConstraints(strip_whitespace=True, pattern=r'^[a-zA-Z0-9_-]{3,20}$')
     ]
@@ -34,7 +35,7 @@ class BaseUser(SQLModel):
     '''
     username: username_pydantic_regex = Field(
         index=True, unique=True, description="the username of the user",
-        schema_extra={"examples": ["username_pattern", "1AboveAll", "Gojo-Senpai"]}
+        schema_extra={"examples": [ "Gojo-Senpai", "username_pattern", "1AboveAll"]}
         )
     email: EmailStr = Field(index=True, unique=True, description="the email address of the user")
     country: Union["Country", None] = Field(default=None, description="the country of origin of the user")
@@ -63,6 +64,13 @@ class BasePlayer(SQLModel):
         m = "male"
         f = "female"
         nb = "non-binary"
+    class Grade(IntEnum):
+        'the enum class for player grades'
+        SPECIAL = 0
+        ONE = 1
+        TWO = 2
+        THREE = 3
+        FOUR = 4
     name: str
     gender: Gender
     age: int | None = Field(default=None, ge=10, le=102)
@@ -73,9 +81,12 @@ class BasePlayerInfo(BasePlayer):
     Base model for player info, without cursed technique info and user info\n
     `id: int`
     `created: date`
+    `points: Decimal`
     '''
     id: int
     created: date
+    grade: BasePlayer.Grade
+    points: float
 
 # CURSED TECHNIQUE
 class BaseCT(SQLModel):
@@ -324,24 +335,32 @@ class BaseColonyInfo(BaseColony):
     '''
     id: int
 
+def load_table_names():
+        'Load the table names dict from the JSON file'
+        with open("app\\database\\table_names.json", 'r') as file:
+            data: dict[str, str] = json.load(file)
+            print('check your model table function for printing, if you see the in termainal without running alembic')
+        return data
+ModelName = Enum("ModelName", load_table_names())
+
+
 
 class BasePermission(SQLModel):
     '''the base class for a permission\n
     >>> class PermissionLevel(IntEnum):
-        ALL = 0
         READ = 1
         CREATE = 2
         UPDATE = 3
         DELETE = 4
-    model: str = Field(description="The model the permission applies to")
+    model: ModelName = Field(description="The model the permission applies to")
     '''
     class PermissionLevel(IntEnum):
-        ALL = 0
         READ = 1
         CREATE = 2
         UPDATE = 3
         DELETE = 4
-    model: str = Field(description="The model the permission applies to")
+    model: ModelName = Field(description="The model the permission applies to")
+
 
 
 class BasePermissionInfo(BasePermission):
@@ -386,3 +405,8 @@ class BaseMatchInfo(BaseMatch):
     '''
     id: int
     winner: Union[BasePlayerInfo, None]
+
+class BaseBarrierTech(SQLModel):
+    domain_expansion: bool = Field(default=False, description="the player's domain expansion")
+    binding_vow: bool = Field(default=False, description="the player's binding vow")
+    simple_domain: bool = Field(default=False, description="the player's simple domain")

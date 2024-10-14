@@ -10,7 +10,7 @@ from app.utils.config import Tag
 from fastapi.security import  OAuth2PasswordRequestForm
 from app.routers import admins, matches, players, users
 from ..utils.logic import usernamedb
-#from ..models.admins import AdminUser
+#from ..models.admin import AdminUser
 
 
 # ROUTERS
@@ -62,7 +62,6 @@ def create_user(session: session,
             raise HTTPException(status.HTTP_409_CONFLICT, detail=err_msg)
     else: # user not already in DATABASE
         # check if user password matches
-        print(user.password, user.confirm_password)
         if user.password == user.confirm_password:
             pw_auth = PasswordAuth()
             hashed_pw = pw_auth.hash_password(user.password)

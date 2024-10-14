@@ -3,13 +3,12 @@ from app.utils.logic import get_user, get_player, id_name_email
 from app.models.player import (CreatePlayer, CreateCT, CreateCTApp,
                                 CTApp, CursedTechnique, Player,
                                 PlayerInfo, BasePlayerInfo,
-                                EditPlayer, EditCT, EditCTApp)
+                                EditPlayer, EditCT, EditCTApp, BarrierTech)
 from app.utils.config import Tag, UserException
 from app.utils.dependencies import colony, session
 from ..auth.dependencies import oauth2_scheme, active_user
 from fastapi import APIRouter, Body, HTTPException, Path, status, Depends, Query
-from typing import Annotated, Union
-
+from typing import Annotated, Union, Literal
 # PLAYERS 
 
 router = APIRouter(prefix="/player",
@@ -46,6 +45,7 @@ def create_player(session: session, colony: colony, current_user:active_user,
             session.add(new_player)
             session.commit()
             session.refresh(new_player)
+            print(new_player)
             return new_player
     else: # no user found
         err_msg = f"User '{user}' not found"
@@ -56,6 +56,7 @@ def create_player(session: session, colony: colony, current_user:active_user,
 def my_player(session: session, current_user: active_user):
     if current_user.player and type(current_user.player.id) == int:
         player = get_player(session, current_user.player.id)
+        print(session.__repr__())
         if player:
             return player
         else:
@@ -174,3 +175,49 @@ def get_players(session: session,
     if slim == True: 
         players = [BasePlayerInfo.model_validate(player) for player in players]
     return players
+
+@router.post("/upgrade/{player_id}", response_model=PlayerInfo)
+def upgrade_player(player_id: Annotated[int, Path(description="the player id")],
+                   session: session,
+                   grade_up: Annotated[Player.Grade, Query(description="specified upgrade")]):
+    '''function for uprading the grade of a player.\n
+    **points required.**'''
+    player = session.get(Player, player_id)
+    if player is not None:
+        # first get the current grade
+        current_grade = player.grade
+        # check if it is less or equal to grade_up
+        if (cg := current_grade.value) <= (gu := grade_up.value):
+            msg = f"grade to promote to value: '{gu}', should be less than current grade value: '{cg}'"
+            raise HTTPException(status.HTTP_417_EXPECTATION_FAILED, msg)
+        else:
+            player_points = player.points
+            # get the required points for upgrade
+            needed_points = points_required_for_upgrade(grade_up)
+            #check if player points is enough
+            if player_points >= needed_points: # there is enough
+                # upgrade and deduct points
+                player.grade = grade_up
+                # deduct points used
+                player.points -= needed_points
+                session.add(player)
+                session.commit()
+                session.refresh(player)
+            else: # not enough
+                msg = f"not enough points; current points: {player_points}; needed points: {needed_points}"
+                raise HTTPException(status.HTTP_412_PRECONDITION_FAILED, msg)
+    else: # player does not exist
+        raise HTTPException(status.HTTP_404_NOT_FOUND, f"player {player_id}, does not exist")
+
+def points_required_for_upgrade(grade: Player.Grade):
+    'returns the points required for an upgrade'
+    points_dict = dict(
+        [
+            (4, 10),
+            (3, 15),
+            (2, 20),
+            (1, 25),
+            (0, 35),
+        ]
+    )
+    return points_dict[grade.value]

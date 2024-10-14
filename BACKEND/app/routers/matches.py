@@ -1,15 +1,17 @@
 '''module for the match routers'''
 from app.utils.logic import get_players_not_in_part, colonies_with_players_available_for_part
 from ..models.player import Player, CTApp
-from ..models.match import Match, MatchInfo, CastVote, Vote, VoteInfo
+from ..models.match import Match, MatchInfo, CastVote, Vote
+from ..models.admin import Permission, BasePermission
+from ..models.base import ModelName
 from ..models.user import User
 from fastapi import APIRouter, Depends, Query, HTTPException, status, Path, Body
 from ..auth.dependencies import oauth2_scheme, admin_user, active_user
 from ..utils.dependencies import session
-from ..utils.logic import id_name_email, get_user, get_match, ongoing_match
-from ..utils.config import Tag
+from ..utils.logic import  get_match, ongoing_match
+from ..utils.config import Tag, UserException
 from typing import Annotated
-from sqlmodel import select
+from sqlmodel import select, or_
 from random import sample, choice
 from datetime import datetime, timedelta
 
@@ -24,43 +26,58 @@ router = APIRouter(
 @router.post('/create', status_code=status.HTTP_201_CREATED, response_model=MatchInfo)
 def create_match(part: Annotated[int, Query()], session: session, admin: admin_user):
     '''path operation for automatically creating a match, requires a part query.'''
+    # first get the permission
+    permission = session.exec(
+        select(Permission)
+        .where(Permission.model == ModelName.match)
+        .where(Permission.level == Permission.PermissionLevel.CREATE)
+    ).first()
+    if permission is not None:
+        # check if admin user has permission
+        if permission in admin.permissions or admin.is_superuser:
+            # fetch colonies that has atleast one player that hasn't fought in the specified part query
+            result = colonies_with_players_available_for_part(session, part)
+            if result and (colony_id := choice(result)) is not None: # list is not empty and contains int (randomly chosen)
+                # Fetch players from the selected colony who have not fought in the specified part.
+                players_not_in_part = get_players_not_in_part(colony_id, part, session)
 
-    # fetch colonies that has atleast one player that hasn't fought in the specified part query
-    result = colonies_with_players_available_for_part(session, part)
-    if result and (colony_id := choice(result)) is not None: # list is not empty and contains int (randomly chosen)
-        # Fetch players from the selected colony who have not fought in the specified part.
-        players_not_in_part = get_players_not_in_part(colony_id, part, session)
+                # randomly select 2 players from the colony who haven't fought in the part before.
+                # if only one player is available, pair them with any other player from the colony.
+                if len(players_not_in_part) == 1:
+                    # fetch all players in colony, excluding the single player_not in_part
+                    all_players_query = select(Player).where(Player.colony_id == colony_id, Player.id != players_not_in_part[0].id)
+                    all_players = session.exec(all_players_query).all()
+                    
+                    if not all_players: # means only one player in colony
+                        err_msg = f"Only one player in Colony {players_not_in_part[0].colony_id}, cannot make match. Try again or add a player to the colony"
+                        raise HTTPException(status.HTTP_412_PRECONDITION_FAILED, err_msg)
+                    else:
+                        player1 = players_not_in_part[0] # the only player available
+                        player2 = choice(all_players)  # Randomly select another player from the same colony
 
-        # randomly select 2 players from the colony who haven't fought in the part before.
-        # if only one player is available, pair them with any other player from the colony.
-        if len(players_not_in_part) == 1:
-            # fetch all players in colony, excluding the single player_not in_part
-            all_players_query = select(Player).where(Player.colony_id == colony_id, Player.id != players_not_in_part[0].id)
-            all_players = session.exec(all_players_query).all()
-            
-            if not all_players: # means only one player in colony
-                err_msg = f"Only one player in Colony {players_not_in_part[0].colony_id}, cannot make match. Try again or add a player to the colony"
-                raise HTTPException(status.HTTP_412_PRECONDITION_FAILED, err_msg)
+                else: # players available are more than 2
+                    # Randomly select two unique players from those who haven't fought in the specified part
+                    player1, player2 = sample(players_not_in_part, 2)
+                
+                # create match
+                begin = datetime.now() + timedelta(minutes=2)
+                end = begin + timedelta(hours=24)
+                new_match = Match(begin=begin, end=end, part=part,
+                                colony_id=colony_id, players=[player1, player2])
+                session.add(new_match)
+                session.commit()
+                session.refresh(new_match)
+                return new_match
             else:
-                player1 = players_not_in_part[0] # the only player available
-                player2 = choice(all_players)  # Randomly select another player from the same colony
-
-        else: # players available are more than 2
-            # Randomly select two unique players from those who haven't fought in the specified part
-            player1, player2 = sample(players_not_in_part, 2)
-        
-        # create match
-        begin = datetime.now() + timedelta(minutes=2)
-        end = begin + timedelta(hours=24)
-        new_match = Match(begin=begin, end=end, part=part,
-                        colony_id=colony_id, players=[player1, player2])
-        session.add(new_match)
-        session.commit()
-        session.refresh(new_match)
-        return new_match
+                detail=f"No colony with players who haven't fought in part {part}. Begin/Try part {part+1}. Else no player yet..."
+                raise HTTPException(status.HTTP_404_NOT_FOUND, detail=detail)
+        else: # admin doesn't have permission to create match
+            raise UserException(admin.user,detail=f"{admin.user.username} doesn't have permission to create a match.")
     else:
-        detail=f"No colony with players who haven't fought in part {part}. Begin/Try part {part+1}. Else no player yet..."
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail=detail)
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN,
+            detail="Permission to create a match does not exist, contact a superuser"
+        )
     
 @router.get("/all", response_model=list[MatchInfo])
 def get_matches(session: session,
@@ -102,29 +119,46 @@ def vote(
             if len(prev_votes) >= 5: # if it has exceeded 5 votes, no more votes
                 raise HTTPException(status.HTTP_423_LOCKED, "vote limit reached")
             else:
-                # get the players fighting, and their ct apps
-                fighters_id = session.exec(
+                # get the players fighting, and their ct apps, and store them in a dict
+                fighters_dict = dict()
+                for player_id, ct_app_id in session.exec(
                     select(Player.id, CTApp.id)
-                    .join(Player.matches)  # Joining on the matches relationship
-                    .join(CTApp, CTApp.ct_id == Player.ct_id) # join on the ct app that belongs to the players
-                    .where(Match.id == match.id)  # Matching the specific match
-                ).all()
+                    .join(Player.matches)
+                    .join(CTApp, CTApp.ct_id == Player.ct_id)
+                    .where(Match.id == match.id)
+                ):
+                    # Add ct_app_id to the corresponding player_id's list
+                    if player_id not in fighters_dict:
+                        fighters_dict[player_id] = []
+                    fighters_dict[player_id].append(ct_app_id)
+
                 new_votes: list[Vote] = list() # votes to be added and commited to session
                 # now iterate over the votes and cast them for correct player ct app
+                i = 0
+                j = 0
+                k= 0
                 for vote in votes:
-                    for player_id, ct_app_id in fighters_id: # this loops runs 20 times, should be impored to only run 5 times
-                        if vote.player_id == player_id and vote.ct_app_id == ct_app_id: # vote matches intended player and ct app
-                            if (# checks if cursed application vote already added in new votes
-                                vote.ct_app_id not in [i.ct_app_id for i in new_votes] and
-                                # use prev vote to cross check any new votes to avoid duplicates
-                                vote.ct_app_id not in [i.ct_app_id for i in prev_votes]
-                            ):
-                                # create vote instance
-                                update_vote = {"user": voter, "match": match}
-                                casted = Vote.model_validate(vote, update=update_vote)
-                                new_votes.append(casted)
-                            else:
-                                continue # go back to top
+                    i+=1
+                    print(i)
+                    # Check if the player_id exists and if the ct_app_id is in their list of ct_app_ids
+                    if (vote.player_id in fighters_dict and 
+                        vote.ct_app_id in fighters_dict[vote.player_id]):
+                        k+=1
+                        print(k)
+                        # Check for duplicate votes
+                        if (vote.ct_app_id not in [v.ct_app_id for v in new_votes] and
+                            vote.ct_app_id not in [v.ct_app_id for v in prev_votes]):
+                            j+=1
+                            print(j)
+                            # Create and add the vote
+                            update_vote = {"user": voter, "match": match}
+                            casted_vote = Vote.model_validate(vote, update=update_vote)
+                            new_votes.append(casted_vote)
+
+                            """# Add 0.2 points to the player
+                            player = session.get(Player, vote.player_id)
+                            player.points += 0.2  # Increment player's points
+                            session.add(player)"""
                 session.add_all(new_votes)
                 session.commit()
                 [session.refresh(v) for v in new_votes]

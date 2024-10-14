@@ -6,7 +6,6 @@ from app.models.base import (BaseMatch, BaseMatchInfo, MatchPlayerLink,
                              BaseColonyInfo, BasePlayerInfo, BaseUserInfo,
                              BaseCTAppInfo)
 from typing import TYPE_CHECKING, Union
-from datetime import time
 if TYPE_CHECKING:
     from app.models.player import Player, CTApp
     from app.models.colony import Colony
@@ -45,10 +44,7 @@ class BaseVote(SQLModel):
     player_id: int | None = Field(default=None, foreign_key="player.id", ondelete="RESTRICT")
     ct_app_id: int | None = Field(default=None, foreign_key="ctapp.id", ondelete="RESTRICT")
 
-    domain_expansion: bool = Field(default=False, description="the player's domain expansion")
-    binding_vow: bool = Field(default=False, description="the player's binding vow")
-    simple_domain: bool = Field(default=False, description="the player's simple domain")
-
+    
     
 class Vote(BaseVote, table=True):
     'a vote as stored in a database'
@@ -64,24 +60,6 @@ class Vote(BaseVote, table=True):
 
     ct_app: "CTApp" = Relationship(back_populates="votes") # the cursed application being voted for
 
-class BarrierTech(SQLModel):
-    '''
-    This is the class for any buffs to a vote.\n
-    This includes, `domain expansion, simple domain, binding vow`, etc.\n
-    It is called `BarrierTech` cos it sounds cool.
-    '''
-    id: int | None = Field(default=None, primary_key=True)
-    player: "Player"
-
-    domain_expansion: bool
-    binding_vow: bool
-    simple_domain: bool
-    # the times are useful for know when to deactivate the techniques
-    de_time: time | None = Field(default=None, description="the time a player cast their domain")
-    bv_time: time | None = Field(default=None, description="the time a player cast their binding_vow")
-    sd_time: time | None = Field(default=None, description="the time a player cast their simple_domain")
-
-    
 class CastVote(BaseVote):
     'model for collecting data to cast a vote'
     pass

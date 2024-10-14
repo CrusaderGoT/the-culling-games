@@ -6,6 +6,7 @@ from pydantic import EmailStr, StringConstraints, ValidationInfo, field_validato
 from datetime import date
 from app.models.base import (BaseUser, BaseUserInfo, Country, BasePlayerInfo, BaseAdminInfo)
 from typing import Union, TYPE_CHECKING, Annotated
+from enum import Enum
 from .base import username_pydantic_regex
 if TYPE_CHECKING:
     from app.models.player import Player
@@ -26,6 +27,7 @@ class User(BaseUser, table=True):
     player: Union["Player", None] = Relationship(back_populates="user") # no cascade_delete, default behaviour required
     admin: Union["AdminUser", None] = Relationship(back_populates="user", cascade_delete=True)
     votes: list["Vote"] = Relationship(back_populates="user")
+    #logs: list["UserLog"] = Relationship(back_populates="user", cascade_delete=True)
 
 class CreateUser(BaseUser):
     'For creating a user'
@@ -37,6 +39,7 @@ class CreateUser(BaseUser):
         str, StringConstraints(
             pattern=r"^([A-Z])([A-Za-z\d@$!%*?&\S]{7,})$")
         ] = Field(description="the user's password")
+    
     # Ensure password and confirm_password match
     @field_validator('confirm_password')
     @classmethod
@@ -57,5 +60,12 @@ class UserInfo(BaseUserInfo):
     player: Union["BasePlayerInfo", None] = None
     admin: Union["BaseAdminInfo", None] = None
 
-    
-
+class UserLog(SQLModel):
+    'the log model for users'
+    class Method(str, Enum):
+        get = "GET"
+    id: int | None = Field(default=None, primary_key=True)
+    user_id: int = Field(ondelete="CASCADE", foreign_key="user.id")
+    user: User = Relationship(back_populates="logs")
+    method: Method = Field(description="the http method used by the user")
+    # continue tommorow

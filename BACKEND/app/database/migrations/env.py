@@ -7,6 +7,8 @@ from alembic import context
 
 from sqlmodel import SQLModel
 
+import json
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -26,7 +28,6 @@ from app.models.match import *
 from app.models.admin import *
 # target_metadata = mymodel.Base.metadata
 target_metadata = SQLModel.metadata
-
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
@@ -45,6 +46,11 @@ def run_migrations_offline() -> None:
     script output.
 
     """
+    # write table names to json file, useful for getting the names of database tables
+    with open("app\\database\\table_names.json", "w") as fl:
+        names_dict = dict([(d,d) for d in target_metadata.tables.keys() if "link" not in d])
+        json.dump(names_dict, fl)
+
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
@@ -64,6 +70,11 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
+    # write table names to json file, useful for getting the names of database tables
+    with open("app\\database\\table_names.json", "w") as fl:
+        names_dict = dict([(d,d) for d in target_metadata.tables.keys() if "link" not in d])
+        json.dump(names_dict, fl)
+
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
