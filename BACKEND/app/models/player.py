@@ -19,17 +19,17 @@ if TYPE_CHECKING:
 class Player(BasePlayer, table=True):
     'The Player as stored in the database'
     id: int | None = Field(default=None, primary_key=True)
-    grade: BasePlayer.Grade = Field(default=BasePlayer.Grade.FOUR, description="the grade of a player")
+    grade: BasePlayer.Grade = Field(default=BasePlayer.Grade.FOUR, description="the grade of a player", index=True)
     points: float = Field(default=0.0, description='the overall points of a player')
-    created: date = Field(default=date.today())
-    ct_id: int | None = Field(default=None, foreign_key="cursedtechnique.id", ondelete="CASCADE")
+    created: date = Field(default=date.today(), index=True)
+    ct_id: int | None = Field(default=None, foreign_key="cursedtechnique.id", ondelete="CASCADE", index=True)
     cursed_technique: "CursedTechnique" = Relationship(back_populates="player")
     # barrier techniques are only available to player of grade 2 up, implement later.
-    barrier_tech_id: int | None = Field(default=None, foreign_key="barriertech.id", ondelete="CASCADE")
+    barrier_tech_id: int | None = Field(default=None, foreign_key="barriertech.id", ondelete="CASCADE", index=True)
     barrier_technique: Union["BarrierTech", None] = Relationship(back_populates="player")
-    user_id: int | None = Field(default=None, foreign_key="user.id", ondelete="SET NULL")
+    user_id: int | None = Field(default=None, foreign_key="user.id", ondelete="SET NULL", index=True)
     user: "User" = Relationship(back_populates="player")
-    colony_id: int | None = Field(default=None, foreign_key="colony.id", ondelete="SET NULL")
+    colony_id: int | None = Field(default=None, foreign_key="colony.id", ondelete="SET NULL", index=True)
     colony: "Colony" = Relationship(back_populates="players")
     matches: list["Match"] = Relationship(back_populates="players", link_model=MatchPlayerLink)
     wins: list["Match"] = Relationship(back_populates="winner")
@@ -64,7 +64,7 @@ class CTApp(BaseCTApp, table=True):
     'cursed technique application as stored in the database'
     id: int | None = Field(default=None, primary_key=True)
     number: int = Field(ge=1, le=5)
-    ct_id: int | None = Field(default=None, foreign_key="cursedtechnique.id")
+    ct_id: int | None = Field(default=None, foreign_key="cursedtechnique.id", index=True)
     ct: CursedTechnique = Relationship(back_populates="applications")
 
     votes: list["Vote"] = Relationship(back_populates="ct_app")

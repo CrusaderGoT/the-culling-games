@@ -14,7 +14,7 @@ class AdminUser(SQLModel, table=True):
     "an admin user as stored in the database"
     id: int | None = Field(default=None, primary_key=True)
     permissions: list["Permission"] = Relationship(back_populates="admins", link_model=AdminPermissionLink)
-    user_id: int | None = Field(default=None, foreign_key="user.id", ondelete="CASCADE")
+    user_id: int | None = Field(default=None, foreign_key="user.id", ondelete="CASCADE", index=True)
     user: "User" = Relationship(back_populates="admin")
     is_superuser: bool = Field(default=False)
 

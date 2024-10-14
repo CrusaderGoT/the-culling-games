@@ -38,7 +38,7 @@ class BaseUser(SQLModel):
         schema_extra={"examples": [ "Gojo-Senpai", "username_pattern", "1AboveAll"]}
         )
     email: EmailStr = Field(index=True, unique=True, description="the email address of the user")
-    country: Union["Country", None] = Field(default=None, description="the country of origin of the user")
+    country: Union["Country", None] = Field(default=None, description="the country of origin of the user", index=True)
 
 class BaseUserInfo(BaseUser):
     '''
@@ -71,10 +71,10 @@ class BasePlayer(SQLModel):
         TWO = 2
         THREE = 3
         FOUR = 4
-    name: str
-    gender: Gender
-    age: int | None = Field(default=None, ge=10, le=102)
-    role: str | None = None
+    name: str = Field(index=True)
+    gender: Gender = Field(index=True)
+    age: int | None = Field(default=None, ge=10, le=102, index=True)
+    role: str | None = Field(default=None, index=True)
 
 class BasePlayerInfo(BasePlayer):
     '''
@@ -359,7 +359,7 @@ class BasePermission(SQLModel):
         CREATE = 2
         UPDATE = 3
         DELETE = 4
-    model: ModelName = Field(description="The model the permission applies to")
+    model: ModelName = Field(description="The model the permission applies to", index=True)
 
 
 
@@ -383,8 +383,8 @@ class BaseAdminInfo(SQLModel):
 
 class AdminPermissionLink(SQLModel, table=True):
     'the m2m link table for an admin and permission(s)'
-    admin_id: int | None = Field(default=None, foreign_key="adminuser.id", primary_key=True)
-    permission_id: int | None = Field(default=None, foreign_key="permission.id", primary_key=True)
+    admin_id: int | None = Field(default=None, foreign_key="adminuser.id", primary_key=True, index=True)
+    permission_id: int | None = Field(default=None, foreign_key="permission.id", primary_key=True, index=True)
 
 
 class BaseMatch(SQLModel):
@@ -418,5 +418,5 @@ class BaseVote(SQLModel):
     `player_id: int = Field(foreign_key="player.id", ondelete="RESTRICT")`
     `ct_app_id: int = Field(foreign_key="ctapp.id", ondelete="RESTRICT")`
     '''
-    player_id: int | None = Field(default=None, foreign_key="player.id", ondelete="RESTRICT")
-    ct_app_id: int | None = Field(default=None, foreign_key="ctapp.id", ondelete="RESTRICT")
+    player_id: int | None = Field(default=None, foreign_key="player.id", ondelete="RESTRICT", index=True)
+    ct_app_id: int | None = Field(default=None, foreign_key="ctapp.id", ondelete="RESTRICT", index=True)
