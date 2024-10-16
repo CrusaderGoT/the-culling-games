@@ -8,12 +8,10 @@ from ..models.user import User
 from fastapi import APIRouter, Depends, Query, HTTPException, status, Path, Body
 from ..auth.dependencies import oauth2_scheme, admin_user, active_user
 from ..utils.dependencies import session
-from ..utils.logic import  get_match, ongoing_match, get_player
+from ..utils.logic import  get_match, ongoing_match, get_player, get_last_created_match, create_new_match
 from ..utils.config import Tag, UserException
 from typing import Annotated
 from sqlmodel import select
-from random import sample, choice
-from datetime import datetime, timedelta
 
 # write you match api routes here
 
@@ -26,7 +24,7 @@ router = APIRouter(
 @router.post('/create', status_code=status.HTTP_201_CREATED, response_model=MatchInfo)
 def create_match(part: Annotated[int, Query()], session: session, admin: admin_user):
     '''path operation for automatically creating a match, requires a part query.'''
-    # first get the permission
+    # first get the permission for creating match
     permission = session.exec(
         select(Permission)
         .where(Permission.model == ModelName.match) # type: ignore
@@ -35,44 +33,27 @@ def create_match(part: Annotated[int, Query()], session: session, admin: admin_u
     if permission is not None:
         # check if admin user has permission
         if permission in admin.permissions or admin.is_superuser:
-            # fetch colonies that has atleast one player that hasn't fought in the specified part query
-            result = colonies_with_players_available_for_part(session, part)
-            if result and (colony_id := choice(result)) is not None: # list is not empty and contains int (randomly chosen)
-                # Fetch players from the selected colony who have not fought in the specified part.
-                players_not_in_part = get_players_not_in_part(colony_id, part, session)
-
-                # randomly select 2 players from the colony who haven't fought in the part before.
-                # if only one player is available, pair them with any other player from the colony.
-                if len(players_not_in_part) == 1:
-                    # fetch all players in colony, excluding the single player_not in_part
-                    all_players_query = select(Player).where(Player.colony_id == colony_id, Player.id != players_not_in_part[0].id)
-                    all_players = session.exec(all_players_query).all()
-                    
-                    if not all_players: # means only one player in colony
-                        err_msg = f"Only one player in Colony {players_not_in_part[0].colony_id}, cannot make match. Try again or add a player to the colony"
-                        raise HTTPException(status.HTTP_412_PRECONDITION_FAILED, err_msg)
-                    else:
-                        player1 = players_not_in_part[0] # the only player available
-                        player2 = choice(all_players)  # Randomly select another player from the same colony
-
-                else: # players available are more than 2
-                    # Randomly select two unique players from those who haven't fought in the specified part
-                    player1, player2 = sample(players_not_in_part, 2)
-                
-                # create match
-                begin = datetime.now() + timedelta(minutes=2)
-                end = begin + timedelta(hours=24)
-                new_match = Match(begin=begin, end=end, part=part,
-                                colony_id=colony_id, players=[player1, player2])
+            # get the last match that was created, to check if it has ended
+            last_match = get_last_created_match(session)
+            if last_match is not None:
+                # check if it has ended
+                if ongoing_match(last_match) == False:
+                    msg = f"Previous Match: ID {last_match.id}, part {last_match.part} has not ended"
+                    raise HTTPException(status.HTTP_406_NOT_ACCEPTABLE, msg)
+                else: # previous match has ended; create match
+                    new_match = create_new_match(session, part)
+                    session.add(new_match)
+                    session.commit()
+                    session.refresh(new_match)
+                    return new_match
+            else: # Not a single match have been create; Create match anyway
+                new_match = create_new_match(session, part)
                 session.add(new_match)
                 session.commit()
                 session.refresh(new_match)
                 return new_match
-            else:
-                detail=f"No colony with players who haven't fought in part {part}. Begin/Try part {part+1}. Else no player yet..."
-                raise HTTPException(status.HTTP_404_NOT_FOUND, detail=detail)
         else: # admin doesn't have permission to create match
-            raise UserException(admin.user,detail=f"{admin.user.username} doesn't have permission to create a match.")
+            raise UserException(admin.user, code=status.HTTP_401_UNAUTHORIZED, detail=f"{admin.user.username} doesn't have permission to create a match.")
     else:
         raise HTTPException(
             status.HTTP_403_FORBIDDEN,

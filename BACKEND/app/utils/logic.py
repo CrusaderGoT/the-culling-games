@@ -7,8 +7,9 @@ from ..models.colony import Colony
 from app.models.user import User
 from ..models.player import Player
 from app.utils.dependencies import session
-from sqlmodel import Session, and_, not_, select, exists
-from datetime import datetime
+from sqlmodel import Session, and_, not_, select, exists, Sequence
+from random import sample, choice
+from datetime import datetime, timedelta
 
 
 def usernamedb(username: str):
@@ -160,4 +161,50 @@ def points_required_for_upgrade(grade: Player.Grade):
     )
     return points_dict[grade.value]
 
+def get_last_created_match(session: session):
+    'Get the last created Match, according to begin date. None if no Match exists'
+    last_match = session.exec(
+        select(Match).order_by(Match.begin.desc())
+        .limit(1)
+    ).first()
+    return last_match
 
+def create_new_match(session: session, part: int):
+    'creates a new match, needs a lot of refactoring'
+    # fetch colonies that has atleast one player that hasn't fought in the specified part query
+    result = colonies_with_players_available_for_part(session, part)
+    if result and (colony_id := choice(result)) is not None: # list is not empty and contains int (randomly chosen)
+        # Fetch players from the selected colony who have not fought in the specified part.
+        players_not_in_part = get_players_not_in_part(colony_id, part, session)
+        # Randomly select 2 players from the colony for the match
+        players = random_players_for_match(session, players_not_in_part, colony_id) # type: ignore ; list same as Sequence
+        # create match
+        begin = datetime.now() + timedelta(minutes=2)
+        end = begin + timedelta(hours=24)
+        new_match = Match(begin=begin, end=end, part=part,
+                        colony_id=colony_id, players=players)
+        return new_match
+    else:
+        detail=f"No colony with players who haven't fought in part {part}. Begin/Try part {part+1}. Else no player yet..."
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail=detail)
+    
+def random_players_for_match(session: session, players_not_in_part: list[Player], colony_id: int):
+    """Randomly select 2 players from the colony who haven't fought in the part before.\n
+    if only one player is available, pair them with any other player from the colony.\n
+    raises HTTPException if only one player in colony"""
+    if len(players_not_in_part) == 1:
+        # fetch all players in colony, excluding the single player_not in_part
+        all_players_query = select(Player).where(Player.colony_id == colony_id, Player.id != players_not_in_part[0].id)
+        all_players = session.exec(all_players_query).all()
+        
+        if not all_players: # means only one player in colony
+            err_msg = f"Only one player in Colony {players_not_in_part[0].colony_id}, cannot make match. Try again or add a player to the colony"
+            raise HTTPException(status.HTTP_412_PRECONDITION_FAILED, err_msg)
+        else:
+            player1 = players_not_in_part[0] # the only player available
+            player2 = choice(all_players)  # Randomly select another player from the same colony
+
+    else: # players available are more than 2
+        # Randomly select two unique players from those who haven't fought in the specified part
+        player1, player2 = sample(players_not_in_part, 2)
+    return [player1, player2]

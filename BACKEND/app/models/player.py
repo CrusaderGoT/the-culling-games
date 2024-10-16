@@ -36,10 +36,10 @@ class Player(BasePlayer, table=True):
     votes: list["Vote"] = Relationship(back_populates="player")
 
     @property
-    def point(self) -> float:
+    def get_point(self) -> float:
         return round(self._points, 1)
 
-    @point.setter
+    @get_point.setter
     def set_point(self, value: float):
         self._points = round(value, 1)
 

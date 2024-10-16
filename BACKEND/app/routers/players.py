@@ -195,9 +195,9 @@ def upgrade_player(player_id: Annotated[int, Path(description="the player id")],
             # check if it is less or equal to grade_up
             if (cg := current_grade.value) <= (gu := grade_up.value):
                 if cg == 0:
-                    msg = f"Already Grade {cg}; Grade {cg} is the highest grade attainable."
+                    msg = f"Already {current_grade.name} Grade; {current_grade.name} Grade is the highest grade attainable."
                 else:
-                    msg = f"grade to promote to value: '{gu}', should be less than current grade value: '{cg}'"
+                    msg = f"grade to promote ({grade_up.name}) value: '{gu}', should be less than current grade ({current_grade.name}) value: '{cg}'"
                 raise HTTPException(status.HTTP_417_EXPECTATION_FAILED, msg)
             else:
                 player_points = player.points
