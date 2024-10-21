@@ -5,7 +5,7 @@ from sqlmodel import Field, Relationship, SQLModel
 from app.models.base import (BaseMatch, BaseMatchInfo, BaseVote, MatchPlayerLink,
                              BaseColonyInfo, BasePlayerInfo, BaseUserInfo,
                              BaseCTAppInfo)
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from app.models.player import Player, CTApp
     from app.models.colony import Colony
@@ -15,13 +15,14 @@ if TYPE_CHECKING:
 class Match(BaseMatch, table=True):
     'a match as stored in the database'
     id: int | None = Field(default=None, primary_key=True)
-    colony_id: int | None = Field(foreign_key='colony.id', index=True)
+    # parent rel
+    colony_id: int | None = Field(foreign_key='colony.id', index=True, ondelete="RESTRICT")
     colony: "Colony" = Relationship(back_populates="matches")
+    winner_id: int | None = Field(default=None, ondelete="RESTRICT", foreign_key='player.id', index=True, description="The winner of the match ID (player Id)")
+    winner: "Player" = Relationship(back_populates="wins")
+    # child rels
     #typically will have only two unique players in a match
     players: list["Player"] = Relationship(back_populates="matches", link_model=MatchPlayerLink)
-    winner_id: int | None = Field(default=None, foreign_key='player.id', index=True, description="The winner of the match ID (player Id)")
-    winner: Union["Player", None] = Relationship(back_populates="wins")
-
     votes: list["Vote"] = Relationship(back_populates="match")
 
 class MatchInfo(BaseMatchInfo):

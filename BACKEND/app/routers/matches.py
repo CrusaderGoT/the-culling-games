@@ -1,17 +1,17 @@
 '''module for the match routers'''
-from app.utils.logic import get_players_not_in_part, colonies_with_players_available_for_part
-from ..models.player import Player, CTApp
+from ..models.player import Player, CTApp, BarrierTech, CursedTechnique
 from ..models.match import Match, MatchInfo, CastVote, Vote
 from ..models.admin import Permission
 from ..models.base import ModelName
 from ..models.user import User
-from fastapi import APIRouter, Depends, Query, HTTPException, status, Path, Body
+from fastapi import APIRouter, Depends, Query, HTTPException, status, Path, Body, BackgroundTasks
 from ..auth.dependencies import oauth2_scheme, admin_user, active_user
 from ..utils.dependencies import session
-from ..utils.logic import  get_match, ongoing_match, get_player, get_last_created_match, create_new_match
+from ..utils.logic import  get_match, ongoing_match, get_player, get_last_created_match, create_new_match, round_points
 from ..utils.config import Tag, UserException
 from typing import Annotated
 from sqlmodel import select
+from datetime import timedelta, datetime
 
 # write you match api routes here
 
@@ -37,7 +37,7 @@ def create_match(part: Annotated[int, Query()], session: session, admin: admin_u
             last_match = get_last_created_match(session)
             if last_match is not None:
                 # check if it has ended
-                if ongoing_match(last_match) == False:
+                if ongoing_match(last_match) == True:
                     msg = f"Previous Match: ID {last_match.id}, part {last_match.part} has not ended"
                     raise HTTPException(status.HTTP_406_NOT_ACCEPTABLE, msg)
                 else: # previous match has ended; create match
@@ -106,7 +106,8 @@ def vote(
                 for player_id, ct_app_id in session.exec(
                     select(Player.id, CTApp.id)
                     .join(Player.matches)
-                    .join(CTApp, CTApp.ct_id == Player.ct_id)
+                    .join(CursedTechnique)
+                    .join(CTApp, CTApp.ct_id == CursedTechnique.id)
                     .where(Match.id == match.id)
                 ):
                     # Add ct_app_id to the corresponding player_id's list
@@ -132,7 +133,7 @@ def vote(
                             player = get_player(session, vote.player_id)
                             if player is not None:
                                 # check if domain is activated, blah blah blah
-                                player.points += VOTE_POINT  # Increment player's points
+                                player.points = round_points(player.points+VOTE_POINT)  # Increment player's points
                                 session.add(player)
                 else: # runs after the loop
                     session.add_all(new_votes)
@@ -146,3 +147,93 @@ def vote(
             raise HTTPException(status.HTTP_304_NOT_MODIFIED, detail=f"match has ended", headers={"redirect_reason": 'match has ended'})
     else: # match doesn't exist
         raise HTTPException(status.HTTP_404_NOT_FOUND, "match doesn't exist")
+    
+@router.post('/activate/domain/{player_id}')
+def domain_expansion(player_id: Annotated[int, Path()],
+                    match_id: Annotated[int, Query()],
+                    current_user: active_user,
+                    session: session,
+                    background: BackgroundTasks):
+    '''Activates the domain of a player in an ongoing match.\n
+    Buffs the vote to x4 per vote.\n
+    Negated by simple domain'''
+    # first get the match, check if it is ongoing
+    match = session.get(Match, match_id)
+    player = session.get(Player, player_id)
+    if player is not None:
+        if match is not None:
+            if player.id != current_user.player.id:
+                msg = f"can not activate domain of another player"
+                raise UserException(current_user, status.HTTP_406_NOT_ACCEPTABLE)
+            else:
+                if ongoing_match(match) == True:
+                    # check if domain has been actvated before
+                    # get the Barrier technique of that player for the match
+                    stmt = select(BarrierTech).join(Player, Player.id == player.id).join(Match, Match.id == match.id)
+                    barrier_tech = session.exec(stmt).first()
+                    if barrier_tech is None: # player has no barrier technique
+                        msg = f"'{player.name}' doesn't have a barrier technique, upgrade the player to grade 2, to unlock Barrier Techniques"
+                        raise HTTPException(status.HTTP_428_PRECONDITION_REQUIRED, msg)
+                    # has a barrier tech; check if domain is currently active
+                    #modify to accout for situations where one of the is True-ish/
+                    # also if de end time has passed, that means that domain should have ended but the backgroud task failed
+                    elif (end_time := barrier_tech.de_end_time) and barrier_tech.domain_expansion == True:
+                        if end_time <= datetime.now(): # should have ended, but backgroud task failed
+                            barrier_tech = activate(barrier_tech)
+                            session.add(barrier_tech)
+                            session.commit()
+                            session.refresh(barrier_tech)
+                            # schedule background task for deactivation
+                            background.add_task(deactivate_domain, barrier_tech, session)
+                            return barrier_tech
+                        else: # active
+                            raise HTTPException(status.HTTP_409_CONFLICT, f"Domain is already active, deactivates: {round_points((barrier_tech.de_end_time - datetime.now()).total_seconds())}")
+                    else: # no domain activated or no deactivation time
+                        barrier_tech = activate(barrier_tech)
+                        session.add(barrier_tech)
+                        session.commit()
+                        session.refresh(barrier_tech)
+                        # schedule background task for deactivation
+                        background.add_task(deactivate_domain, barrier_tech, session)
+                        return barrier_tech
+                else: # match has ended
+                    raise HTTPException(status.HTTP_423_LOCKED, f"Match ID: {match_id}, has Ended")
+        else:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, f"Match ID: {match_id}, does not exist.")
+    else:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, f"Player {player_id}, does not exist.")
+    
+def deactivate_domain(barrier_tech: BarrierTech, session: session):
+    'function for the background task of deactivating a domain'
+    active = True
+    while active: 
+        now = datetime.now() # the current time
+        # check if there is an end time for the specified barrier tech DE
+        if barrier_tech.de_end_time is None:
+            # deactivate domain
+            barrier_tech.de_end_time = None
+            barrier_tech.domain_expansion = False
+            session.add(barrier_tech)
+            session.commit()
+            active = False
+            break
+        # see if time for deactivation has reached
+        elif now >= barrier_tech.de_end_time:
+            # deactivate domain
+            barrier_tech.de_end_time = None
+            barrier_tech.domain_expansion = False
+            session.add(barrier_tech)
+            session.commit()
+            active = False
+            break
+        else:
+            # add a time pause if deactivation time is still far
+            continue # loop again
+def activate(barrier_tech: BarrierTech):
+    # activate domain
+    barrier_tech.domain_expansion = True
+    # set deactivation time
+    barrier_tech.de_end_time = datetime.now() + timedelta(minutes=1)
+    # deduct points
+    barrier_tech.player.points = round_points(barrier_tech.player.points-10)
+    return  barrier_tech

@@ -407,6 +407,11 @@ class BaseMatchInfo(BaseMatch):
     winner: Union[BasePlayerInfo, None]
 
 class BaseBarrierTech(SQLModel):
+    """base class for barrier techniques\n
+    domain_expansion: bool = Field(default=False, description="the player's domain expansion")
+    binding_vow: bool = Field(default=False, description="the player's binding vow")
+    simple_domain: bool = Field(default=False, description="the player's simple domain")
+    """
     domain_expansion: bool = Field(default=False, description="the player's domain expansion")
     binding_vow: bool = Field(default=False, description="the player's binding vow")
     simple_domain: bool = Field(default=False, description="the player's simple domain")

@@ -13,8 +13,8 @@ if TYPE_CHECKING:
 
 class Colony(BaseColony, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    players: list["Player"] | None = Relationship(back_populates="colony")
-    matches: list["Match"] | None = Relationship(back_populates="colony")
+    players: list["Player"] = Relationship(back_populates="colony")
+    matches: list["Match"] = Relationship(back_populates="colony")
 
 # CLIENT SIDE RESPONSE MODELS
 class ColonyInfo(BaseColonyInfo):

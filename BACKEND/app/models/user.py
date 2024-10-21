@@ -24,8 +24,16 @@ class User(BaseUser, table=True):
     'username as stored in the database. lowercase'
     created: date = Field(default=date.today())
     password: str = Field(description="the user's hashed password")
-    player: Union["Player", None] = Relationship(back_populates="user") # no cascade_delete, default behaviour required
-    admin: Union["AdminUser", None] = Relationship(back_populates="user", cascade_delete=True)
+    # child rel
+    player: "Player" = Relationship(back_populates="user")
+    admin: "AdminUser" = Relationship(
+        back_populates="user", cascade_delete=True,
+        # the following arg makes it so if you delete an admin the user is delete also
+        sa_relationship_kwargs={
+            "single_parent": True,
+            "cascade": "all, delete"
+        }
+    )
     votes: list["Vote"] = Relationship(back_populates="user")
     #logs: list["UserLog"] = Relationship(back_populates="user", cascade_delete=True)
 

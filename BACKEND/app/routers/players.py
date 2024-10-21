@@ -1,15 +1,17 @@
 from sqlmodel import select, or_
 from app.utils.logic import get_user, get_player, id_name_email
+from ..models.colony import Colony
+from ..models.user import User
 from app.models.player import (CreatePlayer, CreateCT, CreateCTApp,
                                 CTApp, CursedTechnique, Player,
                                 PlayerInfo, BasePlayerInfo,
                                 EditPlayer, EditCT, EditCTApp, BarrierTech)
 from app.utils.config import Tag, UserException
 from app.utils.dependencies import colony, session
-from app.utils.logic import points_required_for_upgrade
+from app.utils.logic import points_required_for_upgrade, round_points
 from ..auth.dependencies import oauth2_scheme, active_user
 from fastapi import APIRouter, Body, HTTPException, Path, status, Depends, Query
-from typing import Annotated, Union, Literal
+from typing import Annotated, Union
 # PLAYERS 
 
 router = APIRouter(prefix="/player",
@@ -57,7 +59,6 @@ def create_player(session: session, colony: colony, current_user:active_user,
 def my_player(session: session, current_user: active_user):
     if current_user.player and type(current_user.player.id) == int:
         player = get_player(session, current_user.player.id)
-        print(session.__repr__())
         if player:
             return player
         else:
@@ -104,7 +105,7 @@ def edit_player(*, player_id: int, session: session, current_user: active_user,
                 ctapps = session.exec(
                     select(CTApp)
                     .join(CursedTechnique)
-                    .where(CTApp.ct_id == playerdb.ct_id)
+                    .where(CTApp.ct_id == playerdb.cursed_technique.id)
                     .where(CTApp.number.in_(app_numbers))
                 ).all()
                 for ct_app in ctapps:
@@ -205,10 +206,14 @@ def upgrade_player(player_id: Annotated[int, Path(description="the player id")],
                 needed_points = points_required_for_upgrade(grade_up)
                 #check if player points is enough
                 if player_points >= needed_points: # there is enough
+                    # check if they have reached the level to access Barrier Tech
+                    if gu <= 2 and cg > 2: # grant barrier technique
+                        new_barrier_tech = BarrierTech(player=player)
+                        session.add(new_barrier_tech)
                     # upgrade and deduct points
                     player.grade = grade_up
                     # deduct points used
-                    player.points -= needed_points
+                    player.points = round_points(player.points-needed_points)
                     session.add(player)
                     session.commit()
                     session.refresh(player)
@@ -219,3 +224,9 @@ def upgrade_player(player_id: Annotated[int, Path(description="the player id")],
     else: # player does not exist
         raise HTTPException(status.HTTP_404_NOT_FOUND, f"player {player_id}, does not exist")
 
+@router.get('/bt/rr')
+def bt(session: session):
+    b = session.exec(select(CTApp)).all()
+    session.delete(b[0])
+    session.commit()
+    return b

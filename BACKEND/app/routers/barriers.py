@@ -1,0 +1,2 @@
+'''routers for barrier techniques'''
+

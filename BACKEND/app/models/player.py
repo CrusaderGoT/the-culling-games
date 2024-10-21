@@ -2,13 +2,11 @@
 '''module for defining the `players` `cursed technique` and `cursed technique applications` models that will be used to perform CRUD operation
 on the database and will be used as schemas/response/request data in the API schema. All SQLModels'''
 from sqlmodel import Field, Relationship, SQLModel
-from pydantic import field_validator
-from datetime import date, time
+from datetime import date, datetime
 from app.models.base import (BaseMatchInfo, BasePlayer, BasePlayerInfo, BaseCT, BaseCTInfo,
                             BaseCTApp, BaseUserInfo, BaseColonyInfo, MatchPlayerLink,
                             BaseBarrierTech)
 from typing import TYPE_CHECKING, Union
-from decimal import Decimal
 if TYPE_CHECKING:
     from app.models.user import User
     from app.models.colony import Colony
@@ -22,26 +20,18 @@ class Player(BasePlayer, table=True):
     grade: BasePlayer.Grade = Field(default=BasePlayer.Grade.FOUR, description="the grade of a player", index=True)
     points: float = Field(default=0.0, description='the overall points of a player')
     created: date = Field(default=date.today(), index=True)
-    ct_id: int | None = Field(default=None, foreign_key="cursedtechnique.id", ondelete="CASCADE", index=True)
+    # child relations
     cursed_technique: "CursedTechnique" = Relationship(back_populates="player")
     # barrier techniques are only available to player of grade 2 up, implement later.
-    barrier_tech_id: int | None = Field(default=None, foreign_key="barriertech.id", ondelete="CASCADE", index=True)
-    barrier_technique: Union["BarrierTech", None] = Relationship(back_populates="player")
+    barrier_technique: "BarrierTech" = Relationship(back_populates="player")
+    matches: list["Match"] = Relationship(back_populates="players", link_model=MatchPlayerLink)
+    wins: list["Match"] = Relationship(back_populates="winner")
+    votes: list["Vote"] = Relationship(back_populates="player")
+    # parent relations
     user_id: int | None = Field(default=None, foreign_key="user.id", ondelete="SET NULL", index=True)
     user: "User" = Relationship(back_populates="player")
     colony_id: int | None = Field(default=None, foreign_key="colony.id", ondelete="SET NULL", index=True)
     colony: "Colony" = Relationship(back_populates="players")
-    matches: list["Match"] = Relationship(back_populates="players", link_model=MatchPlayerLink)
-    wins: list["Match"] = Relationship(back_populates="winner")
-    votes: list["Vote"] = Relationship(back_populates="player")
-
-    @property
-    def get_point(self) -> float:
-        return round(self._points, 1)
-
-    @get_point.setter
-    def set_point(self, value: float):
-        self._points = round(value, 1)
 
 class CreatePlayer(BasePlayer):
     'For creating a Player'
@@ -52,8 +42,20 @@ class CreatePlayer(BasePlayer):
 class CursedTechnique(BaseCT, table=True):
     'The cursed Technique as stored in the DB'
     id: int | None = Field(default=None, primary_key=True)
-    player: Player = Relationship(back_populates="cursed_technique", cascade_delete=True)
-    applications: list["CTApp"] = Relationship(back_populates="ct")
+    # parent rel
+    player_id: int | None = Field(default=None, foreign_key="player.id", ondelete="CASCADE", index=True)
+    player: Player = Relationship(
+        back_populates="cursed_technique",
+        # the following argument makes it so that if the cursed tech is deleted, the player will be deleted also
+        # this is because a player must have a ct, otherwise, an error occurs when fetching the player.
+        # not to be confused with the on_delete arg in player_id, which deletes a ct if the player is deleted
+        sa_relationship_kwargs={
+            "single_parent": True,
+            "cascade": "all, delete",
+        }
+    )
+    # child rel
+    applications: list["CTApp"] = Relationship(back_populates="ct", cascade_delete=True)
 
 class CreateCT(BaseCT):
     'for creating cursed technique'
@@ -64,9 +66,10 @@ class CTApp(BaseCTApp, table=True):
     'cursed technique application as stored in the database'
     id: int | None = Field(default=None, primary_key=True)
     number: int = Field(ge=1, le=5)
-    ct_id: int | None = Field(default=None, foreign_key="cursedtechnique.id", index=True)
+    # parent rel
+    ct_id: int | None = Field(default=None, foreign_key="cursedtechnique.id", index=True, ondelete="CASCADE")
     ct: CursedTechnique = Relationship(back_populates="applications")
-
+    # child rel
     votes: list["Vote"] = Relationship(back_populates="ct_app")
 
 class CreateCTApp(BaseCTApp):
@@ -81,11 +84,13 @@ class BarrierTech(BaseBarrierTech, table=True):
     It is called `BarrierTech` cos it sounds cool.
     '''
     id: int | None = Field(default=None, primary_key=True)
-    player: "Player" = Relationship(back_populates="barrier_technique", cascade_delete=True)
+    # parent rel
+    player_id: int | None = Field(default=None, foreign_key="player.id", ondelete="CASCADE")
+    player: "Player" = Relationship(back_populates="barrier_technique")
     # the times are useful for know when to activate/deactivate the techniques
-    de_time: time | None = Field(default=None, description="the time a player cast their domain")
-    bv_time: time | None = Field(default=None, description="the time a player cast their binding_vow")
-    sd_time: time | None = Field(default=None, description="the time a player cast their simple_domain")
+    de_end_time: datetime | None = Field(default=None, description="the time a player cast their domain")
+    bv_end_time: datetime | None = Field(default=None, description="the time a player cast their binding_vow")
+    sd_end_time: datetime | None = Field(default=None, description="the time a player cast their simple_domain")
 
 class BarrierTechInfo(BaseBarrierTech):
     id: int

@@ -1,13 +1,13 @@
 from fastapi import Path, HTTPException, status
 from typing import Annotated
-from pydantic import EmailStr
+from email_validator import validate_email, EmailNotValidError
 
 from app.models.match import Match, MatchPlayerLink
 from ..models.colony import Colony
 from app.models.user import User
 from ..models.player import Player
 from app.utils.dependencies import session
-from sqlmodel import Session, and_, not_, select, exists, Sequence
+from sqlmodel import Session, and_, not_, select, exists
 from random import sample, choice
 from datetime import datetime, timedelta
 
@@ -20,9 +20,9 @@ def usernamedb(username: str):
 def is_valid_email(email: str) -> bool:
     'checks if a string is a valid email string'
     try:
-        EmailStr._validate(email)
+        validate_email(email)
         return True
-    except Exception:
+    except EmailNotValidError:
         return False
 
 def get_match(session: session, match_id: int):
@@ -152,11 +152,11 @@ def points_required_for_upgrade(grade: Player.Grade):
     'returns the points required for an upgrade'
     points_dict = dict(
         [
-            (4, 10),
-            (3, 15),
-            (2, 20),
-            (1, 25),
-            (0, 35),
+            (4, 0.2),
+            (3, 0.2),
+            (2, 0.4),
+            (1, 0.4),
+            (0, 0.6),
         ]
     )
     return points_dict[grade.value]
@@ -208,3 +208,7 @@ def random_players_for_match(session: session, players_not_in_part: list[Player]
         # Randomly select two unique players from those who haven't fought in the specified part
         player1, player2 = sample(players_not_in_part, 2)
     return [player1, player2]
+
+def round_points(points: float):
+    'returns a 1 decimal place precision of a float. e.g. 1.2'
+    return round(points, 1)
