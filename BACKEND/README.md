@@ -17,4 +17,7 @@ holds the design, user interface and experience of the games.
 In the `BACKEND` directory in vscode, run `pip install -r requirements.txt`
 **Finally**
 - Backend: `uvicorn app.api.main:app --reload`
-- FRONTEND: ` npm run dev`
+- FRONTEND: `npm run dev`
+
+## Contribution
+* If you have uderstanding of NextJS, FastAPI, SQLAlchemy/SQLModel, or Pydantic.
