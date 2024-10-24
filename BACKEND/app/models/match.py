@@ -2,6 +2,7 @@
 '''module for defining the `match` `location` and `vote` models that will be used to perform CRUD operation
 on the database and will be used as schemas/response/request data in the API schema. All SQLModels'''
 from sqlmodel import Field, Relationship, SQLModel
+from app.models.barrier import BarrierRecord
 from app.models.base import (BaseMatch, BaseMatchInfo, BaseVote, MatchPlayerLink,
                              BaseColonyInfo, BasePlayerInfo, BaseUserInfo,
                              BaseCTAppInfo)
@@ -24,7 +25,8 @@ class Match(BaseMatch, table=True):
     #typically will have only two unique players in a match
     players: list["Player"] = Relationship(back_populates="matches", link_model=MatchPlayerLink)
     votes: list["Vote"] = Relationship(back_populates="match")
-
+    barrier_records: list["BarrierRecord"] = Relationship(back_populates="match")
+    
 class MatchInfo(BaseMatchInfo):
     'match info for client side'
     players: list["BasePlayerInfo"]
@@ -58,14 +60,10 @@ class VoteInfo(SQLModel):
     player: "BasePlayerInfo" = Field(description='the player voted')
     ct_app: "BaseCTAppInfo" = Field(description="the player's cursed technique application voted")
 
-
-
 """ 
 
     location_id: int = Field(foreign_key='location.id')
     location: "Location" = Relationship(back_populates="matches")
-    
-    
     
 
 class BaseLocation(SQLModel):

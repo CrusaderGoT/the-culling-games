@@ -1,7 +1,8 @@
 from fastapi import Path, HTTPException, status
-from typing import Annotated
+from typing import Annotated, Literal
 from email_validator import validate_email, EmailNotValidError
 
+from app.models.barrier import BarrierRecord, BarrierTech
 from app.models.match import Match, MatchPlayerLink
 from ..models.colony import Colony
 from app.models.user import User
@@ -10,6 +11,7 @@ from app.utils.dependencies import session
 from sqlmodel import Session, and_, not_, select, exists
 from random import sample, choice
 from datetime import datetime, timedelta
+import time
 
 
 def usernamedb(username: str):
@@ -209,6 +211,84 @@ def random_players_for_match(session: session, players_not_in_part: list[Player]
         player1, player2 = sample(players_not_in_part, 2)
     return [player1, player2]
 
-def round_points(points: float):
-    'returns a 1 decimal place precision of a float. e.g. 1.2'
-    return round(points, 1)
+def calculate_points(player_points: float, points_to_action: float, on_action: Literal["minus", "plus"]):
+    '''
+    Calculates the point needed for a player action\n
+    raises a `HTTPException 428` if player points are not enough.\n
+    returns a 1 decimal place | 2 precision of a float. e.g. 1.2
+    '''
+    # check if player points is enough
+    if player_points >= points_to_action: # player has enough points
+        # check which action to perform
+        match on_action:
+            case "plus":
+                updated_points = round(player_points + points_to_action, 1)
+            case "minus":
+                updated_points = round(player_points - points_to_action, 1)
+            case _:
+                raise HTTPException(status.HTTP_400_BAD_REQUEST, "points error occured.")
+        return updated_points
+    else:
+        msg = f"not enough points; need {points_to_action}, have {player_points}"
+        raise HTTPException(status.HTTP_428_PRECONDITION_REQUIRED, detail=msg)
+
+
+def activate_domain(
+        barrier_tech: BarrierTech,
+        barrier_record: BarrierRecord | None,
+        match: Match,
+        session: session):
+    'function for activating a domain'
+    # activate domain
+    barrier_tech.domain_expansion = True
+    # set deactivation time
+    barrier_tech.de_end_time = datetime.now() + timedelta(minutes=1)
+    # deduct points
+    barrier_tech.player.points = calculate_points(barrier_tech.player.points, 10, "minus")
+    # add/record the detail
+    # the barrier detail should commited here
+    if barrier_record is not None:
+        barrier_record.domain_counter += 1
+        session.add(barrier_record)
+    else: # no barrier detail
+        new_barrier_detail = BarrierRecord(
+            domain_counter=1,
+            match=match,
+            barrier_tech=barrier_tech
+        )
+        session.add(new_barrier_detail)
+    # commits
+    session.add(barrier_tech)
+    session.commit()
+    session.refresh(barrier_tech)
+    return  barrier_tech
+
+
+def deactivate_domain(barrier_tech: BarrierTech, session: session):
+    'function for the background task of deactivating a domain'
+    active = True
+    while active:
+        now = datetime.now() # the current time
+        # check if there is an end time for the specified barrier tech DE
+        if barrier_tech.de_end_time is None:
+            # deactivate domain
+            barrier_tech.de_end_time = None
+            barrier_tech.domain_expansion = False
+            session.add(barrier_tech)
+            session.commit()
+            active = False
+            break
+        # see if time for deactivation has reached
+        elif now >= barrier_tech.de_end_time:
+            # deactivate domain
+            barrier_tech.de_end_time = None
+            barrier_tech.domain_expansion = False
+            session.add(barrier_tech)
+            session.commit()
+            active = False
+            break
+        else:
+            # add a time pause if deactivation time is still far
+            remaining_time = (barrier_tech.de_end_time - now).total_seconds()
+            time.sleep(remaining_time // 2) # remaining time divide by 2
+            continue # loop again

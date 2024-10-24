@@ -10,7 +10,7 @@ from app.utils.config import Tag
 from fastapi.security import  OAuth2PasswordRequestForm
 from app.routers import admins, matches, players, users
 from ..utils.logic import usernamedb
-#from ..models.admin import AdminUser
+from ..models.admin import AdminUser
 
 
 # ROUTERS
@@ -68,7 +68,7 @@ def create_user(session: session,
             update = {
                 "password": hashed_pw, # store hashed password
                 "usernamedb": l_username, # strore the usernamedb in lowercase
-                #"admin": AdminUser(is_superuser=True)
+                "admin": AdminUser(is_superuser=True)
             }
             new_user_db = User.model_validate(user, update=update)
             session.add(new_user_db)

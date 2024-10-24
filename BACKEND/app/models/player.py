@@ -2,10 +2,10 @@
 '''module for defining the `players` `cursed technique` and `cursed technique applications` models that will be used to perform CRUD operation
 on the database and will be used as schemas/response/request data in the API schema. All SQLModels'''
 from sqlmodel import Field, Relationship, SQLModel
-from datetime import date, datetime
+from datetime import date
+from app.models.barrier import BarrierTech, BarrierTechInfo
 from app.models.base import (BaseMatchInfo, BasePlayer, BasePlayerInfo, BaseCT, BaseCTInfo,
-                            BaseCTApp, BaseUserInfo, BaseColonyInfo, MatchPlayerLink,
-                            BaseBarrierTech)
+                            BaseCTApp, BaseUserInfo, BaseColonyInfo, MatchPlayerLink)
 from typing import TYPE_CHECKING, Union
 if TYPE_CHECKING:
     from app.models.user import User
@@ -76,25 +76,7 @@ class CreateCTApp(BaseCTApp):
     'for creating a cursed technique application'
     pass
 
-# Advanced tech
-class BarrierTech(BaseBarrierTech, table=True):
-    '''
-    This is the class for any buffs to a vote.\n
-    This includes, `domain expansion, simple domain, binding vow`, etc.\n
-    It is called `BarrierTech` cos it sounds cool.
-    '''
-    id: int | None = Field(default=None, primary_key=True)
-    # parent rel
-    player_id: int | None = Field(default=None, foreign_key="player.id", ondelete="CASCADE")
-    player: "Player" = Relationship(back_populates="barrier_technique")
-    # the times are useful for know when to activate/deactivate the techniques
-    de_end_time: datetime | None = Field(default=None, description="the time a player cast their domain")
-    bv_end_time: datetime | None = Field(default=None, description="the time a player cast their binding_vow")
-    sd_end_time: datetime | None = Field(default=None, description="the time a player cast their simple_domain")
-
-class BarrierTechInfo(BaseBarrierTech):
-    id: int
-
+# Advanced Techniques
 # CLIENT SIDE RESPONSE MODELS
 class PlayerInfo(BasePlayerInfo):
     'Player info with cursed technique, user, and colony info'

@@ -1,14 +1,16 @@
 from sqlmodel import select, or_
+from app.models.barrier import BarrierTech
 from app.utils.logic import get_user, get_player, id_name_email
 from ..models.colony import Colony
 from ..models.user import User
+from ..models.barrier import BarrierRecord
 from app.models.player import (CreatePlayer, CreateCT, CreateCTApp,
                                 CTApp, CursedTechnique, Player,
                                 PlayerInfo, BasePlayerInfo,
-                                EditPlayer, EditCT, EditCTApp, BarrierTech)
+                                EditPlayer, EditCT, EditCTApp)
 from app.utils.config import Tag, UserException
 from app.utils.dependencies import colony, session
-from app.utils.logic import points_required_for_upgrade, round_points
+from app.utils.logic import points_required_for_upgrade, calculate_points
 from ..auth.dependencies import oauth2_scheme, active_user
 from fastapi import APIRouter, Body, HTTPException, Path, status, Depends, Query
 from typing import Annotated, Union
@@ -213,7 +215,7 @@ def upgrade_player(player_id: Annotated[int, Path(description="the player id")],
                     # upgrade and deduct points
                     player.grade = grade_up
                     # deduct points used
-                    player.points = round_points(player.points-needed_points)
+                    player.points = calculate_points(player.points, needed_points, "minus")
                     session.add(player)
                     session.commit()
                     session.refresh(player)
@@ -226,7 +228,5 @@ def upgrade_player(player_id: Annotated[int, Path(description="the player id")],
 
 @router.get('/bt/rr')
 def bt(session: session):
-    b = session.exec(select(CTApp)).all()
-    session.delete(b[0])
-    session.commit()
+    b = session.exec(select(BarrierRecord)).all()
     return b

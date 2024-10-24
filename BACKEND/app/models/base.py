@@ -411,10 +411,20 @@ class BaseBarrierTech(SQLModel):
     domain_expansion: bool = Field(default=False, description="the player's domain expansion")
     binding_vow: bool = Field(default=False, description="the player's binding vow")
     simple_domain: bool = Field(default=False, description="the player's simple domain")
+    
+    #### The times are useful for know when to activate/deactivate the techniques
+    de_end_time: datetime | None = Field(default=None, description="the time a player cast their domain")
+    bv_end_time: datetime | None = Field(default=None, description="the time a player cast their binding_vow")
+    sd_end_time: datetime | None = Field(default=None, description="the time a player cast their simple_domain")
     """
     domain_expansion: bool = Field(default=False, description="the player's domain expansion")
     binding_vow: bool = Field(default=False, description="the player's binding vow")
     simple_domain: bool = Field(default=False, description="the player's simple domain")
+    
+    # the times are useful for know when to activate/deactivate the techniques
+    de_end_time: datetime | None = Field(default=None, description="the time a player cast their domain")
+    bv_end_time: datetime | None = Field(default=None, description="the time a player cast their binding_vow")
+    sd_end_time: datetime | None = Field(default=None, description="the time a player cast their simple_domain")
 
 
 class BaseVote(SQLModel):
