@@ -195,6 +195,15 @@ def domain_expansion(player_id: Annotated[int, Path()],
                     if barrier_tech is None: # player has no barrier technique
                         msg = f"'{player.name}' doesn't have a barrier technique, upgrade the player to grade 2, to unlock Barrier Techniques"
                         raise HTTPException(status.HTTP_428_PRECONDITION_REQUIRED, msg)
+                    
+                    elif barrier_record is not None and (count := barrier_record.domain_counter) >= 5:
+                        # check if they have reach limit for domain expansion in a match
+                        if ((end_time := barrier_tech.de_end_time) is not None
+                            and end_time <= datetime.now()
+                            or barrier_tech.domain_expansion == True): # should have ended, but backgroud task failed
+                            # deactivate domain
+                            deactivate_domain(barrier_tech, session)
+                        raise HTTPException(status.HTTP_423_LOCKED, f"domain can only be activated {count} times per match")
                 
                     elif (end_time := barrier_tech.de_end_time) and barrier_tech.domain_expansion == True:
                     # has a barrier tech; check if domain is currently active
@@ -212,10 +221,6 @@ def domain_expansion(player_id: Annotated[int, Path()],
                                     round((barrier_tech.de_end_time - datetime.now()).total_seconds(), 1)
                                 } seconds."
                             )
-                    
-                    elif barrier_record is not None and (count := barrier_record.domain_counter) >= 5:
-                        # check if they have reach limit for domain expansion in a match
-                        raise HTTPException(status.HTTP_423_LOCKED, f"domain can only be activated {count} times per match")
                     
                     else: # no domain activated or no deactivation time
                         barrier_tech = activate_domain(barrier_tech, barrier_record, match, session)

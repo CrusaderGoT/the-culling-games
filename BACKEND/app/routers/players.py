@@ -228,5 +228,5 @@ def upgrade_player(player_id: Annotated[int, Path(description="the player id")],
 
 @router.get('/bt/rr')
 def bt(session: session):
-    b = session.exec(select(BarrierRecord)).all()
+    b = session.exec(select(BarrierTech)).all()
     return b
