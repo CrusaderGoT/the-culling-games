@@ -132,11 +132,33 @@ def vote(
                             casted_vote = Vote.model_validate(vote, update=update_vote)
                             new_votes.append(casted_vote)
 
-                            # Add points to the player
+                            # Add points to the player, based on barrier techniques active
                             player = get_player(session, vote.player_id)
                             if player is not None:
-                                # check if domain is activated, blah blah blah
-                                player.points = calculate_points(player.points, VOTE_POINT, "plus")  # Increment player's points
+                                # get the opposing player
+                                opposing_player = [p for p in match.players if p.id != player.id][0]
+                                # vote methods if/elif/else
+                                if (player.barrier_technique.binding_vow == True
+                                    and len(prev_votes) >= 3):
+                                    # limit vote to player who activated binding vow to three, for as long as it is active
+                                    raise HTTPException(status.HTTP_425_TOO_EARLY, "binding vow active, cannot vote more than 3 times")
+                                
+                                if (binded_vow := [br.binding_vow_counter for br in match.barrier_records
+                                                    if br.barrier_tech_id == player.barrier_technique.id][0]
+                                    ) and player.barrier_technique.binding_vow == False:
+                                    # checks if player activated a binding vow that has paid of
+                                    VOTE_POINT += binded_vow # increase VOTE_POINT by 1
+                                elif (player.barrier_technique.domain_expansion == True
+                                    and opposing_player.barrier_technique.simple_domain == False):
+                                    # check if domain is activated, against p2 simple domain
+                                    domain_points = VOTE_POINT * 4 # increase vote points
+                                    player.points = calculate_points(player.points, domain_points, "plus")  # Increment player's points
+                                elif opposing_player.barrier_technique.simple_domain == True:
+                                    # if opponents simple domain is active, reduce vote points
+                                    simple_domain_points = VOTE_POINT / 2
+                                    player.points = calculate_points(player.points, simple_domain_points, "plus")
+                                else:
+                                    player.points = calculate_points(player.points, VOTE_POINT, "plus")  # Increment player's points
                                 session.add(player)
                 else: # runs after the loop
                     session.add_all(new_votes)
