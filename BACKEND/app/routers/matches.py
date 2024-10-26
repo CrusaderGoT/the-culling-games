@@ -207,7 +207,7 @@ def domain_expansion(player_id: Annotated[int, Path()],
                 
                     elif (end_time := barrier_tech.de_end_time) and barrier_tech.domain_expansion == True:
                     # has a barrier tech; check if domain is currently active
-                    # modify to accout for situations where one of the is True-ish/
+                    # modify to accout for situations where one of them is True-ish/
                     # also if de end time has passed, that means that domain should have ended but the backgroud task failed
                         if end_time <= datetime.now(): # should have ended, but backgroud task failed
                             barrier_tech = activate_domain(barrier_tech, barrier_record, match, session)

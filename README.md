@@ -1,4 +1,3 @@
-
 # The Culling Games
 *This is a repository for the Implementation of the culling games from reddit, r/thecullinggames as a website/api.*
 *Engineered using FastAPI and NextJS.*
@@ -52,4 +51,4 @@ In the `BACKEND` directory in vscode, run `pip install -r requirements.txt`
 This doesn't cover everything needed to be done, it is the core things i can think of for now.
 So if you have any contribution, mostly programming , and design skills, do reach out to me on github or reddit.
 
-# **Repost on any relevant group, that could get us progress. Thanks.**
+# **Repost on any relevant Jujutsu Kaisen group, that could get us progress. Thanks.**
