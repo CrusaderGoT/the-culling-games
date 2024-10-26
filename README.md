@@ -48,6 +48,8 @@ In the `BACKEND` directory in vscode, run `pip install -r requirements.txt`
 
 - **Domain Name/Deployment**: A domain name has to be registered, and then deployment.
 
+- **Documentaion**: This will be documenting the intricates of the app on the  README, helping to correct grammar, or even improving code documentation.
+
 This doesn't cover everything needed to be done, it is the core things i can think of for now.
 So if you have any contribution, mostly programming , and design skills, do reach out to me on github or reddit.
 
