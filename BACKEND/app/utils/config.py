@@ -34,6 +34,6 @@ class Tag(str, Enum):
     'tags for path operation decorators'
     user = 'users'
     player = 'players'
-    auth = 'authentication'
+    auth = 'auth'
     match = 'matches'
     admin = 'admin'
