@@ -1,6 +1,6 @@
 """the module for barrier classes"""
 
-from app.models.base import BaseBarrierTech
+from ..models.base import BaseBarrierTech
 
 from typing import TYPE_CHECKING
 

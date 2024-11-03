@@ -75,6 +75,8 @@ def my_player(session: session, current_user: active_user):
 def a_player(player_id: Annotated[int, Path()], session: session):
     player = get_player(session, player_id)
     if player:
+        player.barrier_technique.binding_vow = True
+        session.commit()
         return player
     else:
         err_msg = f"player ID '{player_id}' not found"
@@ -228,5 +230,6 @@ def upgrade_player(player_id: Annotated[int, Path(description="the player id")],
 
 @router.get('/bt/rr')
 def bt(session: session):
-    b = session.exec(select(BarrierTech)).all()
+    b = session.exec(select(BarrierTech).where(BarrierTech.id == 3)).first()
+    
     return b

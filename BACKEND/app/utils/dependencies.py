@@ -1,11 +1,12 @@
 '''module for defining fastapi dependencies. Typically for codes that are repeated a lot and used in path operations'''
-from app.database.pgsql import engine
+from ..database.pgsql import engine
 from sqlmodel import Session, select, func
-from app.models.colony import Colony
-from app.models.player import Player
-from app.models.base import Country
+from ..models.colony import Colony
+from ..models.player import Player
+from ..models.base import Country
 from random import choice
 from typing import Annotated
+import pytest
 from fastapi import Depends
 
 # Get Session Dependency

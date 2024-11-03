@@ -1,7 +1,5 @@
 '''module for the match routers'''
-from app.utils.logic import activate_domain
-from app.utils.logic import deactivate_domain
-from ..models.barrier import BarrierRecord, BarrierTech, BarrierTechInfo
+from ..models.barrier import BarrierTech, BarrierTechInfo
 from ..models.player import Player, CTApp, CursedTechnique
 from ..models.match import Match, MatchInfo, CastVote, Vote
 from ..models.admin import Permission
@@ -10,11 +8,15 @@ from ..models.user import User
 from fastapi import APIRouter, Depends, Query, HTTPException, status, Path, Body, BackgroundTasks
 from ..auth.dependencies import oauth2_scheme, admin_user, active_user
 from ..utils.dependencies import session
-from ..utils.logic import  get_match, ongoing_match, get_player, get_last_created_match, create_new_match, calculate_points
 from ..utils.config import Tag, UserException
 from typing import Annotated
 from sqlmodel import select
 from datetime import datetime
+from app.api.settings import TIME_AMT
+from app.utils.logic import (
+    activate_domain, deactivate_domain, get_vote_point, conditions_for_barrier_tech,
+    get_match, ongoing_match, get_player, get_last_created_match, create_new_match,
+    activate_simple_domain, deactivate_simple_domain)
 
 # write you match api routes here
 
@@ -82,18 +84,18 @@ def vote(
     voter: active_user,
     votes: Annotated[list[CastVote],
                     Body(min_length=1 ,max_length=5)]
-):
-    """function for casting votes\n
-    - a match id is required
-    - if invalid vote cursed application id or player id is submitted, they are ignored.
+    ):
     """
-    VOTE_POINT = 0.2
+    function for casting votes\n
+    - a match id is required
+    - if an invalid vote cursed application id or player id is submitted, they are ignored.
+    """
     # first check if match exists
     match = get_match(session, match_id)
     if match is not None:
         # check if match still ongoing
-        if ongoing_match(match) == True:
-            # check if user has voted before
+        if ongoing_match(match) == False:
+            # check if user has voted before, and get previous votes
             prev_votes = session.exec(
                 select(Vote)
                 .join(User)
@@ -101,8 +103,8 @@ def vote(
                 .where(Vote.match_id == match_id)
                 .where(User.id == voter.id)
             ).all()
-            if len(prev_votes) >= 5: # if it has exceeded 5 votes, no more votes
-                raise HTTPException(status.HTTP_423_LOCKED, "vote limit reached")
+            if (vote_count := len(prev_votes)) >= 5: # if it has exceeded 5 votes, no more votes
+                raise HTTPException(status.HTTP_423_LOCKED, f"{vote_count} votes limit reached")
             else:
                 # get the players fighting, and their ct apps, and store them in a dict
                 fighters_dict = dict()
@@ -114,10 +116,11 @@ def vote(
                     .where(Match.id == match.id)
                 ):
                     # Add ct_app_id to the corresponding player_id's list
-                    if player_id not in fighters_dict:
+                    if player_id not in fighters_dict and player_id is not None:
                         fighters_dict[player_id] = []
                     fighters_dict[player_id].append(ct_app_id)
-
+    
+                print(fighters_dict, 'fightttttttttttt')
                 new_votes: list[Vote] = list() # votes to be added and commited to session
                 # now iterate over the votes and cast them for correct player ct app
                 for vote in votes:
@@ -127,39 +130,21 @@ def vote(
                         # Check for duplicate votes
                         if (vote.ct_app_id not in [v.ct_app_id for v in new_votes] and
                             vote.ct_app_id not in [v.ct_app_id for v in prev_votes]):
-                            # Create and add the vote
-                            update_vote = {"user": voter, "match": match}
-                            casted_vote = Vote.model_validate(vote, update=update_vote)
-                            new_votes.append(casted_vote)
 
                             # Add points to the player, based on barrier techniques active
                             player = get_player(session, vote.player_id)
                             if player is not None:
-                                # get the opposing player
+                                # get the opposing player, for their BT check against player
                                 opposing_player = [p for p in match.players if p.id != player.id][0]
-                                # vote methods if/elif/else
-                                if (player.barrier_technique.binding_vow == True
-                                    and len(prev_votes) >= 3):
-                                    # limit vote to player who activated binding vow to three, for as long as it is active
-                                    raise HTTPException(status.HTTP_425_TOO_EARLY, "binding vow active, cannot vote more than 3 times")
-                                
-                                if (binded_vow := [br.binding_vow_counter for br in match.barrier_records
-                                                    if br.barrier_tech_id == player.barrier_technique.id][0]
-                                    ) and player.barrier_technique.binding_vow == False:
-                                    # checks if player activated a binding vow that has paid of
-                                    VOTE_POINT += binded_vow # increase VOTE_POINT by 1
-                                elif (player.barrier_technique.domain_expansion == True
-                                    and opposing_player.barrier_technique.simple_domain == False):
-                                    # check if domain is activated, against p2 simple domain
-                                    domain_points = VOTE_POINT * 4 # increase vote points
-                                    player.points = calculate_points(player.points, domain_points, "plus")  # Increment player's points
-                                elif opposing_player.barrier_technique.simple_domain == True:
-                                    # if opponents simple domain is active, reduce vote points
-                                    simple_domain_points = VOTE_POINT / 2
-                                    player.points = calculate_points(player.points, simple_domain_points, "plus")
-                                else:
-                                    player.points = calculate_points(player.points, VOTE_POINT, "plus")  # Increment player's points
-                                session.add(player)
+                                # get the vote point
+                                vote_point = get_vote_point(match, prev_votes,
+                                                            player.barrier_technique,
+                                                            opposing_player.barrier_technique)
+                                # Create and add the vote
+                                update_vote = {"user": voter, "match": match, "point": vote_point}
+                                casted_vote = Vote.model_validate(vote, update=update_vote)
+                                new_votes.append(casted_vote)
+
                 else: # runs after the loop
                     session.add_all(new_votes)
                     session.commit()
@@ -178,83 +163,109 @@ def domain_expansion(player_id: Annotated[int, Path()],
                     match_id: Annotated[int, Query()],
                     current_user: active_user,
                     session: session,
-                    background: BackgroundTasks):
+                    background: BackgroundTasks) -> BarrierTech:
     '''Activates the domain of a player in an ongoing match.\n
     Buffs the vote to x4 per vote.\n
-    Negated by simple domain'''
+    Weakend by simple domain'''
     # first get the match, check if it is ongoing
     match = session.get(Match, match_id)
     player = session.get(Player, player_id)
 
-    if player is not None:
-        if match is not None:
-            if player.user_id != current_user.id:
-                msg = f"cannot activate domain of another player"
-                raise UserException(current_user, status.HTTP_406_NOT_ACCEPTABLE, msg)
-            else:
-                if ongoing_match(match) == True:
-                    # check if domain has been actvated before
-                    # get the Barrier technique of that player for the match
-                    stmt = (
-                        select(BarrierTech)
-                        .join(Player)
-                        .where(BarrierTech.player_id == player.id)
-                    )
-                    barrier_tech = session.exec(stmt).first()
-
-                    # get the barrier details of the player for this match
-                    bt_id = barrier_tech.id if barrier_tech else None # the barrier tech ID, else None
-                    
-                    st = (
-                        select(BarrierRecord)
-                        .join(BarrierTech)
-                        .join(Match)
-                        .where(BarrierRecord.barrier_tech_id == bt_id)
-                        .where(BarrierRecord.match_id == match.id)
-                    )
-                    barrier_record = session.exec(st).first()
-
-                    if barrier_tech is None: # player has no barrier technique
-                        msg = f"'{player.name}' doesn't have a barrier technique, upgrade the player to grade 2, to unlock Barrier Techniques"
-                        raise HTTPException(status.HTTP_428_PRECONDITION_REQUIRED, msg)
-                    
-                    elif barrier_record is not None and (count := barrier_record.domain_counter) >= 5:
-                        # check if they have reach limit for domain expansion in a match
-                        if ((end_time := barrier_tech.de_end_time) is not None
-                            and end_time <= datetime.now()
-                            or barrier_tech.domain_expansion == True): # should have ended, but backgroud task failed
-                            # deactivate domain
-                            deactivate_domain(barrier_tech, session)
-                        raise HTTPException(status.HTTP_423_LOCKED, f"domain can only be activated {count} times per match")
-                
-                    elif (end_time := barrier_tech.de_end_time) and barrier_tech.domain_expansion == True:
-                    # has a barrier tech; check if domain is currently active
-                    # modify to accout for situations where one of them is True-ish/
-                    # also if de end time has passed, that means that domain should have ended but the backgroud task failed
-                        if end_time <= datetime.now(): # should have ended, but backgroud task failed
-                            barrier_tech = activate_domain(barrier_tech, barrier_record, match, session)
-                            # schedule background task for deactivation
-                            background.add_task(deactivate_domain, barrier_tech, session)
-                            return barrier_tech
-                        else: # active
-                            raise HTTPException(
-                                status.HTTP_409_CONFLICT,
-                                f"Domain is already active, deactivates in {
-                                    round((barrier_tech.de_end_time - datetime.now()).total_seconds(), 1)
-                                } seconds."
-                            )
-                    
-                    else: # no domain activated or no deactivation time
-                        barrier_tech = activate_domain(barrier_tech, barrier_record, match, session)
-                        # schedule background task for deactivation
-                        background.add_task(deactivate_domain, barrier_tech, session)
-                        return barrier_tech
-                    
-                else: # match has ended
-                    raise HTTPException(status.HTTP_423_LOCKED, f"Match ID: {match_id}, has Ended")
-        else:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, f"Match ID: {match_id}, does not exist.")
-    else:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, f"Player {player_id}, does not exist.")
+    # get the condition necessary for a BT
+    barrier_tech, barrier_record, match, _ = conditions_for_barrier_tech(
+        player=player, match=match, player_id=player_id,
+        match_id=match_id,
+        current_user=current_user, session=session)
     
+    if barrier_record is not None and (count := barrier_record.domain_counter) >= TIME_AMT["DOMAIN"]:
+        # check if they have reach limit for domain expansion in a match
+        if ((end_time := barrier_tech.de_end_time) is not None
+            and end_time <= datetime.now()
+            or barrier_tech.domain_expansion == True): # should have ended, but backgroud task failed
+            # deactivate domain
+            deactivate_domain(barrier_tech, session)
+        raise HTTPException(status.HTTP_423_LOCKED, f"domain can only be activated {count} times per match")
 
+    elif (end_time := barrier_tech.de_end_time) and barrier_tech.domain_expansion == True:
+    # has a barrier tech; check if domain is currently active
+    # modify to accout for situations where one of them is True-ish/
+    # also if de end time has passed, that means that domain should have ended but the backgroud task failed
+        if end_time <= datetime.now(): # should have ended, but backgroud task failed
+            barrier_tech = activate_domain(barrier_tech, barrier_record, match, session)
+            # schedule background task for deactivation
+            background.add_task(deactivate_domain, barrier_tech, session)
+            return barrier_tech
+        else: # active
+            raise HTTPException(
+                status.HTTP_409_CONFLICT,
+                f"Domain is already active, deactivates in {
+                    round((barrier_tech.de_end_time - datetime.now()).total_seconds(), 1)
+                } seconds."
+            )
+        
+    else: # no domain activated or no deactivation time
+        barrier_tech = activate_domain(barrier_tech, barrier_record, match, session)
+        # schedule background task for deactivation
+        background.add_task(deactivate_domain, barrier_tech, session)
+        return barrier_tech
+                    
+               
+    
+@router.post("/activate/simple/{player_id}", response_model=BarrierTechInfo)
+def simple_domain(player_id: Annotated[int, Path()],
+                           match_id: Annotated[int, Query()],
+                           current_user: active_user,
+                           session: session,
+                           background: BackgroundTasks):
+    '''Activates the simple domain of a player in an ongoing match.\n
+    Which either\n\t
+    * Reduces the opponent's vote to half per vote, If opponent doesn't have domain expansion active.\n
+    or
+    * If opponent's domain is expanded, the simple domain weakens the domain expansion effect'''
+    match_none = session.get(Match, match_id)
+    player = session.get(Player, player_id)
+
+    barrier_tech, barrier_record, match, _ = conditions_for_barrier_tech(
+        player=player, match=match_none, player_id=player_id, match_id=match_id,
+        current_user=current_user, session=session)
+    
+    if barrier_record is not None and (count := barrier_record.simple_domain_counter) >= TIME_AMT["SIMPLE_DOMAIN"]:
+        # check if they have reached limit for simple domain in a match
+        if ((end_time := barrier_tech.sd_end_time) is not None
+            and end_time <= datetime.now()
+            or barrier_tech.simple_domain == True): # should have ended, but backgroud task failed
+            # deactivate domain
+            deactivate_simple_domain(barrier_tech, session)
+        raise HTTPException(status.HTTP_423_LOCKED, f"simple domain can only be activated {count} times per match")
+
+    elif (end_time := barrier_tech.sd_end_time) and barrier_tech.simple_domain == True:
+    # has a barrier tech; check if simple domain is currently active
+    # modify to accout for situations where one of them is True-ish/
+    # also if sd end time has passed, that means that simple domain should have ended but the backgroud task failed
+        if end_time <= datetime.now(): # should have ended, but backgroud task failed
+            barrier_tech = activate_simple_domain(barrier_tech, barrier_record, match, session)
+            # schedule background task for deactivation
+            background.add_task(deactivate_simple_domain, barrier_tech, session)
+            return barrier_tech
+        else: # active
+            raise HTTPException(
+                status.HTTP_409_CONFLICT,
+                f"Simple Domain is already active, deactivates in {
+                    round((barrier_tech.sd_end_time - datetime.now()).total_seconds(), 1)
+                } seconds."
+            )
+        
+    else: # no simple domain activated or no deactivation time
+        barrier_tech = activate_simple_domain(barrier_tech, barrier_record, match, session)
+        # schedule background task for deactivation
+        background.add_task(deactivate_simple_domain, barrier_tech, session)
+        return barrier_tech
+
+
+"""
+# calculate match victor n=qnd
+should run at the end of a match, to prevent increasing player points during a match
+# add the vote points to players points
+    player.points += vote_point
+    # add player to session
+    session.add(player)"""

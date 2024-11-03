@@ -4,12 +4,12 @@ The models that will be used as schemas/response/request data in the API schema.
 from sqlmodel import SQLModel, Field, Relationship
 from pydantic import EmailStr, StringConstraints, ValidationInfo, field_validator
 from datetime import date
-from app.models.base import (BaseUser, BaseUserInfo, Country, BasePlayerInfo, BaseAdminInfo)
+from ..models.base import (BaseUser, BaseUserInfo, Country, BasePlayerInfo, BaseAdminInfo)
 from typing import Union, TYPE_CHECKING, Annotated
 from enum import Enum
 from .base import username_pydantic_regex
 if TYPE_CHECKING:
-    from app.models.player import Player
+    from ..models.player import Player
     from .match import Vote
     from .admin import AdminUser
 

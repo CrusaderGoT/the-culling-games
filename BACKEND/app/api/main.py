@@ -79,3 +79,5 @@ def create_user(session: session,
             err_msg = f"passwords do not match"
             raise HTTPException(status.HTTP_412_PRECONDITION_FAILED, detail=err_msg)
 
+        
+

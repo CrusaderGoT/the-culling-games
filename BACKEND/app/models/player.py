@@ -3,14 +3,14 @@
 on the database and will be used as schemas/response/request data in the API schema. All SQLModels'''
 from sqlmodel import Field, Relationship, SQLModel
 from datetime import date
-from app.models.barrier import BarrierTech, BarrierTechInfo
-from app.models.base import (BaseMatchInfo, BasePlayer, BasePlayerInfo, BaseCT, BaseCTInfo,
+from ..models.barrier import BarrierTech, BarrierTechInfo
+from ..models.base import (BaseMatchInfo, BasePlayer, BasePlayerInfo, BaseCT, BaseCTInfo,
                             BaseCTApp, BaseUserInfo, BaseColonyInfo, MatchPlayerLink)
 from typing import TYPE_CHECKING, Union
 if TYPE_CHECKING:
-    from app.models.user import User
-    from app.models.colony import Colony
-    from app.models.match import Match, Vote
+    from ..models.user import User
+    from ..models.colony import Colony
+    from ..models.match import Match, Vote
 
 
 # PLAYER
@@ -23,7 +23,7 @@ class Player(BasePlayer, table=True):
     # child relations
     cursed_technique: "CursedTechnique" = Relationship(back_populates="player")
     # barrier techniques are only available to player of grade 2 up, implement later.
-    barrier_technique: "BarrierTech" = Relationship(back_populates="player")
+    barrier_technique: Union["BarrierTech", None] = Relationship(back_populates="player")
     matches: list["Match"] = Relationship(back_populates="players", link_model=MatchPlayerLink)
     wins: list["Match"] = Relationship(back_populates="winner")
     votes: list["Vote"] = Relationship(back_populates="player")

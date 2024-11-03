@@ -1,18 +1,18 @@
 from fastapi import Path, HTTPException, status
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Sequence
 from email_validator import validate_email, EmailNotValidError
-
-from app.models.barrier import BarrierRecord, BarrierTech
-from app.models.match import Match, MatchPlayerLink
-from ..models.colony import Colony
-from app.models.user import User
-from ..models.player import Player
+from app.api.settings import ACT_POINT, TIME_DUR
+from app.utils.config import UserException
 from app.utils.dependencies import session
 from sqlmodel import Session, and_, not_, select, exists
 from random import sample, choice
 from datetime import datetime, timedelta
 import time
-
+from app.models.barrier import BarrierRecord, BarrierTech
+from app.models.match import Match, MatchPlayerLink, Vote
+from ..models.colony import Colony
+from app.models.user import User
+from ..models.player import Player
 
 def usernamedb(username: str):
     'returns the username as stored in the DB -> lowercase'
@@ -69,16 +69,6 @@ def get_player(session: session, player_id: int):
         return player
     else:
         return None
-    
-def match_user_exists(session: session, match_id: int, user_id: int | str):
-        'function for check if both `match` and `user` exist. raises a HTTPException otherwise.'
-        match = get_match(session, match_id)
-        user = get_user(session, user_id)
-        if match is None: # match does't exist
-            raise HTTPException(status.HTTP_404_NOT_FOUND, f"match with id {match_id} not found")
-        elif user is None: # user doesn't exists
-            raise HTTPException(status.HTTP_404_NOT_FOUND, f"match with id {match_id} not found")
-        return match, user
 
 def get_players_not_in_part(colony_id: int, part: int, session: Session):
     """
@@ -143,11 +133,11 @@ id_name_email = Annotated[int | str, Path(description="The user's Id, Username, 
 \nActually accepts any int or str. The name is for convention."""
 
 def ongoing_match(match: Match):
-        'checks if a match is still ongoing, returns false if match is over, otherwise true'
-        time_now = datetime.now()
-        end_time = match.end
-        ongoing = time_now < end_time
-        return ongoing
+    'checks if a match is still ongoing, returns false if match is over, otherwise true'
+    time_now = datetime.now()
+    end_time = match.end
+    ongoing = time_now < end_time
+    return ongoing
 
 
 def points_required_for_upgrade(grade: Player.Grade):
@@ -182,7 +172,7 @@ def create_new_match(session: session, part: int):
         players = random_players_for_match(session, players_not_in_part, colony_id) # type: ignore ; list same as Sequence
         # create match
         begin = datetime.now() + timedelta(minutes=2)
-        end = begin + timedelta(hours=24)
+        end = begin + timedelta(minutes=10)
         new_match = Match(begin=begin, end=end, part=part,
                         colony_id=colony_id, players=players)
         return new_match
@@ -242,9 +232,9 @@ def activate_domain(
     # activate domain
     barrier_tech.domain_expansion = True
     # set deactivation time
-    barrier_tech.de_end_time = datetime.now() + timedelta(minutes=1)
+    barrier_tech.de_end_time = datetime.now() + timedelta(minutes=TIME_DUR["DOMAIN_TIME"])
     # deduct points
-    barrier_tech.player.points = calculate_points(barrier_tech.player.points, 10, "minus")
+    barrier_tech.player.points = calculate_points(barrier_tech.player.points, ACT_POINT["ACT_DOMAIN"], "minus")
     # add/record the detail
     # the barrier detail should commited here
     if barrier_record is not None:
@@ -264,12 +254,14 @@ def activate_domain(
     return  barrier_tech
 
 
+
+
 def deactivate_domain(barrier_tech: BarrierTech, session: session):
     'function for the background task of deactivating a domain'
     active = True
     while active:
         now = datetime.now() # the current time
-        # check if there is an end time for the specified barrier tech DE
+        # check if there is no end time for the specified barrier tech DE
         if barrier_tech.de_end_time is None:
             # deactivate domain
             barrier_tech.de_end_time = None
@@ -288,7 +280,196 @@ def deactivate_domain(barrier_tech: BarrierTech, session: session):
             active = False
             break
         else:
-            # add a time pause if deactivation time is still far
+            # add a time pause if deactivation time is still further
             remaining_time = (barrier_tech.de_end_time - now).total_seconds()
             time.sleep(remaining_time // 2) # remaining time divide by 2
             continue # loop again
+
+
+def get_vote_point(match:Match, prev_votes: Sequence[Vote],
+                   player_bt: BarrierTech | None, opposing_player_bt: BarrierTech | None) -> float:
+    'vote function for getting the vote point of a particular vote'
+
+    vote_point = ACT_POINT["VOTE_POINT"]
+    # OPTIONS CONTROL FLOW if/if/...
+    # 1. limit vote of player with an active binding vow to three, for as long as it is active
+    if (player_bt
+        and player_bt.binding_vow == True
+        and len(prev_votes) >= (limit := TIME_DUR["BINDING_LIMIT"])
+    ):
+        raise HTTPException(status.HTTP_425_TOO_EARLY, f"binding vow active, cannot vote more than {limit} times")
+
+    # 2. check if a player previously activated a binding vow that has paid off, in this match
+    # then increment the vote_point, even if other BTs are active, except binding vow BT
+    if (# this confirms a player has a BT, then confirms that the/a BT has been used in this match
+        player_bt and match.barrier_records
+        # it then tries to get the acculamted binding vow points of the player, if any
+        and (binded_vow := [br.binding_vow_counter for br in match.barrier_records
+                                if br.barrier_tech_id == player_bt.id])
+        # finally checks that the player isn't currently under a binding vow
+        and player_bt.binding_vow == False
+    ):
+        # ALL THESE CLAUSES MUST BE MET, HENCE THE 'and' OPERATORS.
+        vote_point += binded_vow[0] # increase vote_point by binding vow accumulated points
+
+    # STRICT CONTROL FLOW if/elif/else; only one of them runs
+    # 3. check if domain is activated and p2 simple domain isn't activated
+    if (# confirm the player has a barrier technique
+        player_bt
+        # then confirm that their DE is active
+        and player_bt.domain_expansion == True
+    ):
+        # Now check if opposing player has a barrier tech of their own
+        if (opposing_player_bt
+            # check if their simple domain is active
+            and opposing_player_bt.simple_domain == True
+        ):
+            # players DE effect is reduced by half if so
+            vote_point *= ACT_POINT["DOMAIN_GAIN"] / 2
+        else: # opposing player doesn't have an activated simple domain
+            vote_point *= ACT_POINT["DOMAIN_GAIN"] # increase vote points
+
+    # 4. Check if the opposing player has an active simple domain, outside of defending a DE
+    # no need to check if player has their DE deactivated, since the above CONTROL FLOW
+    # would have run, skipping this one; for this one to run implies player no DE or BT.
+    elif (# check if opposing player has a barrier tech
+        opposing_player_bt
+        # and their simple domain is activated
+        and opposing_player_bt.simple_domain == True):
+        # if opponents simple domain is active, reduce vote points
+        vote_point /= ACT_POINT["SIMPLE_GAIN"]
+    # 5. else no BT shenanigans
+    else:
+        vote_point = vote_point
+
+    return round(vote_point, 1)
+
+
+def conditions_for_barrier_tech(session:session, player_id: int, match_id: int,
+                               player: Player | None, match: Match | None,
+                               current_user: User):
+    '''
+    function for meeting the conditions nesseccary for the use of a barrier tech.
+    i.e, check if player has a barrier technique.\n
+    Otherwise raise a `HTTPException` error.\n
+    Conditions:\n\t
+    * match must exist
+    * player must exist
+    * player must have a barrier technique; player of grade 2 up
+    \nreturns a tuple of `BarrierTech`, `BarrierRecord` if any, the `Match` the `BarrierTech` will be used in, and `Player`.
+    '''
+    if player is not None:
+        if match is not None:
+            if player.user_id != current_user.id:
+                msg = f"cannot activate simple domain of another player"
+                raise UserException(current_user, status.HTTP_406_NOT_ACCEPTABLE, msg)
+            else:
+                if ongoing_match(match) == True:
+                    # check if domain has been actvated before
+                    # get the Barrier technique of that player for the match
+                    stmt = (
+                        select(BarrierTech)
+                        .join(Player)
+                        .where(BarrierTech.player_id == player.id)
+                    )
+                    barrier_tech = session.exec(stmt).first()
+
+                    # get the barrier details of the player for this match
+                    bt_id = barrier_tech.id if barrier_tech else None # the barrier tech ID, else None
+
+                    st = (
+                        select(BarrierRecord)
+                        .join(BarrierTech)
+                        .join(Match)
+                        .where(BarrierRecord.barrier_tech_id == bt_id)
+                        .where(BarrierRecord.match_id == match.id)
+                    )
+                    barrier_record = session.exec(st).first()
+
+                    if barrier_tech is None: # player has no barrier technique
+                        msg = f"'{player.name}' doesn't have a barrier technique, upgrade the player to grade 2, to unlock Barrier Techniques"
+                        raise HTTPException(status.HTTP_428_PRECONDITION_REQUIRED, msg)
+                    else: # return the barrier tech and  barrier record if any
+                        return barrier_tech, barrier_record, match, player
+
+                else: # match has ended
+                    raise HTTPException(status.HTTP_423_LOCKED, f"Match ID: {match_id}, has Ended")
+
+        else:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, f"Match ID: {match_id}, does not exist.")
+    else:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, f"Player {player_id}, does not exist.")
+    
+def activate_simple_domain(barrier_tech: BarrierTech, barrier_record: BarrierRecord | None, match, session: session):
+    # activate simple domain
+    barrier_tech.simple_domain = True
+    # set deactivation time
+    barrier_tech.sd_end_time = datetime.now() + timedelta(minutes=TIME_DUR["SIMPLE_DOMAIN_TIME"])
+    # deduct points
+    barrier_tech.player.points = calculate_points(barrier_tech.player.points, ACT_POINT["ACT_SIMPLE"], "minus")
+    # add/record the detail
+    # the barrier detail should commited here
+    if barrier_record is not None:
+        barrier_record.simple_domain_counter += 1
+        session.add(barrier_record)
+    else: # no barrier detail
+        new_barrier_detail = BarrierRecord(
+            simple_domain_counter=1,
+            match=match,
+            barrier_tech=barrier_tech
+        )
+        session.add(new_barrier_detail)
+    # commits
+    session.add(barrier_tech)
+    session.commit()
+    session.refresh(barrier_tech)
+    return barrier_tech
+
+def deactivate_simple_domain(barrier_tech: BarrierTech, session: session):
+    'function for the background task of deactivating a simple domain'
+    active = True
+    while active:
+        now = datetime.now() # the current time
+        # check if there is no end time for the specified barrier tech SD
+        if barrier_tech.sd_end_time is None:
+            # deactivate simple domain
+            barrier_tech.sd_end_time = None
+            barrier_tech.simple_domain = False
+            session.add(barrier_tech)
+            session.commit()
+            active = False
+            break
+        # see if time for deactivation has reached
+        elif now >= barrier_tech.sd_end_time:
+            # deactivate domain
+            barrier_tech.de_end_time = None
+            barrier_tech.domain_expansion = False
+            session.add(barrier_tech)
+            session.commit()
+            active = False
+            break
+        else:
+            # add a time pause if deactivation time is still further
+            remaining_time = (barrier_tech.sd_end_time - now).total_seconds()
+            time.sleep(remaining_time // 2) # remaining time divide by 2
+            continue # loop again
+
+def activate_barrier_tech(technique: Literal["doamin_expansion", "simple_domain", "binding_vow"],
+                      barrier_tech: BarrierTech, barrier_record: BarrierRecord | None, match: Match,
+                      session: session):     
+    # make the variables depending on which technique to activate
+    match technique:
+        case "doamin_expansion":
+            tech = barrier_tech.domain_expansion
+            tech_end_time = barrier_tech.sd_end_time
+            player_points = barrier_tech.player.points
+            # add/record the detail
+            # the barrier detail should commited here
+            if barrier_record is not None:
+                barrier_record.domain_counter += 1
+            else: # no barrier detail
+                barrier_record = BarrierRecord(
+                    domain_counter=1,
+                    match=match,
+                    barrier_tech=barrier_tech
+                )

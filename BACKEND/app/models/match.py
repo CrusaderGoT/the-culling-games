@@ -2,14 +2,14 @@
 '''module for defining the `match` `location` and `vote` models that will be used to perform CRUD operation
 on the database and will be used as schemas/response/request data in the API schema. All SQLModels'''
 from sqlmodel import Field, Relationship, SQLModel
-from app.models.barrier import BarrierRecord
-from app.models.base import (BaseMatch, BaseMatchInfo, BaseVote, MatchPlayerLink,
+from ..models.barrier import BarrierRecord
+from ..models.base import (BaseMatch, BaseMatchInfo, BaseVote, MatchPlayerLink,
                              BaseColonyInfo, BasePlayerInfo, BaseUserInfo,
                              BaseCTAppInfo)
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from app.models.player import Player, CTApp
-    from app.models.colony import Colony
+    from ..models.player import Player, CTApp
+    from ..models.colony import Colony
     from .user import User
 
 # MATCH
@@ -48,6 +48,10 @@ class Vote(BaseVote, table=True):
 
     ct_app: "CTApp" = Relationship(back_populates="votes") # the cursed application being voted for
 
+    point: float = Field(description="the point a vote carries")
+
+    has_been_added: bool = Field(default=False, description="whether or not the vote point has been added to a player's point")
+
 class CastVote(SQLModel):
     'model for collecting data to cast a vote'
     player_id: int
@@ -59,6 +63,8 @@ class VoteInfo(SQLModel):
     user: "BaseUserInfo" = Field(description='the user that casted their votes')
     player: "BasePlayerInfo" = Field(description='the player voted')
     ct_app: "BaseCTAppInfo" = Field(description="the player's cursed technique application voted")
+    point: float
+    has_been_added: bool
 
 """ 
 
