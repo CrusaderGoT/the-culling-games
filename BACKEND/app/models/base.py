@@ -339,7 +339,6 @@ def load_table_names():
         'Load the table names dict from the JSON file'
         with open("app\\database\\table_names.json", 'r') as file:
             data: dict[str, str] = json.load(file)
-            print('check your model table function for printing, if you see the in termainal without running alembic')
         return data
 ModelName = Enum("ModelName", load_table_names())
 
