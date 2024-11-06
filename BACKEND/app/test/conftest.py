@@ -79,7 +79,7 @@ def test_client():
         with Session(test_engine) as session:
             setup_user(session)
         yield tst_cli
-    app.dependency_overrides = {}
+        app.dependency_overrides = {}
 
 @pytest.fixture(scope="function")
 def autheticated_test_client(test_client) -> TestClient:

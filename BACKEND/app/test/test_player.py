@@ -4,7 +4,6 @@ test file for the players routers/paths
 
 from typing import Literal
 from fastapi.testclient import TestClient
-from app.utils.dependencies import colony
 from ..models.player import (CreatePlayer, CreateCT, 
                             CreateCTApp, PlayerInfo)
 from fastapi.encoders import jsonable_encoder
