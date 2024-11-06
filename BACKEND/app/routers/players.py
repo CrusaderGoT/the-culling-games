@@ -50,6 +50,7 @@ def create_player(session: session, colony: colony, current_user:active_user,
             session.add(new_player)
             session.commit()
             session.refresh(new_player)
+            print(new_player)
             return new_player
     else: # no user found
         err_msg = f"User '{user}' not found"
@@ -74,6 +75,8 @@ def my_player(session: session, current_user: active_user):
 def a_player(player_id: Annotated[int, Path()], session: session):
     player = get_player(session, player_id)
     if player:
+        player.barrier_technique.binding_vow = True
+        session.commit()
         return player
     else:
         err_msg = f"player ID '{player_id}' not found"

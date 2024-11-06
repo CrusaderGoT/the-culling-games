@@ -6,6 +6,7 @@ from ..models.player import Player
 from ..models.base import Country
 from random import choice
 from typing import Annotated
+import pytest
 from fastapi import Depends
 
 # Get Session Dependency
