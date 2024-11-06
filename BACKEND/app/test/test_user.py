@@ -99,6 +99,5 @@ def test_delete_user(autheticated_commiter_client: TestClient, user_id: Literal[
     # check is user no longer exists in database
     deleted_response = autheticated_commiter_client.get(f"users/{user_id}")
     # check status, should be unsuccessful
-    print(deleted_response.json())
     assert deleted_response.is_success == False
     
