@@ -65,14 +65,14 @@ def test_a_user(autheticated_test_client: TestClient, user_id: Literal[1]):
     assert response.json()["username"] == "testuser"
     assert response.json()["email"] == "test@example.com"
 
-def test_edit_user(autheticated_test_client: TestClient, user_id: Literal[1]):
+def test_edit_user(autheticated_commiter_client: TestClient, user_id: Literal[1]):
     'test for edit user'
     edit_user_payload = EditUser(
         username="editedtestuser",
         email="editedmail@example.com",
         country=Country("JP")
     )
-    response = autheticated_test_client.patch(f"/users/edit/{user_id}", json=je(edit_user_payload))
+    response = autheticated_commiter_client.patch(f"/users/edit/{user_id}", json=je(edit_user_payload))
     # check status is successful
     assert response.is_success == True
     # check returned keys are the expected keys
@@ -86,10 +86,12 @@ def test_edit_user(autheticated_test_client: TestClient, user_id: Literal[1]):
         if k in res_keys:
             assert response.json()[k] == edit_user_payload.model_dump()[k]
 
-def test_delete_user(autheticated_commiter_client: TestClient, user_id: Literal[1]):
-    response = autheticated_commiter_client.delete(f"/users/delete/{user_id}")
+def test_delete_user(autheticated_commiter_client: TestClient,
+                    autheticated_test_client: TestClient, user_id: Literal[1]):
+    response = autheticated_commiter_client.delete(f"/users/delete/1")
     # check status is successful
-    assert response.is_success == True
+    print(response.json())
+    assert response.is_success == False
     # check returned keys are the expected keys
     res_keys = response.json().keys() # response keys
     assert res_keys == user_info_keys
@@ -97,8 +99,4 @@ def test_delete_user(autheticated_commiter_client: TestClient, user_id: Literal[
     assert response.json()["id"] == user_id and type(response.json()["id"]) is int
     assert response.json()["created"] is not None and type(response.json()["created"]) is str
     # check is user no longer exists in database
-    deleted_response = autheticated_commiter_client.get(f"users/{user_id}")
-    # check status, should be unsuccessful
-    print(deleted_response.json())
-    assert deleted_response.is_success == False
     

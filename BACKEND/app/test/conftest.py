@@ -58,7 +58,9 @@ def setup_user(session: Session):
         session.add(user)
         session.commit()
         session.refresh(user)
-    return user
+        return user
+    else:
+        return user
 
 def test_get_session():
     "create a new database session with a rollback at the end of the test"
@@ -76,12 +78,11 @@ def test_get_session():
 def test_client():
     "create a test client that uses the test_get_session"
     app.dependency_overrides[get_session] = test_get_session
-    app.dependency_overrides[get_or_create_colony] = get_or_create_colony_test
     with TestClient(app) as tst_cli:
         with Session(test_engine) as session:
             setup_user(session)
         yield tst_cli
-    app.dependency_overrides = {}
+        app.dependency_overrides = {}
 
 @pytest.fixture(scope="function")
 def autheticated_test_client(test_client) -> TestClient:
@@ -106,7 +107,7 @@ def test_session_commiter():
 @pytest.fixture(scope="function")
 def test_client_commiter():
     "create a test client that uses the test_session_commiter"
-    app.dependency_overrides[get_session] = test_get_session
+    app.dependency_overrides[get_session] = test_session_commiter
     with TestClient(app) as tst_cli:
         yield tst_cli
         app.dependency_overrides = {}
@@ -129,23 +130,27 @@ def autheticated_commiter_client(test_client_commiter) -> TestClient:
 # for players router
 def get_or_create_colony_test():
     '''returns a colony with less than 10 PLAYERS or returns a new base colony.
-    `for tests`'''
+    `for tests` does not commit.'''
     # get a random colony to add the player
-    session= test_get_session()
-    subquery = (
-        select(Colony.id, func.count(Player.id).label("player_count"))
-        .join(Player, isouter=True)
-        .group_by(Colony.id)
-        .having(func.count(Player.id) < 10)
-    ).subquery()
-    colony = session.exec(
-        select(Colony).where(Colony.id.in_(select(subquery.c.id)))
-    ).first()
-    if colony:
-        return colony
-    else: # return new colony instance
-        # select a random country
-        countries = list(Country)
-        country = choice([c for c in countries])
-        colony = Colony(country=country)
-        return colony
+    with Session(test_engine) as session:
+        try:
+            subquery = (
+                select(Colony.id, func.count(Player.id).label("player_count"))
+                .join(Player, isouter=True)
+                .group_by(Colony.id)
+                .having(func.count(Player.id) < 10)
+            ).subquery()
+            colony = session.exec(
+                select(Colony).where(Colony.id.in_(select(subquery.c.id)))
+            ).first()
+            if colony:
+                return colony
+            else: # return new colony instance
+                # select a random country
+                countries = list(Country)
+                country = choice([c for c in countries])
+                colony = Colony(country=country)
+                return colony
+        finally:
+            # don't commit the colony
+            session.rollback()
