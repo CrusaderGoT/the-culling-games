@@ -3,6 +3,8 @@ import pytest
 from sqlmodel import Session, SQLModel, select
 from sqlalchemy import create_engine
 from fastapi.testclient import TestClient
+from fastapi import Depends
+from typing import Annotated
 from ..api.main import app
 from ..utils.dependencies import get_session, get_or_create_colony
 from ..models.colony import *
@@ -104,7 +106,7 @@ def test_session_commiter():
 @pytest.fixture(scope="function")
 def test_client_commiter():
     "create a test client that uses the test_session_commiter"
-    app.dependency_overrides[get_session] = test_session_commiter
+    app.dependency_overrides[get_session] = test_get_session
     with TestClient(app) as tst_cli:
         yield tst_cli
         app.dependency_overrides = {}
@@ -129,21 +131,21 @@ def get_or_create_colony_test():
     '''returns a colony with less than 10 PLAYERS or returns a new base colony.
     `for tests`'''
     # get a random colony to add the player
-    with Session(test_engine) as session:
-        subquery = (
-            select(Colony.id, func.count(Player.id).label("player_count"))
-            .join(Player, isouter=True)
-            .group_by(Colony.id)
-            .having(func.count(Player.id) < 10)
-        ).subquery()
-        colony = session.exec(
-            select(Colony).where(Colony.id.in_(select(subquery.c.id)))
-        ).first()
-        if colony:
-            return colony
-        else: # return new colony instance
-            # select a random country
-            countries = list(Country)
-            country = choice([c for c in countries])
-            colony = Colony(country=country)
-            return colony
+    session= test_get_session()
+    subquery = (
+        select(Colony.id, func.count(Player.id).label("player_count"))
+        .join(Player, isouter=True)
+        .group_by(Colony.id)
+        .having(func.count(Player.id) < 10)
+    ).subquery()
+    colony = session.exec(
+        select(Colony).where(Colony.id.in_(select(subquery.c.id)))
+    ).first()
+    if colony:
+        return colony
+    else: # return new colony instance
+        # select a random country
+        countries = list(Country)
+        country = choice([c for c in countries])
+        colony = Colony(country=country)
+        return colony
