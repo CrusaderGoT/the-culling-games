@@ -95,13 +95,14 @@ def edit_player(*, player_id: int, session: session, current_user: active_user,
             raise UserException(current_user, detail=f"Can only edit your own player.")
         else: # update database infos
             if player is not None:
-                edit_player_data = player.model_dump(exclude_unset=True)
+                edit_player_data = player.model_dump(exclude_unset=True, exclude_defaults=True)
                 playerdb.sqlmodel_update(edit_player_data)
             if cursed_technique is not None:
-                edit_ct_data = cursed_technique.model_dump(exclude_unset=True)
+                edit_ct_data = cursed_technique.model_dump(exclude_unset=True, exclude_defaults=True)
                 playerdb.cursed_technique.sqlmodel_update(edit_ct_data)
             if applications is not None:
                 # get the list of ct apps to edit from db
+                # modify to use the same format used in voting, for quicker loops
                 app_numbers = [app.number for app in applications]
                 ctapps = session.exec(
                     select(CTApp)
@@ -112,7 +113,7 @@ def edit_player(*, player_id: int, session: session, current_user: active_user,
                 for ct_app in ctapps:
                     for edit_ct_app in applications:
                         if edit_ct_app.number == ct_app.number:
-                            ct_app_data = edit_ct_app.model_dump(exclude_unset=True)
+                            ct_app_data = edit_ct_app.model_dump(exclude_unset=True, exclude_defaults=True)
                             ct_app.sqlmodel_update(ct_app_data)
             # add playerdb to session, and commit to update infos
             session.add(playerdb)
@@ -224,9 +225,3 @@ def upgrade_player(player_id: Annotated[int, Path(description="the player id")],
                     raise HTTPException(status.HTTP_412_PRECONDITION_FAILED, msg)
     else: # player does not exist
         raise HTTPException(status.HTTP_404_NOT_FOUND, f"player {player_id}, does not exist")
-
-@router.get('/bt/rr')
-def bt(session: session):
-    b = session.exec(select(BarrierTech).where(BarrierTech.id == 3)).first()
-    
-    return b

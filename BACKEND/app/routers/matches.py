@@ -119,8 +119,6 @@ def vote(
                     if player_id not in fighters_dict and player_id is not None:
                         fighters_dict[player_id] = []
                     fighters_dict[player_id].append(ct_app_id)
-    
-                print(fighters_dict, 'fightttttttttttt')
                 new_votes: list[Vote] = list() # votes to be added and commited to session
                 # now iterate over the votes and cast them for correct player ct app
                 for vote in votes:

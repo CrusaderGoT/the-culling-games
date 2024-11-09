@@ -162,7 +162,7 @@ def get_last_created_match(session: session):
     return last_match
 
 def create_new_match(session: session, part: int):
-    'creates a new match, needs a lot of refactoring'
+    'creates a new match'
     # fetch colonies that has atleast one player that hasn't fought in the specified part query
     result = colonies_with_players_available_for_part(session, part)
     if result and (colony_id := choice(result)) is not None: # list is not empty and contains int (randomly chosen)

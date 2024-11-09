@@ -81,6 +81,7 @@ class BasePlayerInfo(BasePlayer):
     Base model for player info, without cursed technique info and user info\n
     `id: int`
     `created: date`
+    `grade: BasePlayer.Grade`
     `points: Decimal`
     '''
     id: int

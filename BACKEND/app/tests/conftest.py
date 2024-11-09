@@ -30,13 +30,16 @@ SQLModel.metadata.create_all(test_engine)
 
 @pytest.fixture
 def user_id():
-    "User Id of the `setup_user` as a Path parameter; for tests."
+    "User Id of the `setup_user` as a fixture; for tests."
     return 1
 
-
+@pytest.fixture
+def player_id():
+    "Player Id of the player created during test as a fixture. If client error (4xx), then likely there are multiple players in DB"
+    return 1
 
 def setup_user(session: Session):
-    'a user that persists in the test database'
+    'a user that is committed in the test database; of the ID 1'
     # check if user already exists
     user = session.exec(
         select(User)
@@ -51,12 +54,11 @@ def setup_user(session: Session):
             username="testuser",
             usernamedb="testuser",
             email="test@example.com",
+            country=Country("JP"),
             password=pw,
         )
         session.add(user)
         session.commit()
-        session.refresh(user)
-    return user
 
 def test_get_session():
     "create a new database session with a rollback at the end of the test"
@@ -64,7 +66,7 @@ def test_get_session():
     transaction = connection.begin()
     session = Session(connection)
     try:
-        yield session
+        yield session       
     finally:
         session.close()
         transaction.rollback()
@@ -77,6 +79,8 @@ def test_client():
     app.dependency_overrides[get_or_create_colony] = get_or_create_colony_test
     with TestClient(app) as tst_cli:
         with Session(test_engine) as session:
+            # used with a new session instance since we want the setup user
+            # to persist in the DB
             setup_user(session)
         yield tst_cli
         app.dependency_overrides = {}
@@ -106,6 +110,9 @@ def test_client_commiter():
     "create a test client that uses the test_session_commiter"
     app.dependency_overrides[get_session] = test_session_commiter
     with TestClient(app) as tst_cli:
+        with Session(test_engine) as session:
+            # set up user for persistent use
+            setup_user(session)
         yield tst_cli
         app.dependency_overrides = {}
 
@@ -124,7 +131,6 @@ def autheticated_commiter_client(test_client_commiter) -> TestClient:
     test_client_commiter.headers.update({"Authorization": f"Bearer {token}"})
     return test_client_commiter
 
-# for players router
 def get_or_create_colony_test():
     '''returns a colony with less than 10 PLAYERS or returns a new base colony.
     `for tests`'''
@@ -147,3 +153,40 @@ def get_or_create_colony_test():
             country = choice([c for c in countries])
             colony = Colony(country=country)
             return colony
+
+
+def match_player():
+    'returns a player instance for use in setup player'
+    # create 3 players for test purposes
+    c_player_payload = CreatePlayer(
+        name="testplayer",
+        gender=CreatePlayer.Gender("male"),
+        age=25,
+        role="programmer"
+    )
+    c_ct_apps = [
+        CTApp(application="first", number=1),
+        CTApp(application="second", number=2),
+        CTApp(application="third", number=3),
+        CTApp(application="fourth", number=4),
+        CTApp(application="fifth", number=5),
+    ]
+    c_ct = CursedTechnique(
+        name="git push",
+        definition="commit on friday, trust me bro",
+        applications=c_ct_apps
+    )
+    player = Player(**c_player_payload.model_dump(), cursed_technique=c_ct)
+    return player
+
+def setup_match_players(session: Session):
+    'players to use during test, 3 in number'
+    for i in range(3):
+        exist_session_player = session.get(Player, i)
+        if not exist_session_player:
+            session_player = match_player()
+            #session_player.colony = get_or_create_colony_test()
+            session.add(session_player)
+    # commit after the loop so all the player are available after
+    # commit during the loop won't save the player since the preferred session will rollback
+    session.commit()
