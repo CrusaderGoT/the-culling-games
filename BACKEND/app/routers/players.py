@@ -69,6 +69,32 @@ def my_player(session: session, current_user: active_user):
         err_msg = f"{current_user.username} has no player. Create player."
         raise UserException(current_user, status.HTTP_404_NOT_FOUND, detail=err_msg)
 
+@router.get('/all', response_model=Union[list[PlayerInfo], list[BasePlayerInfo]], status_code=status.HTTP_200_OK,
+            response_description="A list of players", summary="Get a list of players.")
+def get_players(session: session,
+                offset: Annotated[int, Query(ge=0)] = 0,
+                limit: Annotated[int, Query(le=30)] = 10,
+                slim: Annotated[bool, Query(description="If true, minimal player info will be returned")] = False,
+                gender: Annotated[Player.Gender | None, Query()] = None,
+                age: Annotated[int | None, Query(ge=10, le=102)] = None,
+                role: Annotated[str | None, Query()] = None
+                ):
+    statement = select(Player).offset(offset).limit(limit)
+    # if clauses to add a where/or clause to the statement
+    if gender is not None:
+        statement = statement.where(or_(Player.gender == gender))
+    if age is not None:
+        statement = statement.where(or_(Player.age == age))
+    if role is not None:
+        statement = statement.where(or_(Player.role == role))
+    # execute
+    players = session.exec(statement).all()
+    # if slim return info without cursed technique info and user info
+    if slim == True: 
+        players = [BasePlayerInfo.model_validate(player) for player in players]
+    return players
+
+
 @router.get('/{player_id}', response_model=PlayerInfo, status_code=status.HTTP_200_OK,
             response_description="A Player", summary="Get a player with their ID")
 def a_player(player_id: Annotated[int, Path()], session: session):
@@ -155,31 +181,6 @@ def delete_player(player_id: int, session: session, current_user: active_user):
         err_msg = f"Player with ID '{player_id}' not found"
         raise HTTPException(status.HTTP_404_NOT_FOUND, err_msg)
     
-@router.get('/all/players', response_model=Union[list[PlayerInfo], list[BasePlayerInfo]], status_code=status.HTTP_200_OK,
-            response_description="A list of players", summary="Get a list of players.")
-def get_players(session: session,
-                offset: Annotated[int, Query(ge=0)] = 0,
-                limit: Annotated[int, Query(le=30)] = 10,
-                slim: Annotated[bool, Query(description="If true, minimal player info will be returned")] = False,
-                gender: Annotated[Player.Gender | None, Query()] = None,
-                age: Annotated[int | None, Query(ge=10, le=102)] = None,
-                role: Annotated[str | None, Query()] = None
-                ):
-    statement = select(Player).offset(offset).limit(limit)
-    # if clauses to add a where/or clause to the statement
-    if gender is not None:
-        statement = statement.where(or_(Player.gender == gender))
-    if age is not None:
-        statement = statement.where(or_(Player.age == age))
-    if role is not None:
-        statement = statement.where(or_(Player.role == role))
-    # execute
-    players = session.exec(statement).all()
-    # if slim return info without cursed technique info and user info
-    if slim == True: 
-        players = [BasePlayerInfo.model_validate(player) for player in players]
-    return players
-
 @router.post("/upgrade/{player_id}", response_model=PlayerInfo)
 def upgrade_player(player_id: Annotated[int, Path(description="the player id")],
                    session: session,
