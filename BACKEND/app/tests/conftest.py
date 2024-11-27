@@ -14,15 +14,11 @@ import os
 
 
 # load enviroment file
-load_dotenv()
-
-# SQLITE Database for testing
-SQLITE_DATABASE_URL = "sqlite:///./test.db"
-'the test database url'
+load_dotenv(".env.test")
 
 # create sqlalchemy/sqlmodel engine
 test_engine = create_engine(
-    SQLITE_DATABASE_URL,
+    os.getenv("SQLITE_DATABASE_URL", "sqlite:///./test.db"),
     connect_args={"check_same_thread": False},
     )
 'the test engine'
@@ -40,7 +36,7 @@ def setup_test_database():
 
 
 @pytest.fixture(scope="function")
-def test_session(setup_test_database, setup_match_players):
+def test_session(setup_test_database):
     """
     `create a new database session that commits at the end of the test`
     """
@@ -55,11 +51,28 @@ def test_client(test_session):
         yield tst_cli
         app.dependency_overrides = {}
 
+@pytest.fixture(scope="session")
+def ptest_session():
+    """
+    `create a new database session that commits at the end of the test`
+    """
+    with Session(test_engine) as session:
+        yield session
+
+@pytest.fixture(scope="module")
+def ptest_client(ptest_session):
+    "create a test client that uses the test_session_commiter"
+    override_dependencies(ptest_session)
+    with TestClient(app) as tst_cli:
+        yield tst_cli
+        app.dependency_overrides = {}
+
+
 @pytest.fixture(scope="function")
 def authenticated_test_client(test_client) -> tuple[TestClient, dict]:
     'an aunthenticated client that their session commits'
     #  use test client to create a user and then login them in to get access token
-    test_user = create_test_user(test_client)
+    test_user = create_test_user(test_client).json()
     token = login_test_user(test_client, test_user["id"])
     client = setup_authenticated_client(test_client, token)
     return client, test_user
@@ -67,7 +80,7 @@ def authenticated_test_client(test_client) -> tuple[TestClient, dict]:
 @pytest.fixture(scope="function")
 def authenticated_admin_client(test_client) -> tuple[TestClient, dict]:
     'an aunthenticated admin client, that commits'
-    test_user = create_test_user(test_client)
+    test_user = create_test_user(test_client).json()
     code = os.getenv("CODE")
     super_uer_res = test_client.post(f"/admin/superuser/{test_user['id']}", params={"code": code})
     assert super_uer_res.is_success == True
@@ -75,18 +88,17 @@ def authenticated_admin_client(test_client) -> tuple[TestClient, dict]:
     client = setup_authenticated_client(test_client, token)
     return client, test_user
 
-@pytest.fixture(scope="function")
-def setup_match_players() -> list[tuple[TestClient, dict]]:
+@pytest.fixture(scope="module")
+def create_match_players(ptest_client) -> list[tuple[TestClient, dict]]:
     """
     Create players and authenticated clients for match tests.
     Returns a list of tuples: (authenticated client, player data).
     """
-    client = TestClient(app)
     players_info = []
     for _ in range(2):
         # Create a new test user
-        test_user = create_test_user(client)
-        login_res = client.post("/login", data={
+        test_user = create_test_user(ptest_client).json()
+        login_res = ptest_client.post("/login", data={
             "username": test_user["id"],
             "password": "Password",
         })
@@ -95,15 +107,14 @@ def setup_match_players() -> list[tuple[TestClient, dict]]:
         assert token
 
         # Create a new authenticated client for this user
-        ac = TestClient(app)
-        ac.headers.update({"Authorization": f"Bearer {token}"})
+        auth_client = setup_authenticated_client(ptest_client, token)
 
         # Create a player for the user
-        player_res = create_test_player((ac, test_user))
+        player_res = create_test_player((auth_client, test_user))
         assert player_res.is_success
         player_data = player_res.json()
 
         # Append client and player info to the list
-        players_info.append((ac, player_data))
+        players_info.append((auth_client, player_data))
 
     return players_info

@@ -9,4 +9,7 @@ load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL", "")
 # create engine variable
-engine = create_engine(DATABASE_URL, echo=True)
+engine = create_engine(
+    DATABASE_URL, 
+    echo=True
+    )

@@ -66,9 +66,11 @@ def create_test_player(authenticated_test_client: tuple[TestClient, dict]):
     'creates a test player, and returns the Reponse object'
     user = authenticated_test_client[1]
     created_res = authenticated_test_client[0].post(f"/player/create/{user["id"]}", json=je(player_payload()))
+    # check status is created
+    assert created_res.status_code == 201
     return created_res
 
-def create_test_user(test_client):
+def create_test_user(test_client: TestClient):
     '''creates a brand new test user. returns the user info\n
     should typically be used in a function
     that uses the test_client pytest fixture as an arg.'''
@@ -76,7 +78,7 @@ def create_test_user(test_client):
     new_user_res = test_client.post("/signup", json=je(create_user_payload))
     # check status is created
     assert new_user_res.status_code == 201
-    return new_user_res.json()
+    return new_user_res
 
 
 # DEPENDENCIES
