@@ -1,20 +1,18 @@
 '''configuraturations for test, i.e, fixtures, dependecy overrides, etc.'''
 import pytest
-from sqlmodel import SQLModel, Session
+from sqlmodel import Session, SQLModel, select
 from sqlalchemy import create_engine
 from fastapi.testclient import TestClient
-
-from app.tests.utils_test import (
-    create_test_player, create_test_user, login_test_user,
-    override_dependencies, setup_authenticated_client
-    )
 from ..api.main import app
-from dotenv import load_dotenv
-import os
-
-
-# load enviroment file
-load_dotenv()
+from ..utils.dependencies import get_session, get_or_create_colony
+from ..models.colony import *
+from ..models.user import *
+from ..models.player import *
+from ..models.match import *
+from ..models.admin import *
+from ..auth.credentials import PasswordAuth as pw_auth
+from sqlmodel import Session, select, func
+from random import choice
 
 # SQLITE Database for testing
 SQLITE_DATABASE_URL = "sqlite:///./test.db"
@@ -27,83 +25,168 @@ test_engine = create_engine(
     )
 'the test engine'
 
-@pytest.fixture(scope="session")
-def setup_test_database():
-    """
-    Fixture to create the tables once for all tests and drop them after all tests complete.
-    """
-    # Create tables before running tests
-    SQLModel.metadata.create_all(test_engine)
-    yield
-    # Drop tables after all tests have run
-    SQLModel.metadata.drop_all(test_engine)
+# create tables in test database
+SQLModel.metadata.create_all(test_engine)
 
+@pytest.fixture
+def user_id():
+    "User Id of the `setup_user` as a fixture; for tests."
+    return 1
+
+@pytest.fixture
+def player_id():
+    "Player Id of the player created during test as a fixture. If client error (4xx), then likely there are multiple players in DB"
+    return 1
+
+def setup_user(session: Session):
+    'a user that is committed in the test database; of the ID 1'
+    # check if user already exists
+    user = session.exec(
+        select(User)
+        .where(User.id == 1)
+        .where(User.username == "testuser")
+        ).first()
+    if not user:
+        # create the user only if it doesn't exist
+        # hash password
+        pw = pw_auth().hash_password("Password")
+        user = User(
+            username="testuser",
+            usernamedb="testuser",
+            email="test@example.com",
+            country=Country("JP"),
+            password=pw,
+        )
+        session.add(user)
+        session.commit()
+
+def test_get_session():
+    "create a new database session with a rollback at the end of the test"
+    connection = test_engine.connect()
+    transaction = connection.begin()
+    session = Session(connection)
+    try:
+        yield session       
+    finally:
+        session.close()
+        transaction.rollback()
+        connection.close()
 
 @pytest.fixture(scope="function")
-def test_session(setup_test_database, setup_match_players):
-    """
-    `create a new database session that commits at the end of the test`
-    """
-    with Session(test_engine) as session:
-        yield session
-
-@pytest.fixture(scope="function")
-def test_client(test_session):
-    "create a test client that uses the test_session_commiter"
-    override_dependencies(test_session)
+def test_client():
+    "create a test client that uses the test_get_session"
+    app.dependency_overrides[get_session] = test_get_session
+    app.dependency_overrides[get_or_create_colony] = get_or_create_colony_test
     with TestClient(app) as tst_cli:
+        with Session(test_engine) as session:
+            # used with a new session instance since we want the setup user
+            # to persist in the DB
+            setup_user(session)
         yield tst_cli
         app.dependency_overrides = {}
 
 @pytest.fixture(scope="function")
-def authenticated_test_client(test_client) -> tuple[TestClient, dict]:
+def autheticated_test_client(test_client) -> TestClient:
+    'an aunthenticated client'
+    #  use test client to get the setup_user and get access token
+    login_res = test_client.post("/login", data={
+        "username": "testuser",
+        "password": "Password",
+    })
+    assert login_res.is_success == True
+    token = login_res.json().get("access_token")
+    assert token
+    # add token to test client header
+    test_client.headers.update({"Authorization": f"Bearer {token}"})
+    return test_client
+
+def test_session_commiter():
+    "create a new database session that commits at the end of the test"
+    with Session(test_engine) as session:
+        yield session
+
+@pytest.fixture(scope="function")
+def test_client_commiter():
+    "create a test client that uses the test_session_commiter"
+    app.dependency_overrides[get_session] = test_session_commiter
+    with TestClient(app) as tst_cli:
+        with Session(test_engine) as session:
+            # set up user for persistent use
+            setup_user(session)
+        yield tst_cli
+        app.dependency_overrides = {}
+
+@pytest.fixture(scope="function")
+def autheticated_commiter_client(test_client_commiter) -> TestClient:
     'an aunthenticated client that their session commits'
-    #  use test client to create a user and then login them in to get access token
-    test_user = create_test_user(test_client)
-    token = login_test_user(test_client, test_user["id"])
-    client = setup_authenticated_client(test_client, token)
-    return client, test_user
+    #  use test client to get the setup_user and get access token
+    login_res = test_client_commiter.post("/login", data={
+        "username": "testuser",
+        "password": "Password",
+    })
+    assert login_res.is_success == True
+    token = login_res.json().get("access_token")
+    assert token
+    # add token to test client header
+    test_client_commiter.headers.update({"Authorization": f"Bearer {token}"})
+    return test_client_commiter
 
-@pytest.fixture(scope="function")
-def authenticated_admin_client(test_client) -> tuple[TestClient, dict]:
-    'an aunthenticated admin client, that commits'
-    test_user = create_test_user(test_client)
-    code = os.getenv("CODE")
-    super_uer_res = test_client.post(f"/admin/superuser/{test_user['id']}", params={"code": code})
-    assert super_uer_res.is_success == True
-    token = login_test_user(test_client, test_user["id"])
-    client = setup_authenticated_client(test_client, token)
-    return client, test_user
+def get_or_create_colony_test():
+    '''returns a colony with less than 10 PLAYERS or returns a new base colony.
+    `for tests`'''
+    # get a random colony to add the player
+    with Session(test_engine) as session:
+        subquery = (
+            select(Colony.id, func.count(Player.id).label("player_count"))
+            .join(Player, isouter=True)
+            .group_by(Colony.id)
+            .having(func.count(Player.id) < 10)
+        ).subquery()
+        colony = session.exec(
+            select(Colony).where(Colony.id.in_(select(subquery.c.id)))
+        ).first()
+        if colony:
+            return colony
+        else: # return new colony instance
+            # select a random country
+            countries = list(Country)
+            country = choice([c for c in countries])
+            colony = Colony(country=country)
+            return colony
 
-@pytest.fixture(scope="function")
-def setup_match_players() -> list[tuple[TestClient, dict]]:
-    """
-    Create players and authenticated clients for match tests.
-    Returns a list of tuples: (authenticated client, player data).
-    """
-    client = TestClient(app)
-    players_info = []
-    for _ in range(2):
-        # Create a new test user
-        test_user = create_test_user(client)
-        login_res = client.post("/login", data={
-            "username": test_user["id"],
-            "password": "Password",
-        })
-        assert login_res.status_code == 200
-        token = login_res.json().get("access_token")
-        assert token
 
-        # Create a new authenticated client for this user
-        ac = TestClient(app)
-        ac.headers.update({"Authorization": f"Bearer {token}"})
+def match_player():
+    'returns a player instance for use in setup player'
+    # create 3 players for test purposes
+    c_player_payload = CreatePlayer(
+        name="testplayer",
+        gender=CreatePlayer.Gender("male"),
+        age=25,
+        role="programmer"
+    )
+    c_ct_apps = [
+        CTApp(application="first", number=1),
+        CTApp(application="second", number=2),
+        CTApp(application="third", number=3),
+        CTApp(application="fourth", number=4),
+        CTApp(application="fifth", number=5),
+    ]
+    c_ct = CursedTechnique(
+        name="git push",
+        definition="commit on friday, trust me bro",
+        applications=c_ct_apps
+    )
+    player = Player(**c_player_payload.model_dump(), cursed_technique=c_ct)
+    return player
 
-        # Create a player for the user
-        player_res = create_test_player((ac, test_user))
-        assert player_res.is_success
-        player_data = player_res.json()
-
-        # Append client and player info to the list
-        players_info.append((ac, player_data))
-
-    return players_info
+def setup_match_players(session: Session):
+    'players to use during test, 3 in number'
+    for i in range(3):
+        exist_session_player = session.get(Player, i)
+        if not exist_session_player:
+            session_player = match_player()
+            #session_player.colony = get_or_create_colony_test()
+            session.add(session_player)
+    # commit after the loop so all the player are available after
+    # commit during the loop won't save the player since the preferred session will rollback
+    session.commit()

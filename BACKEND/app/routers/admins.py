@@ -1,22 +1,15 @@
 '''routes for admin purposes/interface'''
-from fastapi import APIRouter, status, Body, HTTPException, Query, Depends
+from fastapi import APIRouter, status, Body, HTTPException
 from sqlmodel import select
 from typing import Annotated
-from ..models.admin import AdminUser, Permission, AdminInfo, CreatePermission, PermissionInfo
+from ..models.admin import AdminUser, Permission, AdminInfo, CreatePermission
 from ..utils.logic import get_user, id_name_email
 from ..utils.dependencies import session
 from ..utils.config import UserException, Tag
 from ..auth.dependencies import admin_user
-from dotenv import load_dotenv
-import os
-
-load_dotenv()
 
 # Create your API routes here
-router = APIRouter(
-    prefix='/admin', tags=[Tag.admin],
-    #dependencies=[Depends(admin_user)]
-)
+router = APIRouter(prefix='/admin', tags=[Tag.admin])
 
 
 @router.post('/create/{user}', response_model=AdminInfo)
@@ -67,9 +60,7 @@ def create_admin(
                     )
                 
                 # Avoid duplicate permissions
-                if perm.id: # pemission already exist
-                    pass
-                else:
+                if perm not in new_permissions:
                     new_permissions.append(perm)
 
         # Once all permissions are processed, create the new admin user
@@ -92,8 +83,7 @@ def create_admin(
                 
                 # Add only the permissions that the current admin is authorized to assign
                 perm = session.exec(stmt).first()
-
-                if perm and perm.id not in [p.id for p in new_permissions]:
+                if perm and perm not in new_permissions:
                     new_permissions.append(perm)
         
         # After filtering, check if there are valid permissions to assign
@@ -112,59 +102,3 @@ def create_admin(
     
     # Handle any unknown errors (this block is unlikely to run but serves as a safeguard)
     raise HTTPException(status.HTTP_400_BAD_REQUEST, "An unknown error occurred while processing the request.")
-
-@router.post("/new/permission", response_model=list[PermissionInfo])
-def new_permission(admin: admin_user, permissions: Annotated[list[CreatePermission], Body()],
-                      session: session):
-    'for creating new permissions; only doable by a super user'
-    # check if the user is a super user
-    if admin.is_superuser == False:
-        raise UserException(admin.user, status.HTTP_401_UNAUTHORIZED, "only super users can create permissions")
-    # get any possible already existing permission
-    new_permissions: list[Permission] = list()
-    for permission in permissions:
-        for level in permission.level:
-            # Try to find an existing permission in the database
-            try:
-                stmt = select(Permission).where(
-                    Permission.model == permission.model,
-                    Permission.level == level
-                )
-                perm = session.exec(stmt).one()
-            except Exception:  # If the permission does not exist, create a new one
-                name = f"can_perform_{level.name}_{level.value}_operations_on_{permission.model.name}"
-                perm = Permission(
-                    model=permission.model,
-                    level=level,
-                    name=name
-                )
-            
-            # Avoid duplicate permissions
-            if perm.id: # pemission already exist
-                pass
-            else:
-                new_permissions.append(perm)
-    # check atleast one new perm exist
-    if not new_permissions:
-        raise HTTPException(status.HTTP_411_LENGTH_REQUIRED, f"no valid permission; length -> {len(new_permissions)}")
-    # add new perms to session
-    session.add_all(new_permissions)
-    session.commit()
-    for perm in new_permissions:
-        session.refresh(perm)
-    return new_permissions
-
-@router.post("/superuser/{user}")
-def demo_superuser(user: id_name_email, code: Annotated[str, Query(default=...)], session: session):
-    # get the user
-    userdb = get_user(session, user)
-    CODE = os.getenv("CODE")
-    if not userdb:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, f"user {user} not found")
-    if code != CODE:
-        raise HTTPException(status.HTTP_405_METHOD_NOT_ALLOWED, "invalid code")
-    admin_user = AdminUser(is_superuser=True, user=userdb)
-    session.add(admin_user)
-    session.commit()
-    session.refresh(admin_user)
-    return admin_user
