@@ -1,7 +1,7 @@
 '''
 test file for the users routers/paths
 '''
-from typing import Literal
+from .utils_test import gen_rand_email, gen_rand_username
 from fastapi.testclient import TestClient
 from ..models.user import CreateUser, EditUser, UserInfo, Country
 from fastapi.encoders import jsonable_encoder as je
@@ -13,9 +13,11 @@ user_info_keys = UserInfo.model_fields.keys() # expected keys
 
 def test_create_user(test_client: TestClient):
     'test for the creation of a user'
+    username = gen_rand_username()
+    email = gen_rand_email()
     create_user_payload = CreateUser(
-    username="test_username",
-    email="testuser@example.com",
+    username=username,
+    email=email,
     country=Country("NG"),
     password="Crusader45@",
     confirm_password="Crusader45@"
@@ -35,9 +37,9 @@ def test_create_user(test_client: TestClient):
             assert response.json()[k] == create_user_payload.model_dump()[k]
 
 
-def test_current_user(autheticated_test_client: TestClient):
+def test_current_user(authenticated_test_client: tuple[TestClient, dict]):
     'test get the current user'
-    response = autheticated_test_client.get("/users/me")
+    response = authenticated_test_client[0].get("/users/me")
     # check status is successful
     assert response.is_success == True
     # check returned keys are the expected keys
@@ -47,57 +49,62 @@ def test_current_user(autheticated_test_client: TestClient):
     assert response.json()["id"] is not None and type(response.json()["id"]) is int
     assert response.json()["created"] is not None and type(response.json()["created"]) is str
     # check if response values match setup user values
-    assert response.json()["username"] == "testuser"
-    assert response.json()["email"] == "test@example.com"
+    assert response.json()["username"] == authenticated_test_client[1]["username"]
+    assert response.json()["email"] == authenticated_test_client[1]["email"]
 
-def test_a_user(autheticated_test_client: TestClient, user_id: Literal[1]):
+def test_a_user(authenticated_test_client: tuple[TestClient, dict]):
     'test for getting a specific user'
-    response = autheticated_test_client.get(f"/users/{user_id}")
+    auth_user = authenticated_test_client[1]
+    response = authenticated_test_client[0].get(f"/users/{auth_user["id"]}")
     # check status is successful
     assert response.is_success == True
     # check returned keys are the expected keys
     res_keys = response.json().keys() # response keys
     assert res_keys == user_info_keys
     # check database calculated fields was made
-    assert response.json()["id"] == user_id and type(response.json()["id"]) is int
+    assert response.json()["id"] == auth_user["id"] and type(response.json()["id"]) is int
     assert response.json()["created"] is not None and type(response.json()["created"]) is str
     # check if response values match setup user values
-    assert response.json()["username"] == "testuser"
-    assert response.json()["email"] == "test@example.com"
+    assert response.json()["username"] == auth_user["username"]
+    assert response.json()["email"] == auth_user["email"]
 
-def test_edit_user(autheticated_test_client: TestClient, user_id: Literal[1]):
+def test_edit_user(authenticated_test_client: tuple[TestClient, dict]):
     'test for edit user'
+    user = authenticated_test_client[1]
+    username=gen_rand_username()
+    email=gen_rand_email()
     edit_user_payload = EditUser(
-        username="editedtestuser",
-        email="editedmail@example.com",
+        username=username,
+        email=email,
         country=Country("JP")
     )
-    response = autheticated_test_client.patch(f"/users/edit/{user_id}", json=je(edit_user_payload))
+    response = authenticated_test_client[0].patch(f"/users/edit/{user["id"]}", json=je(edit_user_payload))
     # check status is successful
     assert response.is_success == True
     # check returned keys are the expected keys
     res_keys = response.json().keys() # response keys
     assert res_keys == user_info_keys
-    # check database calculated fields was made
-    assert response.json()["id"] == user_id and type(response.json()["id"]) is int
+    # check constant database fields is still same
+    assert response.json()["id"] == user['id'] and type(response.json()["id"]) is int
     assert response.json()["created"] is not None and type(response.json()["created"]) is str
-    # check userpayload values match the response user
+    # check edituserpayload values match the response user
     for k in edit_user_payload.model_dump().keys():
         if k in res_keys:
             assert response.json()[k] == edit_user_payload.model_dump()[k]
 
-def test_delete_user(autheticated_commiter_client: TestClient, user_id: Literal[1]):
-    response = autheticated_commiter_client.delete(f"/users/delete/{user_id}")
+def test_delete_user(authenticated_test_client: tuple[TestClient, dict]):
+    user = authenticated_test_client[1]
+    response = authenticated_test_client[0].delete(f"/users/delete/{user["id"]}")
     # check status is successful
     assert response.is_success == True
     # check returned keys are the expected keys
     res_keys = response.json().keys() # response keys
     assert res_keys == user_info_keys
     # check database calculated fields matches
-    assert response.json()["id"] == user_id and type(response.json()["id"]) is int
+    assert response.json()["id"] == user['id'] and type(response.json()["id"]) is int
     assert response.json()["created"] is not None and type(response.json()["created"]) is str
-    # check is user no longer exists in database
-    deleted_response = autheticated_commiter_client.get(f"users/{user_id}")
+    # check if user no longer exists in database
+    deleted_response = authenticated_test_client[0].get(f"users/{user['id']}")
     # check status, should be unsuccessful
     assert deleted_response.is_client_error == True
     

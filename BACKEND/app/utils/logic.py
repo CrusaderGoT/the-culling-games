@@ -78,8 +78,8 @@ def get_players_not_in_part(colony_id: int, part: int, session: Session):
     part_matches_subquery = (
         select(MatchPlayerLink.player_id)
         .join(Match, MatchPlayerLink.match_id == Match.id)
-        .where(Match.id == part)
-    )
+        .where(Match.id == part) 
+    ).subquery()
 
     part_matches_select = select(part_matches_subquery.c.player_id)
 
@@ -169,10 +169,10 @@ def create_new_match(session: session, part: int):
         # Fetch players from the selected colony who have not fought in the specified part.
         players_not_in_part = get_players_not_in_part(colony_id, part, session)
         # Randomly select 2 players from the colony for the match
-        players = random_players_for_match(session, players_not_in_part, colony_id) # type: ignore ; list same as Sequence
+        players = random_players_for_match(session, players_not_in_part, colony_id) 
         # create match
-        begin = datetime.now() + timedelta(minutes=2)
-        end = begin + timedelta(minutes=10)
+        begin = datetime.now() + timedelta(minutes=2) # match begins in timedelta
+        end = begin + timedelta(minutes=TIME_DUR["MATCH_TIME"]) # match ends in timedelta 
         new_match = Match(begin=begin, end=end, part=part,
                         colony_id=colony_id, players=players)
         return new_match
@@ -180,7 +180,7 @@ def create_new_match(session: session, part: int):
         detail=f"No colony with players who haven't fought in part {part}. Begin/Try part {part+1}. Else no player yet..."
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail=detail)
     
-def random_players_for_match(session: session, players_not_in_part: list[Player], colony_id: int):
+def random_players_for_match(session: session, players_not_in_part: Sequence[Player], colony_id: int):
     """Randomly select 2 players from the colony who haven't fought in the part before.\n
     if only one player is available, pair them with any other player from the colony.\n
     raises HTTPException if only one player in colony"""
@@ -222,7 +222,6 @@ def calculate_points(player_points: float, points_to_action: float, on_action: L
         msg = f"not enough points; need {points_to_action}, have {player_points}"
         raise HTTPException(status.HTTP_428_PRECONDITION_REQUIRED, detail=msg)
 
-
 def activate_domain(
         barrier_tech: BarrierTech,
         barrier_record: BarrierRecord | None,
@@ -253,9 +252,6 @@ def activate_domain(
     session.refresh(barrier_tech)
     return  barrier_tech
 
-
-
-
 def deactivate_domain(barrier_tech: BarrierTech, session: session):
     'function for the background task of deactivating a domain'
     active = True
@@ -284,7 +280,6 @@ def deactivate_domain(barrier_tech: BarrierTech, session: session):
             remaining_time = (barrier_tech.de_end_time - now).total_seconds()
             time.sleep(remaining_time // 2) # remaining time divide by 2
             continue # loop again
-
 
 def get_vote_point(match:Match, prev_votes: Sequence[Vote],
                    player_bt: BarrierTech | None, opposing_player_bt: BarrierTech | None) -> float:
