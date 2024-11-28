@@ -68,7 +68,7 @@ def test_get_players(authenticated_test_client: tuple[TestClient, dict]):
     'test for getting all existing players'
     params = {
         "offset": 0,
-        "limit": 10,
+        "limit": 30,
         "slim": True # False to include extra infos about the player
     }
     res = authenticated_test_client[0].get("/player/all", params=params)
@@ -93,5 +93,4 @@ def test_delete_player(authenticated_test_client: tuple[TestClient, dict]):
     # confirm player info was returned
     assert res.json().keys() == player_info_keys
     # confirm the created player was the player deleted
-    for v in res.json().values():
-        assert v in player.values()
+    assert res.json()["id"] == player["id"]

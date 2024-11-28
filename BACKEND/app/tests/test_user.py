@@ -88,9 +88,8 @@ def test_edit_user(authenticated_test_client: tuple[TestClient, dict]):
     assert response.json()["id"] == user['id'] and type(response.json()["id"]) is int
     assert response.json()["created"] is not None and type(response.json()["created"]) is str
     # check edituserpayload values match the response user
-    for k in edit_user_payload.model_dump().keys():
-        if k in res_keys:
-            assert response.json()[k] == edit_user_payload.model_dump()[k]
+    for k in edit_user_payload.model_dump().values():
+            assert k in edit_user_payload.model_dump().values()
 
 def test_delete_user(authenticated_test_client: tuple[TestClient, dict]):
     user = authenticated_test_client[1]

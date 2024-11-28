@@ -94,7 +94,7 @@ def vote(
     match = get_match(session, match_id)
     if match is not None:
         # check if match still ongoing
-        if ongoing_match(match) == False:
+        if ongoing_match(match) == True:
             # check if user has voted before, and get previous votes
             prev_votes = session.exec(
                 select(Vote)
@@ -139,9 +139,15 @@ def vote(
                                                             player.barrier_technique,
                                                             opposing_player.barrier_technique)
                                 # Create and add the vote
-                                update_vote = {"user": voter, "match": match, "point": vote_point}
+                                update_vote = {
+                                    "user": voter, "match": match, "point": vote_point,
+                                    "has_been_added": True}
                                 casted_vote = Vote.model_validate(vote, update=update_vote)
                                 new_votes.append(casted_vote)
+                                # add the vote points to players points
+                                player.points += vote_point
+                                # add player to session
+                                session.add(player)
 
                 else: # runs after the loop
                     session.add_all(new_votes)

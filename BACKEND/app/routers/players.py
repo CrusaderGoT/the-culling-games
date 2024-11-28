@@ -191,7 +191,7 @@ def upgrade_player(player_id: Annotated[int, Path(description="the player id")],
     player = session.get(Player, player_id)
     if player is not None:
         if player != current_user.player:
-            msg = f"cannot upgrade another player; wrong player id"
+            msg = f"cannot upgrade another player; wrong player id."
             raise UserException(current_user, status.HTTP_401_UNAUTHORIZED, msg)
         else:
             # get the current grade
