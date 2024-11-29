@@ -78,18 +78,21 @@ def test_edit_user(authenticated_test_client: tuple[TestClient, dict]):
         email=email,
         country=Country("JP")
     )
-    response = authenticated_test_client[0].patch(f"/users/edit/{user["id"]}", json=je(edit_user_payload))
+    response = authenticated_test_client[0].patch(f"/users/edit/{user['id']}", json=je(edit_user_payload))
     # check status is successful
     assert response.is_success == True
     # check returned keys are the expected keys
     res_keys = response.json().keys() # response keys
     assert res_keys == user_info_keys
+    res_data = response.json()
     # check constant database fields is still same
-    assert response.json()["id"] == user['id'] and type(response.json()["id"]) is int
-    assert response.json()["created"] is not None and type(response.json()["created"]) is str
+    assert res_data["id"] == user['id'] and type(response.json()["id"]) is int
+    assert res_data["created"] is not None and type(response.json()["created"]) is str
     # check edituserpayload values match the response user
-    for k in edit_user_payload.model_dump().values():
-            assert k in edit_user_payload.model_dump().values()
+    edit_data = edit_user_payload.model_dump()
+    assert res_data["username"] == edit_data["username"]
+    assert res_data["email"] == edit_data["email"]
+    assert res_data["country"] == edit_data["country"]
 
 def test_delete_user(authenticated_test_client: tuple[TestClient, dict]):
     user = authenticated_test_client[1]

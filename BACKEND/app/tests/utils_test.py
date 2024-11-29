@@ -124,4 +124,3 @@ def setup_authenticated_client(client: TestClient, token: str):
     """Set up a client with the given token."""
     client.headers.update({"Authorization": f"Bearer {token}"})
     return client
-

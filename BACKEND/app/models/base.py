@@ -11,6 +11,7 @@ from datetime import date, datetime
 from pydantic import EmailStr, StringConstraints
 from typing import Annotated, Union
 import json
+from datetime import timedelta
 
 
 # write your base models here
@@ -435,3 +436,23 @@ class BaseVote(SQLModel):
     '''
     player_id: int | None = Field(default=None, foreign_key="player.id", ondelete="RESTRICT", index=True)
     ct_app_id: int | None = Field(default=None, foreign_key="ctapp.id", ondelete="RESTRICT", index=True)
+
+class ActionTime(SQLModel):
+    ''
+    match_duration: timedelta = timedelta(minutes=15)
+    domain_duration: timedelta = timedelta(minutes=5)
+    simple_domain_duration: timedelta = timedelta(minutes=5)
+
+    vote_binding_vow_limit: int = 3
+
+    limit_binding_vow: int = 5
+    limit_domain_expansion: int = 5
+    limit_simple_domain: int = 5
+
+    cost_binding_vow: float = 5.0
+    cost_domain_expansion: float = 10.0
+    cost_simple_domain: float = 7.0
+
+    vote_point: float = 0.2
+    domain_expansion_point:float = 4.0
+    simple_domain_point:float = 2.0

@@ -28,6 +28,3 @@ TIME_AMT = dict(DOMAIN=5, SIMPLE_DOMAIN=5, BINDING=5)
 ACT_POINT = dict(VOTE_POINT=0.2, ACT_BINDING=5, ACT_DOMAIN=10, ACT_SIMPLE=7, DOMAIN_GAIN=4, SIMPLE_GAIN=2)
 'A dictionary of the point needed/gained for/from specific actions. e.g, VOTE_POINT'
 
-
-
-

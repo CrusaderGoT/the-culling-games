@@ -48,6 +48,7 @@ def test_session(test_engine):
     """
     with Session(test_engine) as session:
         yield session
+        
 
 @pytest.fixture(scope="module", autouse=True)
 def override_app_dependencies(test_session):
