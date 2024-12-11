@@ -3,7 +3,7 @@ from ..database.pgsql import engine
 from sqlmodel import Session, select, func
 from ..models.colony import Colony
 from ..models.player import Player
-from ..models.base import Country
+from ..models.base import Country, ActionTimePoint
 from random import choice
 from typing import Annotated
 from fastapi import Depends
@@ -42,3 +42,8 @@ def get_or_create_colony(session: session):
 colony = Annotated[Colony, Depends(get_or_create_colony)]
 '''returns a Colony with less than 10 players, or returns a new Colony.\n
 An alias dependency of the `get_or_create_colony` function'''
+
+atp = Annotated[ActionTimePoint, Depends(ActionTimePoint)]
+'''
+The Action Time Point as a dependency.
+'''

@@ -437,7 +437,7 @@ class BaseVote(SQLModel):
     player_id: int | None = Field(default=None, foreign_key="player.id", ondelete="RESTRICT", index=True)
     ct_app_id: int | None = Field(default=None, foreign_key="ctapp.id", ondelete="RESTRICT", index=True)
 
-class ActionTime(SQLModel):
+class ActionTimePoint(SQLModel):
     ''
     match_duration: timedelta = timedelta(minutes=15)
     domain_duration: timedelta = timedelta(minutes=5)

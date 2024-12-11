@@ -2,7 +2,7 @@ from fastapi import Path, HTTPException, status
 from typing import Annotated, Literal, Sequence
 from email_validator import validate_email, EmailNotValidError
 from app.utils.config import UserException
-from app.utils.dependencies import session
+from app.utils.dependencies import session, atp
 from sqlmodel import Session, and_, not_, select, exists
 from random import sample, choice
 from datetime import datetime, timedelta
@@ -12,10 +12,7 @@ from app.models.match import Match, MatchPlayerLink, Vote
 from ..models.colony import Colony
 from app.models.user import User
 from ..models.player import Player
-from ..models.base import ActionTimePoint
 
-
-ATP = ActionTimePoint()
 
 def usernamedb(username: str):
     'returns the username as stored in the DB -> lowercase'
@@ -164,7 +161,7 @@ def get_last_created_match(session: session):
     ).first()
     return last_match
 
-def create_new_match(session: session, part: int):
+def create_new_match(session: session, part: int, atp: atp):
     'creates a new match'
     # fetch colonies that has atleast one player that hasn't fought in the specified part query
     result = colonies_with_players_available_for_part(session, part)
@@ -175,7 +172,7 @@ def create_new_match(session: session, part: int):
         players = random_players_for_match(session, players_not_in_part, colony_id) 
         # create match
         begin = datetime.now() + timedelta(minutes=2) # match begins in timedelta
-        end = begin + ATP.match_duration # match ends in timedelta 
+        end = begin + atp.match_duration # match ends in timedelta 
         new_match = Match(begin=begin, end=end, part=part,
                         colony_id=colony_id, players=players)
         return new_match
@@ -229,14 +226,16 @@ def activate_domain(
         barrier_tech: BarrierTech,
         barrier_record: BarrierRecord | None,
         match: Match,
-        session: session):
+        session: session,
+        atp: atp
+    ):
     'function for activating a domain'
     # activate domain
     barrier_tech.domain_expansion = True
     # set deactivation time
-    barrier_tech.de_end_time = datetime.now() + ATP.domain_duration
+    barrier_tech.de_end_time = datetime.now() + atp.domain_duration
     # deduct points
-    barrier_tech.player.points = calculate_points(barrier_tech.player.points, ATP.cost_domain_expansion, "minus")
+    barrier_tech.player.points = calculate_points(barrier_tech.player.points, atp.cost_domain_expansion, "minus")
     # add/record the detail
     # the barrier detail should commited here
     if barrier_record is not None:
@@ -284,16 +283,20 @@ def deactivate_domain(barrier_tech: BarrierTech, session: session):
             time.sleep(remaining_time // 2) # remaining time divide by 2
             continue # loop again
 
-def get_vote_point(match:Match, prev_votes: Sequence[Vote],
-                   player_bt: BarrierTech | None, opposing_player_bt: BarrierTech | None) -> float:
+def get_vote_point(
+        match:Match, prev_votes: Sequence[Vote],
+        player_bt: BarrierTech | None,
+        opposing_player_bt: BarrierTech | None,
+        atp: atp
+    ) -> float:
     'vote function for getting the vote point of a particular vote'
 
-    vote_point = ATP.vote_point
+    vote_point = atp.vote_point
     # OPTIONS CONTROL FLOW if/if/...
     # 1. limit vote of player with an active binding vow to three, for as long as it is active
     if (player_bt
         and player_bt.binding_vow == True
-        and len(prev_votes) >= (limit := ATP.vote_binding_vow_limit)
+        and len(prev_votes) >= (limit := atp.vote_binding_vow_limit)
     ):
         raise HTTPException(status.HTTP_425_TOO_EARLY, f"binding vow active, cannot vote more than {limit} times")
 
@@ -323,9 +326,9 @@ def get_vote_point(match:Match, prev_votes: Sequence[Vote],
             and opposing_player_bt.simple_domain == True
         ):
             # players DE effect is reduced by half if so
-            vote_point *= ATP.domain_expansion_point / 2
+            vote_point *= atp.domain_expansion_point / 2
         else: # opposing player doesn't have an activated simple domain
-            vote_point *= ATP.domain_expansion_point # increase vote points
+            vote_point *= atp.domain_expansion_point # increase vote points
 
     # 4. Check if the opposing player has an active simple domain, outside of defending a DE
     # no need to check if player has their DE deactivated, since the above CONTROL FLOW
@@ -335,7 +338,7 @@ def get_vote_point(match:Match, prev_votes: Sequence[Vote],
         # and their simple domain is activated
         and opposing_player_bt.simple_domain == True):
         # if opponents simple domain is active, reduce vote points
-        vote_point /= ATP.simple_domain_point
+        vote_point /= atp.simple_domain_point
     # 5. else no BT shenanigans
     else:
         vote_point = vote_point
@@ -398,13 +401,18 @@ def conditions_for_barrier_tech(session:session, player_id: int, match_id: int,
     else:
         raise HTTPException(status.HTTP_404_NOT_FOUND, f"Player {player_id}, does not exist.")
     
-def activate_simple_domain(barrier_tech: BarrierTech, barrier_record: BarrierRecord | None, match, session: session):
+def activate_simple_domain(
+        barrier_tech: BarrierTech,
+        barrier_record: BarrierRecord | None,
+        match, session: session,
+        atp: atp
+    ):
     # activate simple domain
     barrier_tech.simple_domain = True
     # set deactivation time
-    barrier_tech.sd_end_time = datetime.now() + ATP.simple_domain_duration
+    barrier_tech.sd_end_time = datetime.now() + atp.simple_domain_duration
     # deduct points
-    barrier_tech.player.points = calculate_points(barrier_tech.player.points, ATP.cost_simple_domain, "minus")
+    barrier_tech.player.points = calculate_points(barrier_tech.player.points, atp.cost_simple_domain, "minus")
     # add/record the detail
     # the barrier detail should commited here
     if barrier_record is not None:

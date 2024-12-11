@@ -6,13 +6,12 @@ from app.models.player import PlayerInfo
 from fastapi.encoders import jsonable_encoder as je
 from ..models.match import CastVote
 from random import choice
-from pprint import pprint
 
 
 player_info_keys = PlayerInfo.model_fields.keys()
 'expected return keys, for the playerinfo'
 
-def test_create_match(authenticated_admin_client: tuple[TestClient, dict], match_players):
+def test_create_match(authenticated_admin_client: tuple[TestClient, dict], match_players: list[tuple[TestClient, dict]]):
     'test function for creating a match'
     # test create match
     res = authenticated_admin_client[0].post("/match/create?part=1")
@@ -81,4 +80,4 @@ def test_domain_expansion(match_players: list[tuple[TestClient, dict]]):
     # activate for player 1
     player1 = match_players[0][1]
     res0 = match_players[0][0].post(f"match/activate/domain/{player1['id']}", params={"match_id": 1})
-    assert res0.is_success == True, f"Couldn't activate domain for player 1: {pprint(res0.json())}"
+    assert res0.is_success == True, f"Couldn't activate domain for player 1: {res0.json()}"

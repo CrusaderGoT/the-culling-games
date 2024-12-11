@@ -2,6 +2,8 @@
 from fastapi import FastAPI
 import os
 from dotenv import load_dotenv
+import socketio
+
 
 # load .env
 load_dotenv()
@@ -13,18 +15,37 @@ app = FastAPI(title='The Culling Games API')
 >>> @app.get('/')
 >>> # rest of your code'''
 
+
+# Create a Socket.IO server with asyncio
+sio = socketio.AsyncServer(
+    async_mode="asgi",
+    cors_allowed_origins=["http://localhost:3000"],
+)
+'''
+The Global Socket.io server. To allow for use in multiple files.\n
+Should typically be used by converting a router function
+main code block to a `_sub_helper` function,
+and then use that helper in both `sio`,`router`or`app`.
+#### example:
+>>> from api.settings import sio
+>>> @sio.on("my_event")
+>>> def my_event:
+        _sub_helper()
+>>> # rest of your code\n
+
+
+'''
+
+
+# Wrap the Socket.IO server with ASGIApp
+ws_app = socketio.ASGIApp(sio)
+'''The Websocket App, to be mounted on the main FastAI app.'''
+
+# Mount the Socket.IO app to a specific route
+app.mount("/socket.io", ws_app)
+
+
 # to get a string like this run:
 # openssl rand -hex 32 in bash $
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
-
-# Time Constants for durations in Minutes
-TIME_DUR = dict(MATCH_TIME=15, DOMAIN_TIME=5, SIMPLE_DOMAIN_TIME=5, BINDING_TIME=5, BINDING_LIMIT=3)
-'A dictionary of the `times duration in Minutes` for specific events. e.g, MATCH_TIME'
-
-TIME_AMT = dict(DOMAIN=5, SIMPLE_DOMAIN=5, BINDING=5)
-'A dictionary of the amount of times an action can be done in a match. e.g, DOMAIN x5'
-
-ACT_POINT = dict(VOTE_POINT=0.2, ACT_BINDING=5, ACT_DOMAIN=10, ACT_SIMPLE=7, DOMAIN_GAIN=4, SIMPLE_GAIN=2)
-'A dictionary of the point needed/gained for/from specific actions. e.g, VOTE_POINT'
-

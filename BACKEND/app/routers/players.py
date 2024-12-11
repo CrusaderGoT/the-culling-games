@@ -1,9 +1,6 @@
 from sqlmodel import select, or_
 from app.models.barrier import BarrierTech
 from app.utils.logic import get_user, get_player, id_name_email
-from ..models.colony import Colony
-from ..models.user import User
-from ..models.barrier import BarrierRecord
 from app.models.player import (CreatePlayer, CreateCT, CreateCTApp,
                                 CTApp, CursedTechnique, Player,
                                 PlayerInfo, BasePlayerInfo,

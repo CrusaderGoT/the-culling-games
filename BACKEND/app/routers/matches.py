@@ -7,16 +7,17 @@ from ..models.base import ModelName
 from ..models.user import User
 from fastapi import APIRouter, Depends, Query, HTTPException, status, Path, Body, BackgroundTasks
 from ..auth.dependencies import oauth2_scheme, admin_user, active_user
-from ..utils.dependencies import session
+from ..utils.dependencies import session, atp
 from ..utils.config import Tag, UserException
 from typing import Annotated
 from sqlmodel import select
 from datetime import datetime
-from app.api.settings import TIME_AMT
 from app.utils.logic import (
     activate_domain, deactivate_domain, get_vote_point, conditions_for_barrier_tech,
     get_match, ongoing_match, get_player, get_last_created_match, create_new_match,
-    activate_simple_domain, deactivate_simple_domain)
+    activate_simple_domain, deactivate_simple_domain
+)
+from ..api.settings import sio # websocket server
 
 # write you match api routes here
 
@@ -27,7 +28,7 @@ router = APIRouter(
 )
 
 @router.post('/create', status_code=status.HTTP_201_CREATED, response_model=MatchInfo)
-def create_match(part: Annotated[int, Query()], session: session, admin: admin_user):
+def create_match(part: Annotated[int, Query()], session: session, admin: admin_user, atp: atp):
     '''path operation for automatically creating a match, requires a part query.'''
     # first get the permission for creating match
     permission = session.exec(
@@ -46,13 +47,13 @@ def create_match(part: Annotated[int, Query()], session: session, admin: admin_u
                     msg = f"Previous Match: ID {last_match.id}, part {last_match.part} has not ended"
                     raise HTTPException(status.HTTP_406_NOT_ACCEPTABLE, msg)
                 else: # previous match has ended; create match
-                    new_match = create_new_match(session, part)
+                    new_match = create_new_match(session, part, atp)
                     session.add(new_match)
                     session.commit()
                     session.refresh(new_match)
                     return new_match
             else: # Not a single match have been create; Create match anyway
-                new_match = create_new_match(session, part)
+                new_match = create_new_match(session, part, atp)
                 session.add(new_match)
                 session.commit()
                 session.refresh(new_match)
@@ -82,8 +83,11 @@ def vote(
     session: session,
     match_id: Annotated[int, Path()],
     voter: active_user,
-    votes: Annotated[list[CastVote],
-                    Body(min_length=1 ,max_length=5)]
+    votes: Annotated[
+        list[CastVote],
+        Body(min_length=1 ,max_length=5)
+    ],
+    atp: atp
     ):
     """
     function for casting votes\n
@@ -135,9 +139,11 @@ def vote(
                                 # get the opposing player, for their BT check against player
                                 opposing_player = [p for p in match.players if p.id != player.id][0]
                                 # get the vote point
-                                vote_point = get_vote_point(match, prev_votes,
-                                                            player.barrier_technique,
-                                                            opposing_player.barrier_technique)
+                                vote_point = get_vote_point(
+                                    match, prev_votes,
+                                    player.barrier_technique,
+                                    opposing_player.barrier_technique,
+                                    atp)
                                 # Create and add the vote
                                 update_vote = {
                                     "user": voter, "match": match, "point": vote_point,
@@ -163,11 +169,14 @@ def vote(
         raise HTTPException(status.HTTP_404_NOT_FOUND, "match doesn't exist")
     
 @router.post('/activate/domain/{player_id}', response_model=BarrierTechInfo)
-def domain_expansion(player_id: Annotated[int, Path()],
-                    match_id: Annotated[int, Query()],
-                    current_user: active_user,
-                    session: session,
-                    background: BackgroundTasks) -> BarrierTech:
+def domain_expansion(
+        player_id: Annotated[int, Path()],
+        match_id: Annotated[int, Query()],
+        current_user: active_user,
+        session: session,
+        background: BackgroundTasks,
+        atp: atp
+    ) -> BarrierTech:
     '''Activates the domain of a player in an ongoing match.\n
     Buffs the vote to x4 per vote.\n
     Weakend by simple domain'''
@@ -181,7 +190,7 @@ def domain_expansion(player_id: Annotated[int, Path()],
         match_id=match_id,
         current_user=current_user, session=session)
     
-    if barrier_record is not None and (count := barrier_record.domain_counter) >= TIME_AMT["DOMAIN"]:
+    if barrier_record is not None and (count := barrier_record.domain_counter) >= atp.limit_domain_expansion:
         # check if they have reach limit for domain expansion in a match
         if ((end_time := barrier_tech.de_end_time) is not None
             and end_time <= datetime.now()
@@ -195,7 +204,7 @@ def domain_expansion(player_id: Annotated[int, Path()],
     # modify to accout for situations where one of them is True-ish/
     # also if de end time has passed, that means that domain should have ended but the backgroud task failed
         if end_time <= datetime.now(): # should have ended, but backgroud task failed
-            barrier_tech = activate_domain(barrier_tech, barrier_record, match, session)
+            barrier_tech = activate_domain(barrier_tech, barrier_record, match, session, atp)
             # schedule background task for deactivation
             background.add_task(deactivate_domain, barrier_tech, session)
             return barrier_tech
@@ -208,7 +217,7 @@ def domain_expansion(player_id: Annotated[int, Path()],
             )
         
     else: # no domain activated or no deactivation time
-        barrier_tech = activate_domain(barrier_tech, barrier_record, match, session)
+        barrier_tech = activate_domain(barrier_tech, barrier_record, match, session, atp)
         # schedule background task for deactivation
         background.add_task(deactivate_domain, barrier_tech, session)
         return barrier_tech
@@ -216,11 +225,14 @@ def domain_expansion(player_id: Annotated[int, Path()],
                
     
 @router.post("/activate/simple/{player_id}", response_model=BarrierTechInfo)
-def simple_domain(player_id: Annotated[int, Path()],
-                           match_id: Annotated[int, Query()],
-                           current_user: active_user,
-                           session: session,
-                           background: BackgroundTasks):
+def simple_domain(
+        player_id: Annotated[int, Path()],
+        match_id: Annotated[int, Query()],
+        current_user: active_user,
+        session: session,
+        background: BackgroundTasks,
+        atp: atp
+    ) -> BarrierTech:
     '''Activates the simple domain of a player in an ongoing match.\n
     Which either\n\t
     * Reduces the opponent's vote to half per vote, If opponent doesn't have domain expansion active.\n
@@ -233,7 +245,7 @@ def simple_domain(player_id: Annotated[int, Path()],
         player=player, match=match_none, player_id=player_id, match_id=match_id,
         current_user=current_user, session=session)
     
-    if barrier_record is not None and (count := barrier_record.simple_domain_counter) >= TIME_AMT["SIMPLE_DOMAIN"]:
+    if barrier_record is not None and (count := barrier_record.simple_domain_counter) >= atp.limit_simple_domain:
         # check if they have reached limit for simple domain in a match
         if ((end_time := barrier_tech.sd_end_time) is not None
             and end_time <= datetime.now()
@@ -247,7 +259,7 @@ def simple_domain(player_id: Annotated[int, Path()],
     # modify to accout for situations where one of them is True-ish/
     # also if sd end time has passed, that means that simple domain should have ended but the backgroud task failed
         if end_time <= datetime.now(): # should have ended, but backgroud task failed
-            barrier_tech = activate_simple_domain(barrier_tech, barrier_record, match, session)
+            barrier_tech = activate_simple_domain(barrier_tech, barrier_record, match, session, atp)
             # schedule background task for deactivation
             background.add_task(deactivate_simple_domain, barrier_tech, session)
             return barrier_tech
@@ -260,7 +272,7 @@ def simple_domain(player_id: Annotated[int, Path()],
             )
         
     else: # no simple domain activated or no deactivation time
-        barrier_tech = activate_simple_domain(barrier_tech, barrier_record, match, session)
+        barrier_tech = activate_simple_domain(barrier_tech, barrier_record, match, session, atp)
         # schedule background task for deactivation
         background.add_task(deactivate_simple_domain, barrier_tech, session)
         return barrier_tech

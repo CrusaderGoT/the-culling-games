@@ -1,6 +1,6 @@
 from sqlmodel import or_, select
 from app.api.settings import app
-from fastapi import Body, Depends, status, HTTPException
+from fastapi import Body, Depends, status, HTTPException    
 from app.models.user import CreateUser, User, UserInfo
 from app.utils.dependencies import session
 from typing import Annotated
@@ -78,6 +78,3 @@ def create_user(session: session,
         else:
             err_msg = f"passwords do not match"
             raise HTTPException(status.HTTP_412_PRECONDITION_FAILED, detail=err_msg)
-
-        
-

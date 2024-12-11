@@ -1,8 +1,10 @@
+from datetime import timedelta
 from random import choice, sample
 
-from sqlmodel import Session, func, select
+from sqlmodel import SQLModel, Session, func, select
 
 from app.api.main import app
+from app.models.base import ActionTimePoint
 from app.models.colony import Colony
 from app.models.player import CreateCT, CreateCTApp, CreatePlayer, Player
 from app.models.user import Country, CreateUser
@@ -105,12 +107,34 @@ def get_or_create_colony_test(session: Session):
         country = choice([c for c in countries])
         colony = Colony(country=country)
         return colony
+    
+class ATPTest(SQLModel):
+    ''
+    match_duration: timedelta = timedelta(seconds=30)
+    domain_duration: timedelta = timedelta(seconds=30)
+    simple_domain_duration: timedelta = timedelta(seconds=30)
+
+    vote_binding_vow_limit: int = 3
+
+    limit_binding_vow: int = 5
+    limit_domain_expansion: int = 5
+    limit_simple_domain: int = 5
+
+    cost_binding_vow: float = 0
+    cost_domain_expansion: float = 0
+    cost_simple_domain: float = 0
+
+    vote_point: float = 0.2
+    domain_expansion_point:float = 4.0
+    simple_domain_point:float = 2.0
+
 
 
 def override_dependencies(session):
     """Central function for overriding dependencies."""
     app.dependency_overrides[get_session] = lambda: session
     app.dependency_overrides[get_or_create_colony] = lambda: get_or_create_colony_test(session)
+    app.dependency_overrides[ActionTimePoint] = ATPTest
 
 
 def login_test_user(client, username: str, password: str = "Password") -> str:
