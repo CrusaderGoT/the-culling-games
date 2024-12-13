@@ -1,9 +1,10 @@
+import { useActionState } from "react";
 // for defining the components of the signup page -> down to top.
 "use client"
-import { createUser } from "./api/routes"
+import { createUser } from "../api/routes";
 import { roboto_mono, lusitana } from "../fonts";
 import Image from "next/image";
-import { useFormState, useFormStatus } from "react-dom";
+import { useFormStatus } from "react-dom";
 
 
 export function UsernameInput() {
@@ -75,7 +76,7 @@ function FormInput() {
     const initialState = { //message to show if unsuccesfull
         detail: ''
     }
-    const [state, formAction] = useFormState(createUser, initialState)
+    const [state, formAction] = useActionState(createUser, initialState)
     return (
         <> 
         <form action={formAction} className="flex flex-col gap-2 sm:w-[50%] lg:w-[25%]">

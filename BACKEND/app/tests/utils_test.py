@@ -109,7 +109,7 @@ def get_or_create_colony_test(session: Session):
         return colony
     
 class ATPTest(SQLModel):
-    ''
+    'class for duration, limit, point, etc. of techniques, match, etc. `for tests`'
     match_duration: timedelta = timedelta(seconds=30)
     domain_duration: timedelta = timedelta(seconds=30)
     simple_domain_duration: timedelta = timedelta(seconds=30)

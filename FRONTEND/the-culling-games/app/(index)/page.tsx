@@ -1,7 +1,7 @@
 "use server"
 import Image from "next/image";
 import index from "./index.module.css"
-import { checkLogin } from "./api/routes";
+import { checkLogin } from "../api/routes";
 
 
 

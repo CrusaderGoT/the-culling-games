@@ -1,5 +1,5 @@
 from sqlmodel import or_, select
-from app.api.settings import app
+from app.api.settings import app, sio
 from fastapi import Body, Depends, status, HTTPException    
 from app.models.user import CreateUser, User, UserInfo
 from app.utils.dependencies import session

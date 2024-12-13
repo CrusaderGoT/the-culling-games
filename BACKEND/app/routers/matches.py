@@ -12,6 +12,7 @@ from ..utils.config import Tag, UserException
 from typing import Annotated
 from sqlmodel import select
 from datetime import datetime
+from collections import namedtuple
 from app.utils.logic import (
     activate_domain, deactivate_domain, get_vote_point, conditions_for_barrier_tech,
     get_match, ongoing_match, get_player, get_last_created_match, create_new_match,
@@ -28,7 +29,7 @@ router = APIRouter(
 )
 
 @router.post('/create', status_code=status.HTTP_201_CREATED, response_model=MatchInfo)
-def create_match(part: Annotated[int, Query()], session: session, admin: admin_user, atp: atp):
+async def create_match(part: Annotated[int, Query()], session: session, admin: admin_user, atp: atp):
     '''path operation for automatically creating a match, requires a part query.'''
     # first get the permission for creating match
     permission = session.exec(
@@ -64,8 +65,8 @@ def create_match(part: Annotated[int, Query()], session: session, admin: admin_u
         raise HTTPException(
             status.HTTP_403_FORBIDDEN,
             detail="Permission to create a match does not exist, contact a superuser"
-        )
-    
+        )    
+        
 @router.get("/all", response_model=list[MatchInfo])
 def get_matches(session: session,
                 offset: Annotated[int, Query(ge=0)] = 0,
@@ -73,6 +74,15 @@ def get_matches(session: session,
     'get all matches'
     stmt = select(Match).offset(offset).limit(limit)
     result = session.exec(stmt).all()
+    if result:
+        return result
+    else:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, f"No matches yet...")
+
+@router.get("/latest", response_model=list[MatchInfo])
+def get_lastest_match(session: session):
+    'get last created match'
+    result = get_last_created_match(session)
     if result:
         return result
     else:
@@ -277,7 +287,10 @@ def simple_domain(
         background.add_task(deactivate_simple_domain, barrier_tech, session)
         return barrier_tech
 
-
+@sio.event(namespace="/vote/{match_id}")
+async def vote_socket(sid, data):
+    'helper function for creating match'
+    
 """
 # calculate match victor n=qnd
 should run at the end of a match, to prevent increasing player points during a match
