@@ -43,7 +43,19 @@ colony = Annotated[Colony, Depends(get_or_create_colony)]
 '''returns a Colony with less than 10 players, or returns a new Colony.\n
 An alias dependency of the `get_or_create_colony` function'''
 
-atp = Annotated[ActionTimePoint, Depends(ActionTimePoint)]
+def _atp_def():
+    '''
+    `ATP Default`\n
+    A helper function for returning a called ActionTimePoint, i.e, `ActionTimePoint()`\n
+    This helps make the atp dependency not be a query on the API side.\n
+    Because as it is called, the dependency is supplied an instance of ATP,
+    with default values. Otherwise(if ATP is supplied directly as a dependency)
+    the API interprets it as the values have to be filled by the client.
+
+    '''
+    return ActionTimePoint()
+
+atp = Annotated[ActionTimePoint, Depends(_atp_def)]
 '''
 The Action Time Point as a dependency.
 '''

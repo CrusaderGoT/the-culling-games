@@ -1,5 +1,5 @@
 import { lusitana } from "@/app/fonts";
-import { players } from "@/app/api/routes";
+import { players } from "@/app/api/players";
 import Image from "next/image";
 
 

@@ -439,7 +439,7 @@ class BaseVote(SQLModel):
 
 class ActionTimePoint(SQLModel):
     'class for duration, limit, point, etc. of techniques, match, etc.'
-    match_duration: timedelta = timedelta(minutes=15)
+    match_duration: timedelta = timedelta(minutes=10)
     domain_duration: timedelta = timedelta(minutes=5)
     simple_domain_duration: timedelta = timedelta(minutes=5)
 
@@ -456,3 +456,7 @@ class ActionTimePoint(SQLModel):
     vote_point: float = 0.2
     domain_expansion_point:float = 4.0
     simple_domain_point:float = 2.0
+
+    winner_point: float = 5.0
+
+    delay_begin_match: timedelta = timedelta(seconds=60)

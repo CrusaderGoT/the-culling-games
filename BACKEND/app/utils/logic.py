@@ -171,7 +171,7 @@ def create_new_match(session: session, part: int, atp: atp):
         # Randomly select 2 players from the colony for the match
         players = random_players_for_match(session, players_not_in_part, colony_id) 
         # create match
-        begin = datetime.now() + timedelta(minutes=2) # match begins in timedelta
+        begin = datetime.now() + atp.delay_begin_match # match begins in timedelta
         end = begin + atp.match_duration # match ends in timedelta 
         new_match = Match(begin=begin, end=end, part=part,
                         colony_id=colony_id, players=players)
@@ -280,6 +280,8 @@ def deactivate_domain(barrier_tech: BarrierTech, session: session):
         else:
             # add a time pause if deactivation time is still further
             remaining_time = (barrier_tech.de_end_time - now).total_seconds()
+            if remaining_time < 0:
+                continue # loop here to avoid negative float being supplied to time.sleep
             time.sleep(remaining_time // 2) # remaining time divide by 2
             continue # loop again
 
@@ -457,25 +459,68 @@ def deactivate_simple_domain(barrier_tech: BarrierTech, session: session):
         else:
             # add a time pause if deactivation time is still further
             remaining_time = (barrier_tech.sd_end_time - now).total_seconds()
+            if remaining_time < 0:
+                continue # loop here to avoid negative float being supplied to time.sleep
+
             time.sleep(remaining_time // 2) # remaining time divide by 2
             continue # loop again
 
-def activate_barrier_tech(technique: Literal["doamin_expansion", "simple_domain", "binding_vow"],
+def activate_barrier_tech(technique: Literal["domain_expansion", "simple_domain", "binding_vow"],
                       barrier_tech: BarrierTech, barrier_record: BarrierRecord | None, match: Match,
-                      session: session):     
+                      session: session, atp: atp):
+    'function for a match/case implementation of barrier techniques'    
     # make the variables depending on which technique to activate
     match technique:
-        case "doamin_expansion":
-            tech = barrier_tech.domain_expansion
-            tech_end_time = barrier_tech.sd_end_time
-            player_points = barrier_tech.player.points
-            # add/record the detail
-            # the barrier detail should commited here
-            if barrier_record is not None:
-                barrier_record.domain_counter += 1
-            else: # no barrier detail
-                barrier_record = BarrierRecord(
-                    domain_counter=1,
-                    match=match,
-                    barrier_tech=barrier_tech
-                )
+        case "simple_domain":
+            activate_simple_domain(barrier_tech, barrier_record, match, session, atp)
+        case "domain_expansion":
+            activate_domain(barrier_tech, barrier_record, match, session, atp)
+        case "simple_domain":
+            activate_simple_domain(barrier_tech, barrier_record, match, session, atp)
+
+
+def assign_match_winner(*, match_id: int, session: session, atp: atp):
+    'for assigning the winner of a match, after it ends'
+    match = get_match(session=session, match_id=match_id)
+    if match == None: # match doesn't exit
+        return
+    # check if match is ongoing
+    active = ongoing_match(match)
+    print (active, 'hereeeeeeeeee')
+    while active:
+        # pause the loop for 1/2 the time remaining
+        now = datetime.now() # the current time
+        half_time_remaining = (match.end - now).total_seconds() // 2
+        if half_time_remaining < 0: # to avoid negative float being supplied to time.sleep
+            active = False
+            continue # last begin loop
+        time.sleep(half_time_remaining)
+        continue # run loop again after sleep
+        
+    else: # runs after the match is ended
+        # get the total vote points of the players
+        player_votes: dict[int, int] = dict()
+        if len(match.votes) >= 1: # at least one vote
+            for player in match.players:
+                player_votes.setdefault(player.id, 0)
+                for vote in match.votes:
+                    if vote.player_id == player.id:
+                        player_votes[player.id] += vote.point
+            else: # runs after loop
+                winner_key = max(player_votes, key= lambda k: player_votes[k])
+                loser_key  = min(player_votes, key= lambda k: player_votes[k])
+                # make sure it isn't a draw; if draw return/end code here
+                if player_votes[winner_key] == player_votes[loser_key]:
+                    return
+                
+                # assign winner extra 5 points
+                winner = get_player(session=session, player_id=winner_key)
+                if winner is None:
+                    return
+                winner.points += atp.winner_point
+                match.winner = winner
+                session.add(match)
+                session.commit()
+        else: # no vote was casted for this match
+            # implement draw logic
+            pass

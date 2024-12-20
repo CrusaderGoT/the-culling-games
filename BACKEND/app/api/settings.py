@@ -31,11 +31,7 @@ and then use that helper in both `sio`,`router`or`app`.
 >>> @sio.on("my_event")
 >>> def my_event:
         _sub_helper()
->>> # rest of your code\n
-
-
 '''
-
 
 # Wrap the Socket.IO server with ASGIApp
 ws_app = socketio.ASGIApp(sio)

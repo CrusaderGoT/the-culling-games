@@ -1,7 +1,8 @@
 '''module for the match routers'''
+from app.utils.logic import assign_match_winner
 from ..models.barrier import BarrierTech, BarrierTechInfo
 from ..models.player import Player, CTApp, CursedTechnique
-from ..models.match import Match, MatchInfo, CastVote, Vote
+from ..models.match import Match, MatchInfo, CastVote, Vote, ClientVoteInfo
 from ..models.admin import Permission
 from ..models.base import ModelName
 from ..models.user import User
@@ -12,7 +13,6 @@ from ..utils.config import Tag, UserException
 from typing import Annotated
 from sqlmodel import select
 from datetime import datetime
-from collections import namedtuple
 from app.utils.logic import (
     activate_domain, deactivate_domain, get_vote_point, conditions_for_barrier_tech,
     get_match, ongoing_match, get_player, get_last_created_match, create_new_match,
@@ -29,7 +29,10 @@ router = APIRouter(
 )
 
 @router.post('/create', status_code=status.HTTP_201_CREATED, response_model=MatchInfo)
-async def create_match(part: Annotated[int, Query()], session: session, admin: admin_user, atp: atp):
+async def create_match(
+    part: Annotated[int, Query()], session: session, admin: admin_user, atp: atp,
+    background: BackgroundTasks
+    ):
     '''path operation for automatically creating a match, requires a part query.'''
     # first get the permission for creating match
     permission = session.exec(
@@ -52,6 +55,7 @@ async def create_match(part: Annotated[int, Query()], session: session, admin: a
                     session.add(new_match)
                     session.commit()
                     session.refresh(new_match)
+                    background.add_task(assign_match_winner, match_id=new_match.id, session=session, atp=atp)
                     return new_match
             else: # Not a single match have been create; Create match anyway
                 new_match = create_new_match(session, part, atp)
@@ -68,9 +72,11 @@ async def create_match(part: Annotated[int, Query()], session: session, admin: a
         )    
         
 @router.get("/all", response_model=list[MatchInfo])
-def get_matches(session: session,
-                offset: Annotated[int, Query(ge=0)] = 0,
-                limit: Annotated[int, Query(le=30)] = 10):
+def get_matches(
+        session: session,
+        offset: Annotated[int, Query(ge=0)] = 0,
+        limit: Annotated[int, Query(le=30)] = 10
+    ):
     'get all matches'
     stmt = select(Match).offset(offset).limit(limit)
     result = session.exec(stmt).all()
@@ -79,16 +85,24 @@ def get_matches(session: session,
     else:
         raise HTTPException(status.HTTP_404_NOT_FOUND, f"No matches yet...")
 
-@router.get("/latest", response_model=list[MatchInfo])
-def get_lastest_match(session: session):
+@router.get("/latest", response_model=MatchInfo)
+def get_lastest_match(
+        session: session,
+        ongoing: Annotated[bool, Query(description="should be an ongoing match")] = False
+    ):
     'get last created match'
     result = get_last_created_match(session)
     if result:
+        # check if they want only ongoing latest match
+        if ongoing == True:
+            if ongoing_match(result) == False:
+                raise HTTPException(status.HTTP_404_NOT_FOUND, "No ongoing match")
+                
         return result
     else:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, f"No matches yet...")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, f"No latest match")
     
-@router.post("/vote/{match_id}", response_model=dict[str, list[Vote] | str])
+@router.post("/vote/{match_id}", response_model=ClientVoteInfo)
 def vote(
     session: session,
     match_id: Annotated[int, Path()],
@@ -98,7 +112,7 @@ def vote(
         Body(min_length=1 ,max_length=5)
     ],
     atp: atp
-    ):
+    ) -> ClientVoteInfo:
     """
     function for casting votes\n
     - a match id is required
@@ -162,19 +176,18 @@ def vote(
                                 new_votes.append(casted_vote)
                                 # add the vote points to players points
                                 player.points += vote_point
-                                # add player to session
-                                session.add(player)
 
                 else: # runs after the loop
                     session.add_all(new_votes)
-                    session.commit()
+                    session.commit() # this commit the increased player points also
                     [session.refresh(v) for v in new_votes]
                     msg = f"{len(new_votes)} out of {len(votes)} was successful"
-                    info = {"message": msg, "votes": new_votes}
+                    vote_info = {"message": msg, "votes": new_votes}
+                    info = ClientVoteInfo.model_validate(vote_info)
                     return info
 
         else: # match has ended
-            raise HTTPException(status.HTTP_304_NOT_MODIFIED, detail=f"match has ended", headers={"redirect_reason": 'match has ended'})
+            raise HTTPException(status.HTTP_423_LOCKED, detail=f"match has ended")
     else: # match doesn't exist
         raise HTTPException(status.HTTP_404_NOT_FOUND, "match doesn't exist")
     
@@ -287,14 +300,8 @@ def simple_domain(
         background.add_task(deactivate_simple_domain, barrier_tech, session)
         return barrier_tech
 
-@sio.event(namespace="/vote/{match_id}")
-async def vote_socket(sid, data):
-    'helper function for creating match'
     
-"""
-# calculate match victor n=qnd
-should run at the end of a match, to prevent increasing player points during a match
-# add the vote points to players points
-    player.points += vote_point
-    # add player to session
-    session.add(player)"""
+
+
+
+

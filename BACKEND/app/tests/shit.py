@@ -1,8 +1,10 @@
-from random import choice, sample
+active = True
+l = 0
 
-def gen_rand_email():
-    alphas = [*"a b c d e f g h i j k l m n o p q r s t u v w x y z _".split(' ')]
-    email = "".join(sample(alphas, k=8)) + "@example.com"
-    return email
-
-print(gen_rand_email())
+while active:
+    print(l)
+    l+=1
+    active = False
+    continue
+else:
+    print('worked')

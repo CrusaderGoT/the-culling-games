@@ -1,6 +1,7 @@
-import { useActionState } from "react";
 // for defining the components of the signup page -> down to top.
 "use client"
+
+import { useActionState } from "react";
 import { createUser } from "../api/routes";
 import { roboto_mono, lusitana } from "../fonts";
 import Image from "next/image";
@@ -77,6 +78,7 @@ function FormInput() {
         detail: ''
     }
     const [state, formAction] = useActionState(createUser, initialState)
+
     return (
         <> 
         <form action={formAction} className="flex flex-col gap-2 sm:w-[50%] lg:w-[25%]">

@@ -32,8 +32,7 @@ class MatchInfo(BaseMatchInfo):
     players: list["BasePlayerInfo"]
     colony: "BaseColonyInfo"
 
-# the vote system
-    
+# the vote model
 class Vote(BaseVote, table=True):
     'a vote as stored in a database'
     id: int | None = Field(default=None, primary_key=True)
@@ -46,7 +45,7 @@ class Vote(BaseVote, table=True):
 
     player: "Player" = Relationship(back_populates="votes") # the player being voted for
 
-    ct_app: "CTApp" = Relationship(back_populates="votes") # the cursed application being voted for
+    ct_app: "CTApp" = Relationship(back_populates="votes") # the cursed pplication being voted for
 
     point: float = Field(description="the point a vote carries")
 
@@ -57,14 +56,27 @@ class CastVote(SQLModel):
     player_id: int
     ct_app_id: int
 
-class VoteInfo(SQLModel):
-    'the vote info for client-side'
+class BaseVoteInfo(BaseVote):
+    '''
+    #### Base vote info: Inherits from `BaseVote`\n
+    `user_id: int = Field(description='the id of the user that casted their votes')`
+    `point: float = Field(description="the point a vote carries")`
+    '''
     id: int
+    user_id: int = Field(description='the id of the user that casted their votes')
+    point: float = Field(description="the point a vote carries")
+    has_been_added: bool = Field(default=False, description="whether or not the vote point has been added to a player's point")
+
+class ClientVoteInfo(SQLModel):
+    message: str
+    votes: list[BaseVoteInfo]
+
+class AdminVoteInfo(BaseVoteInfo):
+    'the vote info for client-side'
     user: "BaseUserInfo" = Field(description='the user that casted their votes')
     player: "BasePlayerInfo" = Field(description='the player voted')
     ct_app: "BaseCTAppInfo" = Field(description="the player's cursed technique application voted")
-    point: float
-    has_been_added: bool
+    
 
 """ 
 

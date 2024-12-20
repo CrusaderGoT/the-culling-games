@@ -23,7 +23,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 			{links.map((link) => {
 			return (
 				<Link
-					key={link.href}
+					key={link.name}
 					title={link.name}
 					href={link.href}
 					className={`${link.name === "log out" ? "hidden md:flex absolute mb-2 bg-transparent bottom-0": ""}

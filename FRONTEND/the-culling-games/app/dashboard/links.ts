@@ -33,7 +33,7 @@ export const links = [
     icon: "/images/Chizuru's_Kogane.png",
     iconHeight: 300,
     iconWidth: 300,
-    name: 'matches',
+    name: 'match',
     href: '/dashboard',
   },
   {
