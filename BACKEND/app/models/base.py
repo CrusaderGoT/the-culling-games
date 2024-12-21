@@ -344,7 +344,7 @@ class BaseColonyInfo(BaseColony):
 
 def load_table_names():
         'Load the table names dict from the JSON file'
-        fp = os.path.join(BASE_DIR, "database\\table_names.json")
+        fp = os.path.join(BASE_DIR, "database", "table_names.json")
         with open(fp, 'r') as file:
             data: dict[str, str] = json.load(file)
         return data
