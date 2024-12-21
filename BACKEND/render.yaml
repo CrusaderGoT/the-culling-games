@@ -1,0 +1,2 @@
+predeploy:
+  - alembic upgrade head
