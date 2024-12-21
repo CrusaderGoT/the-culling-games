@@ -5,6 +5,7 @@ base classes defined here cannot have fields annotated with any models outside t
 write attributes in class string definition, for easier understanding of their structure when imported to other files.\n
 should be imported only in other model modules.\n
 '''
+import os
 from sqlmodel import SQLModel, Field
 from enum import Enum, IntEnum
 from datetime import date, datetime
@@ -12,6 +13,10 @@ from pydantic import EmailStr, StringConstraints
 from typing import Annotated, Union
 import json
 from datetime import timedelta
+from pathlib import Path
+
+# Get the base directory of the current script or project
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # write your base models here
@@ -339,7 +344,8 @@ class BaseColonyInfo(BaseColony):
 
 def load_table_names():
         'Load the table names dict from the JSON file'
-        with open("app\\database\\table_names.json", 'r') as file:
+        fp = os.path.join(BASE_DIR, "database\\table_names.json")
+        with open(fp, 'r') as file:
             data: dict[str, str] = json.load(file)
         return data
 ModelName = Enum("ModelName", load_table_names())
