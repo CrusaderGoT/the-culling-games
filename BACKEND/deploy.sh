@@ -4,6 +4,9 @@
 mkdir -p /opt/render/.postgresql
 cp ./certs/root.crt /opt/render/.postgresql/root.crt
 
+# upgrade pip
+pip install --upgrade pip
+
 # Install any dependencies if needed (optional)
 pip install -r requirements.txt
 
