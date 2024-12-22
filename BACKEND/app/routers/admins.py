@@ -154,7 +154,7 @@ def new_permission(admin: admin_user, permissions: Annotated[list[CreatePermissi
         session.refresh(perm)
     return new_permissions
 
-@router.post("/superuser/{user}", include_in_schema=False)
+@router.post("/superuser/{user}")
 def demo_superuser(user: id_name_email, code: Annotated[str, Query(default=...)], session: session):
     # get the user
     userdb = get_user(session, user)
