@@ -9,6 +9,16 @@ from sqlmodel import SQLModel
 
 import json
 
+from dotenv import load_dotenv
+import os
+from pathlib import Path
+
+# Get the base directory of the current script or project
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load environment variables from the .env file
+load_dotenv()
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -17,6 +27,15 @@ config = context.config
 # This line sets up loggers basically.
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
+
+# Retrieve DATABASE_URL from environment variables
+database_url = os.getenv("DATABASE_URL")
+
+if not database_url:
+    raise ValueError("DATABASE_URL environment variable is not set.")
+
+# Replace the sqlalchemy.url in the alembic.ini file dynamically
+config.set_main_option("sqlalchemy.url", database_url)
 
 # add your model's MetaData object here
 # for 'autogenerate' support
@@ -33,6 +52,8 @@ target_metadata = SQLModel.metadata
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 
+# my table json file path
+fp = os.path.join(BASE_DIR, "table_names.json")
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
@@ -47,7 +68,7 @@ def run_migrations_offline() -> None:
 
     """
     # write table names to json file, useful for getting the names of database tables
-    with open("app\\database\\table_names.json", "w") as fl:
+    with open(fp, "w") as fl:
         names_dict = dict([(d,d) for d in target_metadata.tables.keys() if "link" not in d])
         json.dump(names_dict, fl)
 
@@ -71,7 +92,7 @@ def run_migrations_online() -> None:
 
     """
     # write table names to json file, useful for getting the names of database tables
-    with open("app\\database\\table_names.json", "w") as fl:
+    with open(fp, "w") as fl:
         names_dict = dict([(d,d) for d in target_metadata.tables.keys() if "link" not in d])
         json.dump(names_dict, fl)
 
