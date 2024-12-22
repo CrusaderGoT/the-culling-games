@@ -1,12 +1,13 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-# Create the .postgresql directory
+# Ensure the certificates are placed in the correct path for Render (optional)
 mkdir -p /opt/render/.postgresql
+cp ./certs/root.crt /opt/render/.postgresql/root.crt
 
-# Copy the root.crt file to the .postgresql directory
-cp certs/root.crt /opt/render/.postgresql/
-
-# Install dependencies
+# Install any dependencies if needed (optional)
 pip install -r requirements.txt
 
-# Any other build steps...
+# Run database migrations
+alembic upgrade head
+
+# Other deployment-related steps can go here
