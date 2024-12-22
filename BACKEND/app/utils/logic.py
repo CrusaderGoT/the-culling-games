@@ -64,10 +64,7 @@ def get_user(session: session, user_name_id_email: str | int):
     
 def get_player(session: session, player_id: int):
     'for getting a player from the database'
-    player = session.exec(
-        select(Player)
-        .where(Player.id == player_id)
-    ).first()
+    player = session.get(Player, player_id)
     if player:
         return player
     else:
