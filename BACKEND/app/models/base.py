@@ -390,8 +390,8 @@ class BaseAdminInfo(SQLModel):
 
 class AdminPermissionLink(SQLModel, table=True):
     'the m2m link table for an admin and permission(s)'
-    admin_id: int | None = Field(default=None, foreign_key="adminuser.id", primary_key=True, index=True)
-    permission_id: int | None = Field(default=None, foreign_key="permission.id", primary_key=True, index=True)
+    admin_id: int | None = Field(default=None, foreign_key="adminuser.id", primary_key=True)
+    permission_id: int | None = Field(default=None, foreign_key="permission.id", primary_key=True)
 
 
 class BaseMatch(SQLModel):
