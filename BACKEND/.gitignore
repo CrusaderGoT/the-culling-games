@@ -4,3 +4,5 @@ __pycache__/
 .venv
 test.db
 .pytest_cache
+certs/*
+BACKEND/.gitignore
