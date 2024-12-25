@@ -30,11 +30,14 @@ This is where players fight, each player belongs to a colony containing ten play
 
 
 ## Running Locally
-* You need python, vscode, and node installed. Fork this repository.\n
-In the `BACKEND` directory in vscode, run `pip install -r requirements.txt`
+* You need python, vscode, and node installed.
+* Fork this repository.\n
+In the `BACKEND` directory in vscode, run `pip install -r requirements.txt`.
+* And in the `FRONTEND` run `npm install`
+
 **Finally**
 - Backend: `uvicorn app.api.main:app --reload`
-- FRONTEND: `npm run dev`
+- FRONTEND: `pnpm run dev`
 
 ## Contribution
 * If you have uderstanding of NextJS, FastAPI, SQLAlchemy/SQLModel, or Pydantic. It will be highly appreciated if you can contribute in the completion of this project.
@@ -43,10 +46,6 @@ In the `BACKEND` directory in vscode, run `pip install -r requirements.txt`
 - **Frontend**: The frontend needs a lot of work. i have been focused on the backend, as that is my niche, but i am learning nextjs in order to complete the frontend (i already had sufficient knowledge on frontend technologies like JS, HTML, CSS). I am looking to do more work on it, especially at the dashboard, also i suck at design, so even contributing design, will be appreciated.
 
 - **Backend**: The backend i would say is around 60-70% done, the major thing i am yet to do is api for generating location/image for a match. Also i need to add more routes for admins, match, etc. Scale up the middleware, and refactoring.
-
-- **Database**: We need a database online to host the games.
-
-- **Domain Name/Deployment**: A domain name has to be registered, and then deployment.
 
 - **Documentaion**: This will be documenting the intricates of the app on the  README, helping to correct grammar, or even improving code documentation.
 
