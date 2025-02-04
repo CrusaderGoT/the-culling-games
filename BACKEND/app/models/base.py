@@ -334,7 +334,7 @@ class BaseColony(SQLModel):
     '''base class for a colony.\n
     country: Country
     '''
-    country: Country
+    country: Country 
 
 class BaseColonyInfo(BaseColony):
     '''base colony info without matches\n

@@ -22,7 +22,6 @@ app.include_router(admins.router)
 @app.post(
         "/login", response_model=Token, status_code=status.HTTP_200_OK,
         tags=[Tag.auth], summary='creates a login token', response_description='A Token',
-        include_in_schema = False
     )
 def create_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
                 session: session):

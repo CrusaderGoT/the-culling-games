@@ -1,5 +1,6 @@
 '''settings for the api'''
 from fastapi import FastAPI
+from fastapi.routing import APIRoute
 import os
 from dotenv import load_dotenv
 import socketio
@@ -8,7 +9,10 @@ import socketio
 # load .env
 load_dotenv()
 
-app = FastAPI(title='The Culling Games API')
+def custom_generate_unique_id(route: APIRoute):
+    return f"{route.name}"
+
+app = FastAPI(title='The Culling Games API', generate_unique_id_function=custom_generate_unique_id)
 '''The Global FastAPI app. To allow for use in multiple files.
 #### example:
 >>> from api.settings import app

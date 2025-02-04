@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { inter, lusitana } from "./fonts";
-import Image from "next/image";
+import { inter } from "./fonts";
+import { ThemeProvider } from "@/components/theme-povider";
+import { Header } from "@/components/Header";
 
 export const metadata: Metadata = {
   title: "The Culling Games",
@@ -14,47 +15,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} antialiased`}>
-        <Header />
-        {children}
+        <ThemeProvider
+          attribute={"class"}
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+          >
+            <main className="pt-[60px] min-w-[250px] h-dvh w-full">
+              <Header />
+              {children}
+            </main>
+          </ThemeProvider>
       </body>
     </html>
   );
 }
 
-function Header() {
-  return (
-    <header className={
-      `absolute min-w-[250px] bg-gradient-to-b from-[hsla(0,0%,0%,50%)]
-      dark:from-[hsla(0,0%,0%,100%)] to-transparent
-      top-0 z-[100] w-full flex justify-center h-fit min-h-[50px]
-      max-h-[60px] p-1`}>
-      <div className="flex w-[60%] items-center gap-3 justify-between">
-
-        <KoganeImg />
-
-        <div>
-          <p className={`${lusitana.className} max-h-[60px] font-bold text-sm sm:text-lg md:text-xl lg:text-2xl tracking-wide md:tracking-wider lg:tracking-widest`}>
-            The Culling Games
-          </p>
-        </div>
-
-        <KoganeImg />
-
-      </div>
-    </header>
-  );
-}
-
-export function KoganeImg() {
-  return (
-    <Image
-      src="/images/Kogane.png"
-      alt="Kogane-Header.png"
-      width={325}
-      height={275}
-      className={`h-[50px] w-[50px]`}
-    />
-  )
-}
