@@ -29,7 +29,7 @@ export function InputWithLabel<S>({
             render={({ field }) => (
                 <FormItem>
                     <FormLabel
-                        className="text-base"
+                        className="text-xs sm:text-base"
                         htmlFor={nameInSchema}
                     >
                         {fieldTitle}

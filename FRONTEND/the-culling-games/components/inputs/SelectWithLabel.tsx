@@ -46,7 +46,7 @@ export function SelectWithLabel<S>({
                 <FormItem>
 
                     <FormLabel
-                        className="text-base"
+                        className="text-xs sm:text-base"
                     >
                         {fieldTitle}
                     </FormLabel>

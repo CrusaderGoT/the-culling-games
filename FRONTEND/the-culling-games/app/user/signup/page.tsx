@@ -1,13 +1,12 @@
 // for defining the components of the signup page -> down to top.
-"use client"
+"use client";
 
-import { roboto_mono, lusitana } from "../../fonts";
 import Image from "next/image";
-import { UserForm } from "../UserForm";
+import { CreateUserForm } from "./CreateUserForm";
 
 function Description() {
     return (
-        <div className="mb-1 sm:m-5 w-full flex flex-1 relative overflow-hidden rounded-xl">
+        <div className="flex contain-content rounded-xl min-h-96 max-h-[80%] max-w-[90%] mx-auto relative">
             <Image
                 src="/images/Kogane_showing_player_data.png"
                 alt="info-kogane.jpg"
@@ -15,8 +14,9 @@ function Description() {
                 width={519}
                 className="absolute h-full w-full"
             />
-            <p className={`${lusitana.className} z-10 w-full sm:h-full h-[200px] p-2 bg-black/80 text-white text-sm sm:text-base overflow-y-auto`}>
-                Explaination of the games Explaination of the games Explaination of the games
+            <p className="z-10 bg-black/70 sticky p-2 text-white text-base overflow-y-auto">
+                Explaination of the games Explaination of the games Explaination
+                of the games
             </p>
         </div>
     );
@@ -24,12 +24,12 @@ function Description() {
 
 export default function SignUpPage() {
     return (
-            <div className={`${roboto_mono.className} p-5 rounded-md shadow-lg dark:shadow-white dark:shadow-md m-10`}>
-                <h3 className={`font-extrabold text-2xl mb-3`}>Register to Play</h3>
-                <div className="flex flex-col-reverse sm:flex-row justify-between">
-                    <UserForm />
-                    <Description />
-                </div>
+        <div className="sm:m-5 m-3 flex flex-col">
+            <h3 className="font-bold text-xl mb-3 self-center">Register to Play</h3>
+            <div className="flex flex-col sm:flex-row gap-3 self-center">
+                <Description />
+                <CreateUserForm />
             </div>
+        </div>
     );
 }

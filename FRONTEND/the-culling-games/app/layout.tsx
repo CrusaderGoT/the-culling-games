@@ -23,8 +23,8 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
           >
-            <main className="pt-[60px] min-w-[250px] h-dvh w-full">
-              <Header />
+            <Header />
+            <main className="pt-[60px] h-dvh w-dvw">
               {children}
             </main>
           </ThemeProvider>
