@@ -9,7 +9,7 @@ import { Form } from "@/components/ui/form";
 import { InputWithLabel } from "@/components/inputs/InputWithLabel";
 import { Button } from "@/components/ui/button";
 import { LinkButton } from "@/components/LinkButton";
-import { LogInIcon, PersonStandingIcon } from "lucide-react";
+import { LogInIcon, UserPlus2Icon } from "lucide-react";
 
 export function CreateUserForm() {
     const defaultValues: CreateUser = {
@@ -75,16 +75,16 @@ export function CreateUserForm() {
                         <div className="flex flex-col items-start gap-3 sm:flex-row w-max">
                             <Button
                                 type="submit"
-                                className="flex"
+                                className="flex text-center gap-1"
                                 title="Create Account"
                             >
                                 Create Account
                                 <div className="hidden sm:block">
-                                    <PersonStandingIcon />
+                                    <UserPlus2Icon />
                                 </div>
                             </Button>
 
-                            <div className="sm:self-center">
+                            <div className="sm:self-center font-semibold">
                                 <p>or</p>
                             </div>
 

@@ -7,7 +7,7 @@ import { Form } from "@/components/ui/form";
 import { InputWithLabel } from "@/components/inputs/InputWithLabel";
 import { Button } from "@/components/ui/button";
 import { LinkButton } from "@/components/LinkButton";
-import { Link2Icon } from "lucide-react";
+import { LogInIcon, UserPlus2Icon } from "lucide-react";
 
 const formSchema = z.object({
     username: z
@@ -35,38 +35,48 @@ export function LoginForm() {
     }
 
     return (
-        <div className="sm:px-8 p-4 m-10 container">
+        <div className="sm:px-8 p-4 container w-max mx-auto my-[10%]">
             <div>
-                <p>Log In Here</p>
+                <p className="font-bold text-lg">Log In</p>
             </div>
-            <Form {...form}>
-                <form
-                    onSubmit={form.handleSubmit(onSubmit)}
-                    className="flex items-center justify-start p-3 border rounded !text-xs"
-                >
-                    <div className="flex flex-col sm:flex-row justify-around w-full">
-                        <InputWithLabel<formSchemaType>
-                            fieldTitle="Username"
-                            nameInSchema="username"
-                        />
-                        <InputWithLabel<formSchemaType>
-                            fieldTitle="Password"
-                            nameInSchema="password"
-                            type="password"
-                        />
-                        <div className="mt-3 sm:m-0 max-w-xs flex items-center justify-between sm:items-end gap-2">
-                            <Button type="submit">
-                                Log In
-                            </Button>
-                            <LinkButton
-                                href="/user/signup"
-                                label="Create Account"
-                                icon={Link2Icon}
-                            />
+            <div className="p-3 border rounded-lg">
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)}>
+                        <div className="flex flex-col sm:flex-row gap-5 sm:justify-center">
+                            <div className="flex flex-col gap-3 sm:flex-row">
+                                <InputWithLabel<formSchemaType>
+                                    fieldTitle="Username"
+                                    nameInSchema="username"
+                                />
+                                <InputWithLabel<formSchemaType>
+                                    fieldTitle="Password"
+                                    nameInSchema="password"
+                                    type="password"
+                                />
+                            </div>
+                            <div className="mt-3 sm:m-0 max-w-xs h-max flex items-center justify-between sm:self-end gap-2">
+                                <Button type="submit" className="flex text-center gap-1">
+                                    Log In
+                                    <div className="hidden sm:block">
+                                        <LogInIcon />
+                                    </div>
+                                    
+                                </Button>
+
+                                <div className="self-center  font-semibold">
+                                    <p>or</p>
+                                </div>
+
+                                <LinkButton
+                                    href="/user/signup"
+                                    label="Create Account"
+                                    icon={UserPlus2Icon}
+                                />
+                            </div>
                         </div>
-                    </div>
-                </form>
-            </Form>
+                    </form>
+                </Form>
+            </div>
         </div>
     );
 }

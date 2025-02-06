@@ -21,9 +21,9 @@ export function LinkButton({
             title={label}
         >
             {href ? (
-                <Link href={href}>
-                <div className="hidden sm:flex gap-1 place-content-center">{label}<Icon /></div>
-                <div className="sm:hidden text-center">{label}</div>
+                <Link href={href} className="flex text-center gap-1">
+                    {label}
+                    <div className="hidden sm:block"><Icon /></div>
                 </Link>
             ): (
                 <Icon />

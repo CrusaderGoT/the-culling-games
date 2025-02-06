@@ -27,9 +27,14 @@ class MatchPlayerLink(SQLModel, table=True):
     player_id: int | None = Field(default=None, foreign_key="player.id", primary_key=True)
  
 username_pydantic_regex = Annotated[
-        str, StringConstraints(strip_whitespace=True, pattern=r'^[a-zA-Z0-9_-]{3,20}$')
+        str, StringConstraints(strip_whitespace=True, pattern=r'^[a-zA-Z]\w{3,20}$')
     ]
-'username must be alpha-numeric characters, no spaces, only underscore or/and dashes.'
+'''
+username must be alpha-numeric characters,
+starting with an alphabet, no spaces,
+only underscore or/and dashes.\n
+#### min - 3 characters; max - 20 characters
+'''
 
 # USER
 class BaseUser(SQLModel):
