@@ -5,14 +5,15 @@ from app.utils.config import UserException
 from app.utils.dependencies import session, atp
 from sqlmodel import Session, and_, not_, select, exists
 from random import sample, choice
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
+from collections import defaultdict
 import time
 from app.models.barrier import BarrierRecord, BarrierTech
 from app.models.match import Match, MatchPlayerLink, Vote
 from ..models.colony import Colony
 from app.models.user import User
 from ..models.player import Player
-
+ 
 
 def usernamedb(username: str):
     'returns the username as stored in the DB -> lowercase'
@@ -119,7 +120,7 @@ def colonies_with_players_available_for_part(session: session, part: int):
             .where(
                 and_(
                     Player.colony_id == Colony.id,
-                    not_(Player.id.in_(subquery_select))
+                    not_(Player.id.in_(subquery_select)) # type: ignore
                 )
             )
         )
@@ -297,7 +298,7 @@ def get_vote_point(
     # OPTIONS CONTROL FLOW if/if/...
     # 1. limit vote of player with an active binding vow to three, for as long as it is active
     if (player_bt
-        and player_bt.binding_vow == True
+        and player_bt.binding_vow is True
         and len(prev_votes) >= (limit := atp.vote_binding_vow_limit)
     ):
         raise HTTPException(status.HTTP_425_TOO_EARLY, f"binding vow active, cannot vote more than {limit} times")
@@ -310,7 +311,7 @@ def get_vote_point(
         and (binded_vow := [br.binding_vow_counter for br in match.barrier_records
                                 if br.barrier_tech_id == player_bt.id])
         # finally checks that the player isn't currently under a binding vow
-        and player_bt.binding_vow == False
+        and player_bt.binding_vow is False
     ):
         # ALL THESE CLAUSES MUST BE MET, HENCE THE 'and' OPERATORS.
         vote_point += binded_vow[0] # increase vote_point by binding vow accumulated points
@@ -320,12 +321,12 @@ def get_vote_point(
     if (# confirm the player has a barrier technique
         player_bt
         # then confirm that their DE is active
-        and player_bt.domain_expansion == True
+        and player_bt.domain_expansion is True
     ):
         # Now check if opposing player has a barrier tech of their own
         if (opposing_player_bt
             # check if their simple domain is active
-            and opposing_player_bt.simple_domain == True
+            and opposing_player_bt.simple_domain is True
         ):
             # players DE effect is reduced by half if so
             vote_point *= atp.domain_expansion_point / 2
@@ -338,7 +339,7 @@ def get_vote_point(
     elif (# check if opposing player has a barrier tech
         opposing_player_bt
         # and their simple domain is activated
-        and opposing_player_bt.simple_domain == True):
+        and opposing_player_bt.simple_domain is True):
         # if opponents simple domain is active, reduce vote points
         vote_point /= atp.simple_domain_point
     # 5. else no BT shenanigans
@@ -364,10 +365,10 @@ def conditions_for_barrier_tech(session:session, player_id: int, match_id: int,
     if player is not None:
         if match is not None:
             if player.user_id != current_user.id:
-                msg = f"cannot activate simple domain of another player"
+                msg = "cannot activate simple domain of another player"
                 raise UserException(current_user, status.HTTP_406_NOT_ACCEPTABLE, msg)
             else:
-                if ongoing_match(match) == True:
+                if ongoing_match(match) is True:
                     # check if domain has been actvated before
                     # get the Barrier technique of that player for the match
                     stmt = (
@@ -482,11 +483,10 @@ def activate_barrier_tech(technique: Literal["domain_expansion", "simple_domain"
 def assign_match_winner(*, match_id: int, session: session, atp: atp):
     'for assigning the winner of a match, after it ends'
     match = get_match(session=session, match_id=match_id)
-    if match == None: # match doesn't exit
+    if match is None: # match doesn't exit
         return
     # check if match is ongoing
     active = ongoing_match(match)
-    print (active, 'hereeeeeeeeee')
     while active:
         # pause the loop for 1/2 the time remaining
         now = datetime.now() # the current time
@@ -498,29 +498,37 @@ def assign_match_winner(*, match_id: int, session: session, atp: atp):
         continue # run loop again after sleep
         
     else: # runs after the match is ended
-        # get the total vote points of the players
-        player_votes: dict[int, int] = dict()
-        if len(match.votes) >= 1: # at least one vote
-            for player in match.players:
-                player_votes.setdefault(player.id, 0)
-                for vote in match.votes:
-                    if vote.player_id == player.id:
-                        player_votes[player.id] += vote.point
-            else: # runs after loop
-                winner_key = max(player_votes, key= lambda k: player_votes[k])
-                loser_key  = min(player_votes, key= lambda k: player_votes[k])
-                # make sure it isn't a draw; if draw return/end code here
-                if player_votes[winner_key] == player_votes[loser_key]:
-                    return
-                
-                # assign winner extra 5 points
-                winner = get_player(session=session, player_id=winner_key)
-                if winner is None:
-                    return
-                winner.points += atp.winner_point
-                match.winner = winner
-                session.add(match)
-                session.commit()
-        else: # no vote was casted for this match
-            # implement draw logic
-            pass
+        # Aggregate vote points by player_id in one pass
+        player_votes = defaultdict(float)
+        for vote in match.votes:
+            player_votes[vote.player_id] += vote.point
+
+        # Make sure every player in the match is present—even if they received 0 votes
+        for player in match.players:
+            player_votes.setdefault(player.id, 0)
+
+        # If no votes were cast (or all are zero) then implement draw logic
+        if not player_votes or max(player_votes.values()) == min(player_votes.values()):
+            # implement draw logic here
+            return
+
+        # Identify the player(s) with the highest vote total
+        max_points = max(player_votes.values())
+        winner_ids = [pid for pid, points in player_votes.items() if points == max_points]
+
+        # If there is more than one top scorer, that is a draw
+        if len(winner_ids) != 1:
+            # implement draw logic here
+            return
+
+        winner_id = winner_ids[0]
+        winner = get_player(session=session, player_id=winner_id)
+        if winner is None:
+            return
+
+        # Assign winner extra points and update the match record
+        winner.points += atp.winner_point
+        match.winner = winner
+        session.add(match)
+        session.commit()
+

@@ -175,7 +175,7 @@ def vote(
                                 casted_vote = Vote.model_validate(vote, update=update_vote)
                                 new_votes.append(casted_vote)
                                 # add the vote points to players points
-                                player.points += vote_point
+                                player.points = round(player.points + vote_point, 1)
 
                 else: # runs after the loop
                     session.add_all(new_votes)
@@ -299,9 +299,3 @@ def simple_domain(
         # schedule background task for deactivation
         background.add_task(deactivate_simple_domain, barrier_tech, session)
         return barrier_tech
-
-    
-
-
-
-
