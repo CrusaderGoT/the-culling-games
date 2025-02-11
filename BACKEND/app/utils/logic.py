@@ -1,17 +1,20 @@
-from fastapi import Path, HTTPException, status
-from typing import Annotated, Literal, Sequence
-from email_validator import validate_email, EmailNotValidError
-from app.utils.config import UserException
-from app.utils.dependencies import session, atp
-from sqlmodel import Session, and_, not_, select, exists
-from random import sample, choice
-from datetime import datetime
-from collections import defaultdict
 import time
+from collections import defaultdict
+from datetime import datetime
+from random import choice, sample
+from typing import Annotated, Literal, Sequence
+
+from email_validator import EmailNotValidError, validate_email
+from fastapi import HTTPException, Path, status
+from sqlmodel import Session, and_, exists, not_, select
+
 from app.models.barrier import BarrierRecord, BarrierTech
 from app.models.match import Match, MatchPlayerLink, Vote
-from ..models.colony import Colony
 from app.models.user import User
+from app.utils.config import UserException
+from app.utils.dependencies import atp, session
+
+from ..models.colony import Colony
 from ..models.player import Player
 
 
