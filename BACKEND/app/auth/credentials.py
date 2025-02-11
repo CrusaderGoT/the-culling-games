@@ -54,7 +54,7 @@ def create_access_token(data: dict,
     to_encode = data.copy()
     expires = datetime.now(timezone.utc) + expires_delta
     expires_iso = expires.isoformat() # to make json serializable
-    to_encode.update({"expires": expires_iso})
+    to_encode.update({"exp": expires_iso})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
