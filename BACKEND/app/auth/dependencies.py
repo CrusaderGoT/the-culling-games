@@ -27,7 +27,7 @@ def get_current_user(token: Annotated[str, Depends(oauth2_scheme)],
         if usernamedb is None:
             raise credentials_exception
         token_data = TokenData(username=usernamedb)
-    except InvalidTokenError, ExpiredSignatureError:
+    except (InvalidTokenError, ExpiredSignatureError):
         raise credentials_exception
     else:
         user = get_user(session, token_data.username)
