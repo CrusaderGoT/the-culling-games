@@ -2,6 +2,7 @@
 
 import { type Options as ClientOptions, type TDataShape, type Client, urlSearchParamsBodySerializer } from '@hey-api/client-next';
 import type { CurrentUserData, CurrentUserResponse, AuserData, AuserResponse, AuserError, EditUserData, EditUserResponse, EditUserError, DeleteUserData, DeleteUserResponse, DeleteUserError, CreatePlayerData, CreatePlayerResponse, CreatePlayerError, MyPlayerData, MyPlayerResponse, GetPlayersData, GetPlayersResponse, GetPlayersError, APlayerData, APlayerResponse, APlayerError, EditPlayerData, EditPlayerResponse, EditPlayerError, DeletePlayerData, DeletePlayerResponse, DeletePlayerError, UpgradePlayerData, UpgradePlayerResponse, UpgradePlayerError, CreateMatchData, CreateMatchResponse, CreateMatchError, GetMatchesData, GetMatchesResponse, GetMatchesError, GetLastestMatchData, GetLastestMatchResponse, GetLastestMatchError, VoteData, VoteResponse, VoteError, DomainExpansionData, DomainExpansionResponse, DomainExpansionError, SimpleDomainData, SimpleDomainResponse, SimpleDomainError, CreateAdminData, CreateAdminResponse, CreateAdminError, NewPermissionData, NewPermissionResponse, NewPermissionError, DemoSuperuserData, DemoSuperuserError, CreateTokenData, CreateTokenResponse, CreateTokenError, CreateUserData, CreateUserResponse, CreateUserError } from './types.gen';
+import { currentUserResponseTransformer, aUserResponseTransformer, editUserResponseTransformer, deleteUserResponseTransformer, createPlayerResponseTransformer, myPlayerResponseTransformer, aPlayerResponseTransformer, editPlayerResponseTransformer, deletePlayerResponseTransformer, upgradePlayerResponseTransformer, createMatchResponseTransformer, getMatchesResponseTransformer, getLastestMatchResponseTransformer, domainExpansionResponseTransformer, simpleDomainResponseTransformer, createAdminResponseTransformer, createUserResponseTransformer } from './transformers.gen';
 import { zCurrentUserResponse, zAUserResponse, zEditUserResponse, zDeleteUserResponse, zCreatePlayerResponse, zMyPlayerResponse, zGetPlayersResponse, zAPlayerResponse, zEditPlayerResponse, zDeletePlayerResponse, zUpgradePlayerResponse, zCreateMatchResponse, zGetMatchesResponse, zGetLastestMatchResponse, zVoteResponse, zDomainExpansionResponse, zSimpleDomainResponse, zCreateAdminResponse, zNewPermissionResponse, zCreateTokenResponse, zCreateUserResponse } from './zod.gen';
 import { client as _heyApiClient } from './client.gen';
 
@@ -26,6 +27,7 @@ export class UsersService {
                     type: 'http'
                 }
             ],
+            responseTransformer: currentUserResponseTransformer,
             responseValidator: async (data) => {
                 return await zCurrentUserResponse.parseAsync(data);
             },
@@ -45,6 +47,7 @@ export class UsersService {
                     type: 'http'
                 }
             ],
+            responseTransformer: aUserResponseTransformer,
             responseValidator: async (data) => {
                 return await zAUserResponse.parseAsync(data);
             },
@@ -64,6 +67,7 @@ export class UsersService {
                     type: 'http'
                 }
             ],
+            responseTransformer: editUserResponseTransformer,
             responseValidator: async (data) => {
                 return await zEditUserResponse.parseAsync(data);
             },
@@ -88,6 +92,7 @@ export class UsersService {
                     type: 'http'
                 }
             ],
+            responseTransformer: deleteUserResponseTransformer,
             responseValidator: async (data) => {
                 return await zDeleteUserResponse.parseAsync(data);
             },
@@ -101,6 +106,7 @@ export class UsersService {
      */
     public static createUser<ThrowOnError extends boolean = false>(options: Options<CreateUserData, ThrowOnError>) {
         return (options.client ?? _heyApiClient).post<CreateUserResponse, CreateUserError, ThrowOnError>({
+            responseTransformer: createUserResponseTransformer,
             responseValidator: async (data) => {
                 return await zCreateUserResponse.parseAsync(data);
             },
@@ -127,6 +133,7 @@ export class PlayersService {
                     type: 'http'
                 }
             ],
+            responseTransformer: createPlayerResponseTransformer,
             responseValidator: async (data) => {
                 return await zCreatePlayerResponse.parseAsync(data);
             },
@@ -150,6 +157,7 @@ export class PlayersService {
                     type: 'http'
                 }
             ],
+            responseTransformer: myPlayerResponseTransformer,
             responseValidator: async (data) => {
                 return await zMyPlayerResponse.parseAsync(data);
             },
@@ -188,6 +196,7 @@ export class PlayersService {
                     type: 'http'
                 }
             ],
+            responseTransformer: aPlayerResponseTransformer,
             responseValidator: async (data) => {
                 return await zAPlayerResponse.parseAsync(data);
             },
@@ -212,6 +221,7 @@ export class PlayersService {
                     type: 'http'
                 }
             ],
+            responseTransformer: editPlayerResponseTransformer,
             responseValidator: async (data) => {
                 return await zEditPlayerResponse.parseAsync(data);
             },
@@ -235,6 +245,7 @@ export class PlayersService {
                     type: 'http'
                 }
             ],
+            responseTransformer: deletePlayerResponseTransformer,
             responseValidator: async (data) => {
                 return await zDeletePlayerResponse.parseAsync(data);
             },
@@ -257,6 +268,7 @@ export class PlayersService {
                     type: 'http'
                 }
             ],
+            responseTransformer: upgradePlayerResponseTransformer,
             responseValidator: async (data) => {
                 return await zUpgradePlayerResponse.parseAsync(data);
             },
@@ -280,6 +292,7 @@ export class MatchesService {
                     type: 'http'
                 }
             ],
+            responseTransformer: createMatchResponseTransformer,
             responseValidator: async (data) => {
                 return await zCreateMatchResponse.parseAsync(data);
             },
@@ -300,6 +313,7 @@ export class MatchesService {
                     type: 'http'
                 }
             ],
+            responseTransformer: getMatchesResponseTransformer,
             responseValidator: async (data) => {
                 return await zGetMatchesResponse.parseAsync(data);
             },
@@ -320,6 +334,7 @@ export class MatchesService {
                     type: 'http'
                 }
             ],
+            responseTransformer: getLastestMatchResponseTransformer,
             responseValidator: async (data) => {
                 return await zGetLastestMatchResponse.parseAsync(data);
             },
@@ -371,6 +386,7 @@ export class MatchesService {
                     type: 'http'
                 }
             ],
+            responseTransformer: domainExpansionResponseTransformer,
             responseValidator: async (data) => {
                 return await zDomainExpansionResponse.parseAsync(data);
             },
@@ -398,6 +414,7 @@ export class MatchesService {
                     type: 'http'
                 }
             ],
+            responseTransformer: simpleDomainResponseTransformer,
             responseValidator: async (data) => {
                 return await zSimpleDomainResponse.parseAsync(data);
             },
@@ -421,6 +438,7 @@ export class AdminService {
                     type: 'http'
                 }
             ],
+            responseTransformer: createAdminResponseTransformer,
             responseValidator: async (data) => {
                 return await zCreateAdminResponse.parseAsync(data);
             },

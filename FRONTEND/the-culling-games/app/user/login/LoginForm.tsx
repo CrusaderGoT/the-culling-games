@@ -8,8 +8,10 @@ import { InputWithLabel } from "@/components/inputs/InputWithLabel";
 import { Button } from "@/components/ui/button";
 import { LinkButton } from "@/components/LinkButton";
 import { LogInIcon, UserPlus2Icon } from "lucide-react";
+import { useAction } from "next-safe-action/hooks";
+import { loginUserAction } from "@/api/actions/user-actions";
 
-const formSchema = z.object({
+export const loginUserSchema = z.object({
     username: z
         .string()
         .nonempty({ message: "Username must be at least 2 characters" }),
@@ -18,16 +20,35 @@ const formSchema = z.object({
         .min(8, { message: "Password must be atleast 8 characters" }),
 });
 
-type formSchemaType = z.infer<typeof formSchema>;
+type formSchemaType = z.infer<typeof loginUserSchema>;
 
 export function LoginForm() {
     const form = useForm<formSchemaType>({
-        resolver: zodResolver(formSchema),
+        resolver: zodResolver(loginUserSchema),
         defaultValues: {
             username: "",
             password: "",
         },
     });
+
+    const {
+        executeAsync: executeLogin,
+        result: loginResult,
+        isPending: isLoggingIn,
+        reset: resetLoginAction,
+    } = useAction(loginUserAction, {
+        onSuccess({ data }) {
+            if (data?.data) {
+                // save token
+                // redirect to prev page
+            }
+            // toast error message
+        },
+        onError() {
+            // toast server error
+            resetLoginAction()
+        }
+    })
 
     function onSubmit({ username, password }: formSchemaType) {
         // next safe action form here

@@ -1,32 +1,25 @@
 import { roboto_mono } from "@/app/fonts";
 import { EditUserForm } from "./EditUserForm";
-import { UsersService } from "@/api/client";
+import { UsersService, UserInfo } from "@/api/client";
 
 export default async function EditUserPage() {
-    try {
-        const userResponse = await UsersService.currentUser();
+    const userData: UserInfo = {
+        id: 0,
+        username: "crusader",
+        email: "emy@gmail.com",
+        created: new Date(),
+        country: "NG",
 
-        if (userResponse.data === undefined) {
-
-            return <div>{userResponse.error?.detail}</div>;
-        }
-
-        return (
-            <div
-                className={`${roboto_mono.className} p-5 rounded-md shadow-lg dark:shadow-white dark:shadow-md m-10`}
-            >
-                <h3 className={`font-extrabold text-2xl mb-3`}>
-                    Register to Play
-                </h3>
-                <div className="flex flex-col-reverse sm:flex-row justify-between">
-                    <EditUserForm user={userResponse.data} />
-                </div>
-            </div>
-        );
-    } catch (e) {
-        console.error(e)
-        if (e instanceof Error) {
-            throw e;
-        }
     }
+
+    return (
+        <div
+            className={`${roboto_mono.className} p-5 rounded-md shadow-lg dark:shadow-white dark:shadow-md m-10`}
+        >
+            <h3 className={`font-extrabold text-2xl mb-3`}>Edit User</h3>
+            <div className="flex flex-col-reverse sm:flex-row justify-between">
+                <EditUserForm user={userData} />
+            </div>
+        </div>
+    );
 }

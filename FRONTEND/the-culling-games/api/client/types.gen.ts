@@ -29,15 +29,15 @@ export type BarrierTechInfo = {
     /**
      * the time a player cast their domain
      */
-    de_end_time?: string | null;
+    de_end_time?: Date | null;
     /**
      * the time a player cast their binding_vow
      */
-    bv_end_time?: string | null;
+    bv_end_time?: Date | null;
     /**
      * the time a player cast their simple_domain
      */
-    sd_end_time?: string | null;
+    sd_end_time?: Date | null;
     id: number;
 };
 
@@ -94,8 +94,8 @@ export type BaseColonyInfo = {
  * `winner: Union[BasePlayerInfo, None]`
  */
 export type BaseMatchInfo = {
-    begin: string;
-    end: string;
+    begin: Date;
+    end: Date;
     part: number;
     id: number;
     winner: BasePlayerInfo | null;
@@ -134,7 +134,7 @@ export type BasePlayerInfo = {
     age?: number | null;
     role?: string | null;
     id: number;
-    created: string;
+    created: Date;
     grade: Grade;
     points: number;
 };
@@ -162,7 +162,7 @@ export type BaseUserInfo = {
     /**
      * the date the account was created
      */
-    created: string;
+    created: Date;
 };
 
 /**
@@ -571,8 +571,8 @@ export type HttpValidationError = {
  * match info for client side
  */
 export type MatchInfo = {
-    begin: string;
-    end: string;
+    begin: Date;
+    end: Date;
     part: number;
     id: number;
     winner: BasePlayerInfo | null;
@@ -627,7 +627,7 @@ export type PlayerInfo = {
     age?: number | null;
     role?: string | null;
     id: number;
-    created: string;
+    created: Date;
     grade: Grade;
     points: number;
     cursed_technique: BaseCtInfo;
@@ -662,7 +662,7 @@ export type UserInfo = {
     /**
      * the date the account was created
      */
-    created: string;
+    created: Date;
     player?: BasePlayerInfo | null;
     admin?: BaseAdminInfo | null;
 };

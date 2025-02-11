@@ -24,7 +24,7 @@ export default function RootLayout({
           disableTransitionOnChange
           >
             <Header />
-            <main className="pt-[60px] h-dvh w-dvw">
+            <main className="pt-[60px] h-dvh w-full">
               {children}
             </main>
           </ThemeProvider>

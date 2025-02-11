@@ -27,7 +27,7 @@ class MatchPlayerLink(SQLModel, table=True):
     player_id: int | None = Field(default=None, foreign_key="player.id", primary_key=True)
  
 username_pydantic_regex = Annotated[
-        str, StringConstraints(strip_whitespace=True, pattern=r'^[a-zA-Z]\w{3,20}$')
+str, StringConstraints(strip_whitespace=True, pattern=r'^[A-Za-z][A-Za-z0-9_-]{2,19}$')
     ]
 '''
 username must be alpha-numeric characters,
@@ -82,7 +82,7 @@ class BasePlayer(SQLModel):
         TWO = 2
         THREE = 3
         FOUR = 4
-    name: str = Field(index=True)
+    name: str = Field(index=True, min_length=2, nullable=False)
     gender: Gender = Field(index=True)
     age: int | None = Field(default=None, ge=10, le=102, index=True)
     role: str | None = Field(default=None, index=True)

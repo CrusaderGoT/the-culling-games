@@ -10,6 +10,8 @@ export default defineConfig({
   },
   plugins: [
     ...defaultPlugins,
+    "zod",
+    '@hey-api/transformers',
     {
       name: "@hey-api/client-next",
       runtimeConfigPath: "./api/hey-api.ts",
@@ -18,12 +20,12 @@ export default defineConfig({
       asClass: true,
       name: "@hey-api/sdk",
       validator: true,
+      transformer: true, 
     },
     {
       enums: "javascript",
       name: "@hey-api/typescript",
     },
-    "zod",
   ],
   watch: false, // true to keep check for changes to fastapi openapi specs
 });

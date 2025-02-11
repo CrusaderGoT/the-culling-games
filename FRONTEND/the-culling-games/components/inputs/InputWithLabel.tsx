@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { useFormContext } from "react-hook-form";
-import { 
+import { useFormContext, FieldPath, FieldValues } from "react-hook-form";
+import {
     FormControl,
     FormField,
     FormItem,
@@ -11,14 +11,19 @@ import {
 import { Input } from "../ui/input";
 import { InputHTMLAttributes } from "react";
 
-type InputProps<S> = {
-    fieldTitle: string,
-    nameInSchema: keyof S & string,
-    className?: string,
+type InputProps<S extends FieldValues> = {
+    fieldTitle: string;
+    nameInSchema: FieldPath<S>;
+    className?: string;
+    fieldInfo?: string;
 } & InputHTMLAttributes<HTMLInputElement>;
 
-export function InputWithLabel<S>({
-    fieldTitle, nameInSchema, className, ...props
+export function InputWithLabel<S extends FieldValues>({
+    fieldTitle,
+    nameInSchema,
+    className,
+    fieldInfo,
+    ...props
 }: InputProps<S>) {
     const form = useFormContext();
 

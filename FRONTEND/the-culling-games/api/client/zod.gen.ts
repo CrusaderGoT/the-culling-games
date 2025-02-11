@@ -23,7 +23,7 @@ export const zAdminInfo = z.object({
     })),
     id: z.number().int(),
     user: z.object({
-        username: z.string().regex(/^[a-zA-Z0-9_-]{3,20}$/),
+        username: z.string().regex(/^[A-Za-z][A-Za-z0-9_-]{2,19}$/),
         email: z.string().email(),
         country: z.union([
             z.enum([
@@ -493,7 +493,7 @@ export const zBaseMatchInfo = z.object({
     id: z.number().int(),
     winner: z.union([
         z.object({
-            name: z.string(),
+            name: z.string().min(2),
             gender: z.enum([
                 'male',
                 'female',
@@ -535,7 +535,7 @@ export const zBasePermissionInfo = z.object({
 });
 
 export const zBasePlayerInfo = z.object({
-    name: z.string(),
+    name: z.string().min(2),
     gender: z.enum([
         'male',
         'female',
@@ -556,7 +556,7 @@ export const zBasePlayerInfo = z.object({
 });
 
 export const zBaseUserInfo = z.object({
-    username: z.string().regex(/^[a-zA-Z0-9_-]{3,20}$/),
+    username: z.string().regex(/^[A-Za-z][A-Za-z0-9_-]{2,19}$/),
     email: z.string().email(),
     country: z.union([
         z.enum([
@@ -780,7 +780,7 @@ export const zBaseVoteInfo = z.object({
 
 export const zBodyCreatePlayer = z.object({
     player: z.object({
-        name: z.string(),
+        name: z.string().min(2),
         gender: z.enum([
             'male',
             'female',
@@ -1104,7 +1104,7 @@ export const zCreatePermission = z.object({
 });
 
 export const zCreatePlayer = z.object({
-    name: z.string(),
+    name: z.string().min(2),
     gender: z.enum([
         'male',
         'female',
@@ -1121,14 +1121,14 @@ export const zCreatePlayer = z.object({
 });
 
 export const zCreateUser = z.object({
-    username: z.string().regex(/^[a-zA-Z0-9_-]{3,20}$/),
+    username: z.string().regex(/^[A-Za-z][A-Za-z0-9_-]{2,19}$/),
     email: z.string().email(),
     country: z.union([
         zCountry,
         z.null()
     ]).optional(),
-    password: z.string().regex(/^([A-Z])([A-Za-z\\d@$!%*?&\\S]{7,})$/),
-    confirm_password: z.string().regex(/^([A-Z])([A-Za-z\\d@$!%*?&\\S]{7,})$/)
+    password: z.string(),
+    confirm_password: z.string()
 });
 
 export const zEditCt = z.object({
@@ -1172,7 +1172,7 @@ export const zEditPlayer = z.object({
 
 export const zEditUser = z.object({
     username: z.union([
-        z.string().regex(/^[a-zA-Z0-9_-]{3,20}$/),
+        z.string().regex(/^[A-Za-z][A-Za-z0-9_-]{2,19}$/),
         z.null()
     ]).optional(),
     email: z.union([
@@ -1238,7 +1238,7 @@ export const zPermissionInfo = z.object({
 export const zPermissionLevel = z.unknown();
 
 export const zPlayerInfo = z.object({
-    name: z.string(),
+    name: z.string().min(2),
     gender: zGender,
     age: z.union([
         z.number().int().gte(10).lte(102),
@@ -1274,7 +1274,7 @@ export const zToken = z.object({
 });
 
 export const zUserInfo = z.object({
-    username: z.string().regex(/^[a-zA-Z0-9_-]{3,20}$/),
+    username: z.string().regex(/^[A-Za-z][A-Za-z0-9_-]{2,19}$/),
     email: z.string().email(),
     country: z.union([
         zCountry,

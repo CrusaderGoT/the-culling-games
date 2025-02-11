@@ -1,7 +1,7 @@
 "use client";
 
 import { SelectWithLabel } from "@/components/inputs/SelectWithLabel";
-import { type EditUser, Country, UserInfo } from "@/api/client";
+import { type EditUser, UserInfo } from "@/api/client";
 import { zEditUser,  } from "@/api/client/zod.gen";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";

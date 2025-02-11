@@ -1,6 +1,7 @@
 #./api/models/users.py
 '''module for defining the `users` models that will be used to perform CRUD operations on the database and
 The models that will be used as schemas/response/request data in the API schema. All SQLModels'''
+import re
 from sqlmodel import SQLModel, Field, Relationship
 from pydantic import EmailStr, StringConstraints, ValidationInfo, field_validator
 from datetime import date
@@ -37,16 +38,29 @@ class User(BaseUser, table=True):
     votes: list["Vote"] = Relationship(back_populates="user")
     #logs: list["UserLog"] = Relationship(back_populates="user", cascade_delete=True)
 
+PASSWORD_PATTERN = re.compile(
+    r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$'
+)
+
 class CreateUser(BaseUser):
     'For creating a user'
     password: Annotated[
-        str, StringConstraints(
-            pattern=r"^([A-Z])([A-Za-z\d@$!%*?&\S]{7,})$")
+        str, StringConstraints(strip_whitespace=True)
         ] = Field(description="the user's password")
     confirm_password: Annotated[
-        str, StringConstraints(
-            pattern=r"^([A-Z])([A-Za-z\d@$!%*?&\S]{7,})$")
+        str, StringConstraints(strip_whitespace=True)
         ] = Field(description="the user's password")
+    
+    #Ensure password pattern is correct
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, value: str) -> str:
+        # Use re.fullmatch so the entire password string is checked.
+        if not PASSWORD_PATTERN.fullmatch(value):
+            raise ValueError(
+                "Password must be at least 8 characters long, include at least one lowercase letter, one uppercase letter, one digit, and one special character (@, $, !, %, *, ?, &, #)."
+            )
+        return value
     
     # Ensure password and confirm_password match
     @field_validator('confirm_password')

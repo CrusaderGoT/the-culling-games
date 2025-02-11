@@ -16,7 +16,7 @@ import {
     FormMessage,
 } from "@/components/ui/form";
 
-import { useFormContext } from "react-hook-form";
+import { useFormContext, FieldPath, FieldValues } from "react-hook-form";
 
 
 type DataObj = {
@@ -24,15 +24,15 @@ type DataObj = {
     description: string
 }
 
-type SelectProps<S> = {
+type SelectProps<S extends FieldValues> = {
     data: DataObj[]
     fieldTitle: string,
-    nameInSchema: keyof S & string,
+    nameInSchema: FieldPath<S>,
     className?: string,
 }
 
 
-export function SelectWithLabel<S>({
+export function SelectWithLabel<S extends FieldValues>({
     data, fieldTitle, nameInSchema, className
 }: SelectProps<S> ) {
 

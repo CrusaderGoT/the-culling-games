@@ -10,6 +10,7 @@ import { InputWithLabel } from "@/components/inputs/InputWithLabel";
 import { Button } from "@/components/ui/button";
 import { LinkButton } from "@/components/LinkButton";
 import { LogInIcon, UserPlus2Icon } from "lucide-react";
+import { COUNTRIES } from "@/constants/COUNTRIES";
 
 export function CreateUserForm() {
     const defaultValues: CreateUser = {
@@ -50,7 +51,7 @@ export function CreateUserForm() {
                             />
 
                             <SelectWithLabel<CreateUser>
-                                data={countries}
+                                data={COUNTRIES}
                                 fieldTitle="Country"
                                 nameInSchema="country"
                             />
