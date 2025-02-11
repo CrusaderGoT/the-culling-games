@@ -48,4 +48,4 @@ app.mount("/socket.io", ws_app)
 # to get a string like this run:
 # openssl rand -hex 32 in bash $
 SECRET_KEY = os.getenv("SECRET_KEY")
-ALGORITHM = os.getenv("ALGORITHM")
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
