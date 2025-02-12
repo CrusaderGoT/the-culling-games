@@ -1,4 +1,4 @@
-export function ColonyCard() {
+export function ColonyStatus() {
     // each colony has 10 players 100%
     // make a logic that calculates where to place the red line depending on how many players are left
     return (

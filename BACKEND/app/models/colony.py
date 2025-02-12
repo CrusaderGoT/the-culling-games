@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
 # write your colony models here
 
+# COLONY
 class Colony(BaseColony, table=True):
     'a colony as stored in the database'
     id: int | None = Field(default=None, primary_key=True)

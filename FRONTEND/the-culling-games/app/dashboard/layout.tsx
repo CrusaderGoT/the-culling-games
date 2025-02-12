@@ -7,14 +7,26 @@ import Image from "next/image";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
     return (
-			<main className="min-w-[250px] relative sm:h-[100vh] w-full flex flex-col md:flex-row pt-[100px]">
+			<div className="w-full h-full flex flex-col md:flex-row gap-2">
 				<SideNav />
 				{children}
-			</main>
+			</div>
     );
   }
 
-  function SideNav() {
+/**
+ * SideNav component renders a side navigation bar with links.
+ * The navigation bar is responsive and adjusts its layout based on the screen size.
+ * 
+ * returns {JSX.Element} The rendered side navigation component.
+ * 
+ * @remarks
+ * - The component uses `usePathname` to get the current path and highlight the active link.
+ * - The links are rendered from a `links` array, each containing `name`, `href`, `icon`, `iconWidth`, and `iconHeight`.
+ * - The "log out" link is hidden on smaller screens and positioned at the bottom on larger screens.
+ * - The component uses Tailwind CSS classes for styling and responsiveness.
+ */
+function SideNav() {
 	const pathname = usePathname();
 	return (
 			<div className="flex sticky top-[0px] justify-around z-20

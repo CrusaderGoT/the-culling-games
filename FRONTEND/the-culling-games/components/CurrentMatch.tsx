@@ -82,7 +82,7 @@ function MatchCard() {
     );
 }
 
-export function CurrentMatch() {
+export function LatestMatch() {
     const match: MatchInfo = {
         id: 1,
         begin: new Date(),
@@ -129,7 +129,7 @@ export function CurrentMatch() {
     };
 
     return (
-        <Card className="w-full max-w-md bg-gradient-to-bl from-yellow-500 to-red-500 text-black">
+        <Card className="flex flex-col justify-between max-h-max max-w-md bg-gradient-to-bl from-yellow-500 to-red-500 text-black">
             <CardHeader className="flex flex-row justify-between items-center p-2 space-y-0">
                 <div className="rounded-full px-2 py-1 bg-green-600 text-white text-xs">
                     {`Colony ${match.colony.id}: ${match.colony.country}`}
@@ -139,12 +139,17 @@ export function CurrentMatch() {
                 </div>
             </CardHeader>
             <CardContent className="p-4">
-                <div className="flex justify-around items-center gap-5 font-bold mb-4">
-                    <span className="text-center">{match.players[0].name}</span>
+                <div className="flex w-full flex-nowrap justify-around items-center gap-5 font-bold mb-4">
+                    <span className="flex-1 text-center truncate">
+                        {match.players[0].name}
+                    </span>
                     <span className="font-extralight text-sm">VS</span>
-                    <span className="text-center">{match.players[1].name}</span>
+                    <span className="flex-1 text-center truncate">
+                        {match.players[1].name}
+                    </span>
                 </div>
             </CardContent>
+
             <CardFooter className="flex justify-between text-xs p-2">
                 <span className="text-red-950">{`points: ${match.players[0].points.toFixed(
                     1
