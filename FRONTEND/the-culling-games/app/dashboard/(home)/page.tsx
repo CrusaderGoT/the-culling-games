@@ -1,6 +1,6 @@
 import { LeaderboardChart } from "@/components/Chart";
 import { ColonyStatus } from "@/components/ColonyCard";
-import { ColonyDashboard } from "@/components/ColonyChart";
+import { ColonyPlayerGradeChart } from "@/components/ColonyPlayersGradeChart";
 import { LatestMatch } from "@/components/CurrentMatch";
 import { PlayerCard } from "@/components/PlayerCard";
 import { CommentSection } from "@/components/SocialBoard";
@@ -24,7 +24,7 @@ export default function Dashboard() {
                             <PlayerCard />
                         </div>
                         <div>
-                            <ColonyDashboard />
+                            <ColonyPlayerGradeChart />
                         </div>
                     </div>
 

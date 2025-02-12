@@ -37,3 +37,4 @@ class Tag(str, Enum):
     auth = 'auth'
     match = 'matches'
     admin = 'admin'
+    colony = 'colonies'

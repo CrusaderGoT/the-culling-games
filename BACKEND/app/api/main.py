@@ -8,7 +8,7 @@ from app.auth.credentials import PasswordAuth, authenticate_user, create_access_
 from app.auth.models import Token
 from app.utils.config import Tag
 from fastapi.security import  OAuth2PasswordRequestForm
-from app.routers import admins, matches, players, users
+from app.routers import admins, matches, players, users, colonies
 from ..utils.logic import usernamedb
 
 
@@ -17,6 +17,7 @@ app.include_router(users.router)
 app.include_router(players.router)
 app.include_router(matches.router)
 app.include_router(admins.router)
+app.include_router(colonies.router)
 
 # LOGIN
 @app.post(
