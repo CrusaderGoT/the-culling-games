@@ -1,5 +1,4 @@
 import { defineConfig } from "@hey-api/openapi-ts";
-import { defaultPlugins } from '@hey-api/openapi-ts';
 
 export default defineConfig({
   input: "http://localhost:8000/openapi.json",
@@ -9,23 +8,25 @@ export default defineConfig({
     path: "api/client",
   },
   plugins: [
-    ...defaultPlugins,
-    "zod",
-    '@hey-api/transformers',
     {
       name: "@hey-api/client-next",
       runtimeConfigPath: "./api/hey-api.ts",
     },
     {
-      asClass: true,
       name: "@hey-api/sdk",
-      validator: true,
-      transformer: true, 
+      asClass: true,
+      validator: "zod",
+      transformer: "@hey-api/transformers",
     },
     {
-      enums: "javascript",
       name: "@hey-api/typescript",
+      enums: "javascript"
     },
+    "zod",
+    "@hey-api/transformers",
+    "@tanstack/react-query",
+    
+    
   ],
-  watch: false, // true to keep check for changes to fastapi openapi specs
+  watch: true, // true to keep check for changes to fastapi openapi specs
 });

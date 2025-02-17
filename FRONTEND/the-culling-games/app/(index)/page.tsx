@@ -1,13 +1,16 @@
+"use client";
+
 import Image from "next/image";
 import index from "./index.module.css";
+import { useRouter } from "next/navigation";
 
-export default async function Home() {
+export default function Home() {
     return (
         <div
-            className="contain-content
-            bg-gradient-radial dark:from-slate-400 dark:to-slate-900
-            font-mono text-sm flex items-center  
-            justify-center h-full"
+            className="
+            bg-gradient-rzadial dark:from-slate-400 dark:to-slate-900 to-slate-400 from-slate-900
+            font-mono text-sm flex items-center min-h-screen
+            justify-center relative"
         >
             <ColonyCircle />
         </div>
@@ -18,11 +21,10 @@ function ColonyCircle() {
     return (
         <div
             className={`${index.colonyCircle} p-5 overflow-hidden
-      w-[90vw] h-[90vw]
-      sm:w-[80vh] sm:h-[80vh]
-      md:w-2/3 md:h-1/2
-      max-w-[99%] max-h-[99%]
-      rounded-full cursor-default border-transparent
+      w-[380px] h-[380px]
+      sm:w-[600px] sm:h-[600px]
+      md:w-[700px] md:h-[700px]
+      rounded-full cursor-default
       relative flex items-center justify-center
       container
       `}
@@ -84,8 +86,8 @@ function ColonyWarning() {
     return (
         <p
             className={`${index.colonyWarn} absolute bottom-2 text-[10px]
-      leading-3 sm:text-xs text-pretty px-[5%] sm:px-[90px]
-      text-center`}
+      leading-3 sm:text-xs text-wrap
+      text-center w-2/3 text-red-600 font-thin`}
         >
             a dangerous game is going on inside &#x1F6C8;
         </p>
@@ -93,8 +95,10 @@ function ColonyWarning() {
 }
 
 function EnterBtn() {
+    const router = useRouter();
     return (
         <button
+            onClick={() => router.push("/dashboard")}
             type="button"
             className={`${index.colonyBtn} opacity-0 absolute bottom-[25%]
         h-[12px] w-[32px] sm:h-[20px] sm:w-[50px] rounded-full

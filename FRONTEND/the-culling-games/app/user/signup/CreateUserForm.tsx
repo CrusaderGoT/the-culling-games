@@ -11,14 +11,17 @@ import { Button } from "@/components/ui/button";
 import { LinkButton } from "@/components/LinkButton";
 import { LogInIcon, UserPlus2Icon } from "lucide-react";
 import { COUNTRIES } from "@/constants/COUNTRIES";
+import { useMutation } from "@tanstack/react-query";
+import { createUserMutation } from "@/api/client/@tanstack/react-query.gen";
+import { toast } from "sonner";
 
 export function CreateUserForm() {
     const defaultValues: CreateUser = {
-        username: "",
-        email: "",
+        username: "ziniaiajc",
+        email: "mdcocmd@email.com",
         country: Country.AD,
-        password: "",
-        confirm_password: "",
+        password: "miewfjiiwe",
+        confirm_password: "mfowekfowkfo",
     };
 
     const form = useForm<CreateUser>({
@@ -26,10 +29,29 @@ export function CreateUserForm() {
         defaultValues: defaultValues,
     });
 
-    const countries = [{ id: "NG", description: "Nigeria" }];
+    const { mutate, isPending } = useMutation({
+        ...createUserMutation(),
+        onError: (error) => {
+            if (error.detail) {
+                toast(`${error.detail}`);
+            } else {
+                toast("An error occured");
+            }
+        },
+        onSuccess: (data) => {
+            toast(`User Created Successfully ${JSON.stringify(data)}`);
+        },
+    });
 
     function onSubmit(data: CreateUser) {
-        console.log({ ...data });
+        console.log(data)
+        mutate({
+            body: {...data},
+            headers: {
+                "Access-Control-Allow-Origin": "*"
+            },
+            mode: "no-cors"
+        });
     }
 
     return (
@@ -75,6 +97,7 @@ export function CreateUserForm() {
 
                         <div className="flex flex-col items-start gap-3 sm:flex-row w-max">
                             <Button
+                                disabled={isPending}
                                 type="submit"
                                 className="flex text-center gap-1"
                                 title="Create Account"

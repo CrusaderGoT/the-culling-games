@@ -1,7 +1,6 @@
 "use client";
 
 import { lusitana } from "@/app/fonts";
-import Image from "next/image";
 import * as React from "react";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
@@ -12,6 +11,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { KoganeImage } from "./KoganeImage";
 
 export function Header() {
     return (
@@ -19,11 +19,11 @@ export function Header() {
             className={`fixed min-w-[250px] bg-gradient-to-b from-[hsla(0,0%,0%,50%)]
       dark:from-[hsla(0,0%,0%,100%)] to-transparent
       top-0 z-[100] w-full h-fit min-h-[50px]
-      max-h-[60px] p-1`}
+      max-h-[60px] p-1 backdrop-blur-xl`}
         >
             <div className="flex justify-center items-center relative">
                 <div className="flex items-center gap-3 justify-between">
-                    <KoganeImg />
+                    <KoganeImage />
 
                     <div>
                         <p
@@ -33,25 +33,13 @@ export function Header() {
                         </p>
                     </div>
 
-                    <KoganeImg />
+                    <KoganeImage />
                 </div>
                 <span className="absolute right-0 z-10">
                     <ModeToggle />
                 </span>
             </div>
         </header>
-    );
-}
-
-export function KoganeImg() {
-    return (
-        <Image
-            src="/images/Kogane.png"
-            alt="Kogane-Header.png"
-            width={325}
-            height={275}
-            className={`h-[50px] w-[50px]`}
-        />
     );
 }
 

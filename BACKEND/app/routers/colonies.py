@@ -17,7 +17,7 @@ router = APIRouter(
 
 
 @router.get("/all", response_model=list[ColonyInfo])
-def get_matches(
+def get_colonies(
     session: session,
     offset: Annotated[int, Query(ge=0)] = 0,
     limit: Annotated[int, Query(le=30)] = 10,

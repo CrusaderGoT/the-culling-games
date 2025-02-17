@@ -1,0 +1,11 @@
+Error requesting http://localhost:8000/openapi.json 
+fetch failed
+ResolverError: Error requesting http://localhost:8000/openapi.json 
+fetch failed
+    at Object.sendRequest (C:\Users\DELL\Documents\my progamming folder\Projects\the-culling-games\FRONTEND\the-culling-games\node_modules\@hey-api\json-schema-ref-parser\dist\lib\resolvers\url.js:44:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async Zs (C:\Users\DELL\Documents\my progamming folder\Projects\the-culling-games\FRONTEND\the-culling-games\node_modules\@hey-api\openapi-ts\dist\index.cjs:12:908)
+    at async lo (C:\Users\DELL\Documents\my progamming folder\Projects\the-culling-games\FRONTEND\the-culling-games\node_modules\@hey-api\openapi-ts\dist\index.cjs:14:88353)
+    at async Promise.all (index 0)
+    at async oj (C:\Users\DELL\Documents\my progamming folder\Projects\the-culling-games\FRONTEND\the-culling-games\node_modules\@hey-api\openapi-ts\dist\index.cjs:1311:4468)
+    at async start (C:\Users\DELL\Documents\my progamming folder\Projects\the-culling-games\FRONTEND\the-culling-games\node_modules\@hey-api\openapi-ts\bin\index.cjs:120:21)

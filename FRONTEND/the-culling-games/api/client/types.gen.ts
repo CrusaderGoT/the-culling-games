@@ -230,6 +230,15 @@ export type ClientVoteInfo = {
 };
 
 /**
+ * colony info -> client-side
+ */
+export type ColonyInfo = {
+    country: Country;
+    id: number;
+    players: Array<BasePlayerInfo>;
+};
+
+/**
  * the countries enum class
  */
 export type Country = 'AF' | 'AL' | 'DZ' | 'AD' | 'AO' | 'AG' | 'AR' | 'AM' | 'AU' | 'AT' | 'AZ' | 'BS' | 'BH' | 'BD' | 'BB' | 'BY' | 'BE' | 'BZ' | 'BJ' | 'BT' | 'BO' | 'BA' | 'BW' | 'BR' | 'BN' | 'BG' | 'BF' | 'BI' | 'CV' | 'KH' | 'CM' | 'CA' | 'CF' | 'TD' | 'CL' | 'CN' | 'CO' | 'KM' | 'CD' | 'CG' | 'CR' | 'HR' | 'CU' | 'CY' | 'CZ' | 'DK' | 'DJ' | 'DM' | 'DO' | 'EC' | 'EG' | 'SV' | 'GQ' | 'ER' | 'EE' | 'SZ' | 'ET' | 'FJ' | 'FI' | 'FR' | 'GA' | 'GM' | 'GE' | 'DE' | 'GH' | 'GR' | 'GD' | 'GT' | 'GN' | 'GW' | 'GY' | 'HT' | 'HN' | 'HU' | 'IS' | 'IN' | 'ID' | 'IR' | 'IQ' | 'IE' | 'IL' | 'IT' | 'JM' | 'JP' | 'JO' | 'KZ' | 'KE' | 'KI' | 'KP' | 'KR' | 'XK' | 'KW' | 'KG' | 'LA' | 'LV' | 'LB' | 'LS' | 'LR' | 'LY' | 'LI' | 'LT' | 'LU' | 'MG' | 'MW' | 'MY' | 'MV' | 'ML' | 'MT' | 'MH' | 'MR' | 'MU' | 'MX' | 'FM' | 'MD' | 'MC' | 'MN' | 'ME' | 'MA' | 'MZ' | 'MM' | 'NA' | 'NR' | 'NP' | 'NL' | 'NZ' | 'NI' | 'NE' | 'NG' | 'MK' | 'NO' | 'OM' | 'PK' | 'PW' | 'PS' | 'PA' | 'PG' | 'PY' | 'PE' | 'PH' | 'PL' | 'PT' | 'QA' | 'RO' | 'RU' | 'RW' | 'KN' | 'LC' | 'VC' | 'WS' | 'SM' | 'ST' | 'SA' | 'SN' | 'RS' | 'SC' | 'SL' | 'SG' | 'SK' | 'SI' | 'SB' | 'SO' | 'ZA' | 'SS' | 'ES' | 'LK' | 'SD' | 'SR' | 'SE' | 'CH' | 'SY' | 'TW' | 'TJ' | 'TZ' | 'TH' | 'TL' | 'TG' | 'TO' | 'TT' | 'TN' | 'TR' | 'TM' | 'TV' | 'UG' | 'UA' | 'AE' | 'GB' | 'US' | 'UY' | 'UZ' | 'VU' | 'VA' | 'VE' | 'VN' | 'YE' | 'ZM' | 'ZW';
@@ -1231,6 +1240,34 @@ export type DemoSuperuserResponses = {
     200: unknown;
 };
 
+export type GetColoniesData = {
+    body?: never;
+    path?: never;
+    query?: {
+        offset?: number;
+        limit?: number;
+    };
+    url: '/colony/all';
+};
+
+export type GetColoniesErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetColoniesError = GetColoniesErrors[keyof GetColoniesErrors];
+
+export type GetColoniesResponses = {
+    /**
+     * Successful Response
+     */
+    200: Array<ColonyInfo>;
+};
+
+export type GetColoniesResponse = GetColoniesResponses[keyof GetColoniesResponses];
+
 export type CreateTokenData = {
     body: BodyCreateToken;
     path?: never;
@@ -1258,7 +1295,7 @@ export type CreateTokenResponse = CreateTokenResponses[keyof CreateTokenResponse
 
 export type CreateUserData = {
     /**
-     * The User details; Request
+     * The details for creating a User
      */
     body: CreateUser;
     path?: never;

@@ -8,21 +8,24 @@ import { InputWithLabel } from "@/components/inputs/InputWithLabel";
 import { Button } from "@/components/ui/button";
 import { LinkButton } from "@/components/LinkButton";
 import { LogInIcon, UserPlus2Icon } from "lucide-react";
-import { useAction } from "next-safe-action/hooks";
-import { loginUserAction } from "@/api/actions/user-actions";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+
 
 export const loginUserSchema = z.object({
     username: z
-        .string()
-        .nonempty({ message: "Username must be at least 2 characters" }),
+      .string()
+      .nonempty({ message: "Username must be at least 2 characters" }),
     password: z
-        .string()
-        .min(8, { message: "Password must be atleast 8 characters" }),
-});
-
-type formSchemaType = z.infer<typeof loginUserSchema>;
+      .string()
+      .min(8, { message: "Password must be atleast 8 characters" }),
+  });
+type formSchemaType = z.infer<typeof loginUserSchema>; 
 
 export function LoginForm() {
+
+    const router = useRouter();
+
     const form = useForm<formSchemaType>({
         resolver: zodResolver(loginUserSchema),
         defaultValues: {
@@ -38,21 +41,22 @@ export function LoginForm() {
         reset: resetLoginAction,
     } = useAction(loginUserAction, {
         onSuccess({ data }) {
-            if (data?.data) {
-                // save token
-                // redirect to prev page
+            if (data) {
+                // toast success
+                toast(data)
             }
             // toast error message
         },
-        onError() {
+        onError({ error }) {
             // toast server error
-            resetLoginAction()
+            console.log(error.bindArgsValidationErrors)
+            toast(`" Server Error: Login Failed" ${error.serverError}`)
         }
     })
 
-    function onSubmit({ username, password }: formSchemaType) {
+    function onSubmit(data: formSchemaType) {
         // next safe action form here
-        console.log(username, password);
+        executeLogin(data);
     }
 
     return (
@@ -76,7 +80,7 @@ export function LoginForm() {
                                 />
                             </div>
                             <div className="mt-3 sm:m-0 max-w-xs h-max flex items-center justify-between sm:self-end gap-2">
-                                <Button type="submit" className="flex text-center gap-1">
+                                <Button disabled={isLoggingIn} type="submit" className="flex text-center gap-1">
                                     Log In
                                     <div className="hidden sm:block">
                                         <LogInIcon />

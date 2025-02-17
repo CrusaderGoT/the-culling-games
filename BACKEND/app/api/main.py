@@ -40,7 +40,7 @@ def create_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 @app.post("/signup", response_model=UserInfo, status_code=status.HTTP_201_CREATED,
           tags=[Tag.user], summary='Create a new User', response_description='New User')
 def create_user(session: session,
-                user: Annotated[CreateUser, Body(description="The User details; Request")]):
+                user: Annotated[CreateUser, Body(description="The details for creating a User")]):
     # convert user username to lowercase; for easier variable use
     l_username = usernamedb(user.username)
     # check if username or email already in use
@@ -59,7 +59,7 @@ def create_user(session: session,
             err_msg = f"'{user.email}' is already in use."
             raise HTTPException(status.HTTP_409_CONFLICT, detail=err_msg)
         else:
-            err_msg = f"user with username or email already exist."
+            err_msg = "user with username or email already exist."
             raise HTTPException(status.HTTP_409_CONFLICT, detail=err_msg)
     else: # user not already in DATABASE
         # check if user password matches
@@ -76,5 +76,5 @@ def create_user(session: session,
             session.refresh(new_user_db)
             return new_user_db
         else:
-            err_msg = f"passwords do not match"
+            err_msg = "passwords do not match"
             raise HTTPException(status.HTTP_412_PRECONDITION_FAILED, detail=err_msg)

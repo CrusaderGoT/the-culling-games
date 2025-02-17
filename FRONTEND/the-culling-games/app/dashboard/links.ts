@@ -1,45 +1,31 @@
 // for the links in the dashboard
+import { LogOutIcon, HomeIcon, FishIcon, ChartLineIcon, FlameIcon } from "lucide-react";
+
 
 export const links = [
   {
-    icon: "/images/Home-icon.svg.png",
-    iconHeight: 1024,
-    iconWidth: 1024,
+    icon: HomeIcon,
     name: 'Home',
     href: '/dashboard',
   },
   {
-    icon: "/images/Chizuru's_Kogane.png",
-    iconHeight: 300,
-    iconWidth: 300,
+    icon: FishIcon,
     name: 'Players',
     href: '/dashboard/players',
   },
   {
-    icon: "/images/Chizuru's_Kogane.png",
-    iconHeight: 300,
-    iconWidth: 300,
+    icon: FlameIcon,
     name: 'matches',
     href: '/dashboard',
   },
   {
-    icon: "/images/Chizuru's_Kogane.png",
-    iconHeight: 300,
-    iconWidth: 300,
+    icon: ChartLineIcon,
     name: 'stats for charts/leaderboard, etc.',
     href: '/dashboard',
   },
+  
   {
-    icon: "/images/Chizuru's_Kogane.png",
-    iconHeight: 300,
-    iconWidth: 300,
-    name: 'match',
-    href: '/dashboard',
-  },
-  {
-    icon: "/images/Chizuru's_Kogane.png",
-    iconHeight: 300,
-    iconWidth: 300,
+    icon: LogOutIcon,
     name: 'log out',
     href: '/dashboard',
   },

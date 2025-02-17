@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { TrendingUp } from "lucide-react";
-import { Label, LabelList, Pie, PieChart } from "recharts";
+import { Label, Pie, PieChart } from "recharts";
 
 import {
     Card,
@@ -72,15 +72,14 @@ function transformPlayerToChartData(
 }
 
 const chartConfig: ChartConfig = {
-    player: {
-        label: "Players",
-    },
+
     ...Object.fromEntries(
         GRADE_MAPPING.map((grade) => [
-            grade.grade,
+            grade.label,
             {
                 label: grade.label,
                 color: grade.fill,
+                
             },
         ])
     ),
@@ -109,8 +108,9 @@ export function ColonyPlayerGradeChart() {
         ).label;
     }, [chartData]);
 
+
     return (
-        <Card className="flex flex-col">
+        <Card className="flex flex-col sm:max-w-max">
             <CardHeader className="items-center pb-0">
                 <CardTitle>Colonies Grade Distribution</CardTitle>
                 <CardDescription>Surviving Player Grades</CardDescription>
@@ -122,26 +122,20 @@ export function ColonyPlayerGradeChart() {
                 >
                     <PieChart>
                         <ChartTooltip
-                            cursor={false}
+                            cursor={true}
                             content={<ChartTooltipContent hideLabel />}
                         />
                         <Pie
                             data={chartData}
                             dataKey="player"
                             nameKey="label"
-                            innerRadius={50}
-                            strokeWidth={2}
+                            innerRadius={"50%"}
+                            strokeWidth={1}
+                            paddingAngle={2}
+                            cornerRadius={3}
                             label
                         >
-                            <LabelList
-                                dataKey={"grade"}
-                                className="fill-background"
-                                stroke="none"
-                                fontSize={10}
-                                formatter={(value: keyof typeof chartConfig) =>
-                                    chartConfig[value]?.label
-                                }
-                            />
+                            
                             <Label
                                 content={({ viewBox }) => {
                                     if (
@@ -159,14 +153,15 @@ export function ColonyPlayerGradeChart() {
                                                 <tspan
                                                     x={viewBox.cx}
                                                     y={viewBox.cy}
-                                                    className="fill-foreground text-3xl font-bold"
+                                                    className="fill-foreground 
+                                                    text-base sm:text-2xl font-bold"
                                                 >
                                                     {totalPlayers.toLocaleString()}
                                                 </tspan>
                                                 <tspan
                                                     x={viewBox.cx}
                                                     y={(viewBox.cy || 0) + 24}
-                                                    className="fill-muted-foreground"
+                                                    className="fill-muted-foreground text-xs sm:text-base"
                                                 >
                                                     Players
                                                 </tspan>
@@ -178,9 +173,10 @@ export function ColonyPlayerGradeChart() {
                         </Pie>
                         <ChartLegend
                             content={<ChartLegendContent 
-                            nameKey="player"
+                            
                             />}
-                            className="-translate-y-2 flex-wrap gap-2 basis-1/5 justify-between"
+                            className="
+                            sm:grid grid-flow-row grid-cols-3 gap-1 flex-wrap flex basis-1/5 justify-between"
                             
                         />
                     </PieChart>
@@ -199,10 +195,11 @@ export function ColonyPlayerGradeChart() {
                     </div>
                 </div>
 
-                <div className="leading-none text-muted-foreground">
+                <div className="leading-none text-muted-foreground text-center">
                     Showing total players across 4 grades
                 </div>
             </CardFooter>
         </Card>
     );
 }
+
