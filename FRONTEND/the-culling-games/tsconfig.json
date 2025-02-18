@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "forceConsistentCasingInFileNames": true,
+    "noUncheckedIndexedAccess": true,
     "lib": [
       "dom",
       "dom.iterable",

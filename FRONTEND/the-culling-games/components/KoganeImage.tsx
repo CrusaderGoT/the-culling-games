@@ -13,6 +13,8 @@ export function KoganeImage({ className }: KoganeImageProp) {
             alt="Kogane-Header.png"
             width={325}
             height={275}
+            priority
+            aschild="true"
             className={`h-[50px] w-[50px] ${className}`} />
     );
 }
