@@ -29,7 +29,7 @@ export default function RootLayout({
                     <main className="w-full min-h-screen border pt-[60px] bg-gradient-radial dark:from-slate-400 dark:to-slate-900 to-slate-400 from-slate-900">
                         <TanQueryProvider>{children}</TanQueryProvider>
                     </main>
-                    <Toaster />
+                    <Toaster position="top-right" />
                 </ThemeProvider>
             </body>
         </html>

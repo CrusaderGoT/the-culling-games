@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { createTokenMutation } from "@/api/client/@tanstack/react-query.gen";
 import { toast } from "sonner";
+import { DisplayResponseMessage } from "@/components/DisplayServerResponse";
 
 export const loginUserSchema = z.object({
     username: z
@@ -25,7 +26,6 @@ export const loginUserSchema = z.object({
 type formSchemaType = z.infer<typeof loginUserSchema>;
 
 export function LoginForm() {
-    
     const router = useRouter();
 
     const form = useForm<formSchemaType>({
@@ -48,18 +48,18 @@ export function LoginForm() {
         onSuccess: (data) => {
             // save token to cookie; did not work
             const tokenString = data.access_token;
-            localStorage.setItem("access_token", tokenString)
+            localStorage.setItem("access_token", tokenString);
             // invalidate prev user; refetch user query keys
             // redirect
-            router.push("/dashboard")
-        }
+            router.push("/dashboard");
+        },
     });
 
     function onSubmit(data: formSchemaType) {
         // tanstack mutation here
         mutate({
-            body: {...data}
-        })
+            body: { ...data },
+        });
     }
 
     return (
@@ -68,12 +68,6 @@ export function LoginForm() {
                 <p className="font-bold text-lg">Log In</p>
             </div>
             <div className="p-3 border rounded-lg">
-                {
-                    error?.detail ? (
-                        <div>{error.detail.toLocaleString()}</div>
-                    ) :
-                    null
-                }
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)}>
                         <div className="flex flex-col sm:flex-row gap-5 sm:justify-center">
@@ -88,28 +82,35 @@ export function LoginForm() {
                                     type="password"
                                 />
                             </div>
-                            <div className="mt-3 sm:m-0 max-w-xs h-max flex items-center justify-between sm:self-end gap-2">
-                                <Button
-                                    disabled={isPending || isSuccess}
-                                    type="submit"
-                                    className="flex text-center gap-1"
-                                >
-                                    Log In
-                                    <div className="hidden sm:block">
-                                        <LogInIcon />
+
+                            <div className="sm:self-end">
+                                {error && (
+                                    <DisplayResponseMessage error={error} />
+                                )}
+
+                                <div className="mt-3 sm:m-0 max-w-xs h-max flex items-center justify-between gap-2">
+                                    <Button
+                                        disabled={isPending || isSuccess}
+                                        type="submit"
+                                        className="flex text-center gap-1"
+                                    >
+                                        Log In
+                                        <div className="hidden sm:block">
+                                            <LogInIcon />
+                                        </div>
+                                    </Button>
+
+                                    <div className="self-center  font-semibold">
+                                        <p>or</p>
                                     </div>
-                                </Button>
 
-                                <div className="self-center  font-semibold">
-                                    <p>or</p>
+                                    <LinkButton
+                                        disabled={isSuccess}
+                                        href="/user/signup"
+                                        label="Create Account"
+                                        icon={UserPlus2Icon}
+                                    />
                                 </div>
-
-                                <LinkButton
-                                    disabled={isSuccess}
-                                    href="/user/signup"
-                                    label="Create Account"
-                                    icon={UserPlus2Icon}
-                                />
                             </div>
                         </div>
                     </form>
