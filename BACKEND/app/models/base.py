@@ -82,10 +82,10 @@ class BasePlayer(SQLModel):
         TWO = 2
         THREE = 3
         FOUR = 4
-    name: str = Field(index=True, min_length=2, nullable=False)
+    name: str = Field(index=True, min_length=2, max_length=50, nullable=False, description="The name of the player, must be between 2 and 50 characters")
     gender: Gender = Field(index=True)
     age: int = Field(ge=10, le=102, index=True)
-    role: str | None = Field(default=None, index=True)
+    role: str | None = Field(default=None, min_length=3, max_length=50, description="The role of the player, e.g., doctor, lawyer, student, curse user, sorcerer etc.")
 
 class BasePlayerInfo(BasePlayer):
     '''
@@ -107,8 +107,8 @@ class BaseCT(SQLModel):
     `name: str`
     `definition: str`
     '''
-    name: str
-    definition: str
+    name: str = Field(min_length=3, max_length=100, description="The name of the cursed technique, must be between 3 and 100 characters", schema_extra={"examples": ["Boogie Woogie", "Cursed Speech", "Infinity", "Black Flash"]})
+    definition: str = Field(min_length=50, max_length=500, description="The definition of the cursed technique, explaining what it does without including its subsets")
 
 class BaseCTInfo(BaseCT):
     '''
@@ -123,9 +123,11 @@ class BaseCTInfo(BaseCT):
 class BaseCTApp(SQLModel):
     '''
     base model for the cursed technique application\n
+    name: str
     application: str
     '''
-    application: str
+    name: str = Field(min_length=3, max_length=100, description="The name of the application, must be between 3 and 100 characters", schema_extra={"examples": ["Hollow Purple", "Demon Dogs", "Resonance", "Overtime"]})
+    application: str = Field(min_length=50, max_length=500, description="The application of the cursed technique, explaining how it is used or applied in practice")
 
 class BaseCTAppInfo(BaseCTApp):
     '''
