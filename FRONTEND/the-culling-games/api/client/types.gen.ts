@@ -257,7 +257,7 @@ export type ColonyInfo = {
     players: Array<BasePlayerInfo>;
 };
 
-export type Country = 'AF' | 'AL' | 'DZ' | 'AD' | 'AO' | 'AR' | 'AM' | 'AU' | 'AT' | 'AZ' | 'BS' | 'BH' | 'BD' | 'BB' | 'BY' | 'BE' | 'BZ' | 'BJ' | 'BT' | 'BO' | 'BA' | 'BW' | 'BR' | 'BN' | 'BG' | 'BF' | 'BI' | 'CV' | 'KH' | 'CM' | 'CA' | 'CF' | 'TD' | 'CL' | 'CN' | 'CO' | 'KM' | 'CG' | 'CR' | 'HR' | 'CU' | 'CY' | 'CZ' | 'DK' | 'DJ' | 'DM' | 'DO' | 'EC' | 'EG' | 'SV' | 'GQ' | 'ER' | 'EE' | 'SZ' | 'ET' | 'FJ' | 'FI' | 'FR' | 'GA' | 'GM' | 'GE' | 'DE' | 'GH' | 'GR' | 'GD' | 'GT' | 'GN' | 'GW' | 'GY' | 'HT' | 'HN' | 'HU' | 'IS' | 'IN' | 'ID' | 'IR' | 'IQ' | 'IE' | 'IL' | 'IT' | 'JM' | 'JP' | 'JO' | 'KZ' | 'KE' | 'KI' | 'KW' | 'KG' | 'LA' | 'LV' | 'LB' | 'LS' | 'LR' | 'LY' | 'LI' | 'LT' | 'LU' | 'MG' | 'MW' | 'MY' | 'MV' | 'ML' | 'MT' | 'MH' | 'MR' | 'MU' | 'MX' | 'FM' | 'MD' | 'MC' | 'MN' | 'ME' | 'MA' | 'MZ' | 'MM' | 'NA' | 'NR' | 'NP' | 'NL' | 'NZ' | 'NI' | 'NE' | 'NG' | 'KP' | 'MK' | 'NO' | 'OM' | 'PK' | 'PW' | 'PS' | 'PA' | 'PG' | 'PY' | 'PE' | 'PH' | 'PL' | 'PT' | 'QA' | 'RO' | 'RU' | 'RW' | 'KN' | 'LC' | 'VC' | 'WS' | 'SM' | 'ST' | 'SA' | 'SN' | 'RS' | 'SC' | 'SL' | 'SG' | 'SK' | 'SI' | 'SB' | 'SO' | 'ZA' | 'KR' | 'SS' | 'ES' | 'LK' | 'SD' | 'SR' | 'SE' | 'CH' | 'SY' | 'TW' | 'TJ' | 'TZ' | 'TH' | 'TL' | 'TG' | 'TO' | 'TT' | 'TN' | 'TR' | 'TM' | 'TV' | 'UG' | 'UA' | 'AE' | 'GB' | 'US' | 'UY' | 'UZ' | 'VU' | 'VA' | 'VE' | 'VN' | 'YE' | 'ZM' | 'ZW';
+export type Country = 'AF' | 'AL' | 'DZ' | 'AD' | 'AO' | 'AG' | 'AR' | 'AM' | 'AU' | 'AT' | 'AZ' | 'BS' | 'BH' | 'BD' | 'BB' | 'BY' | 'BE' | 'BZ' | 'BJ' | 'BT' | 'BO' | 'BA' | 'BW' | 'BR' | 'BN' | 'BG' | 'BF' | 'BI' | 'CV' | 'KH' | 'CM' | 'CA' | 'CF' | 'TD' | 'CL' | 'CN' | 'CO' | 'KM' | 'CG' | 'CD' | 'CR' | 'HR' | 'CU' | 'CY' | 'CZ' | 'DK' | 'DJ' | 'DM' | 'DO' | 'EC' | 'EG' | 'SV' | 'GQ' | 'ER' | 'EE' | 'SZ' | 'ET' | 'FJ' | 'FI' | 'FR' | 'GA' | 'GM' | 'GE' | 'DE' | 'GH' | 'GR' | 'GD' | 'GT' | 'GN' | 'GW' | 'GY' | 'HT' | 'HN' | 'HU' | 'IS' | 'IN' | 'ID' | 'IR' | 'IQ' | 'IE' | 'IL' | 'IT' | 'JM' | 'JP' | 'JO' | 'KZ' | 'KE' | 'KI' | 'XK' | 'KW' | 'KG' | 'LA' | 'LV' | 'LB' | 'LS' | 'LR' | 'LY' | 'LI' | 'LT' | 'LU' | 'MG' | 'MW' | 'MY' | 'MV' | 'ML' | 'MT' | 'MH' | 'MR' | 'MU' | 'MX' | 'FM' | 'MD' | 'MC' | 'MN' | 'ME' | 'MA' | 'MZ' | 'MM' | 'NA' | 'NR' | 'NP' | 'NL' | 'NZ' | 'NI' | 'NE' | 'NG' | 'KP' | 'MK' | 'NO' | 'OM' | 'PK' | 'PW' | 'PS' | 'PA' | 'PG' | 'PY' | 'PE' | 'PH' | 'PL' | 'PT' | 'QA' | 'RO' | 'RU' | 'RW' | 'KN' | 'LC' | 'VC' | 'WS' | 'SM' | 'ST' | 'SA' | 'SN' | 'RS' | 'SC' | 'SL' | 'SG' | 'SK' | 'SI' | 'SB' | 'SO' | 'ZA' | 'KR' | 'SS' | 'ES' | 'LK' | 'SD' | 'SR' | 'SE' | 'CH' | 'SY' | 'TW' | 'TJ' | 'TZ' | 'TH' | 'TL' | 'TG' | 'TO' | 'TT' | 'TN' | 'TR' | 'TM' | 'TV' | 'UG' | 'UA' | 'AE' | 'GB' | 'US' | 'UY' | 'UZ' | 'VU' | 'VA' | 'VE' | 'VN' | 'YE' | 'ZM' | 'ZW';
 
 export const Country = {
     AF: 'AF',
@@ -265,6 +265,7 @@ export const Country = {
     DZ: 'DZ',
     AD: 'AD',
     AO: 'AO',
+    AG: 'AG',
     AR: 'AR',
     AM: 'AM',
     AU: 'AU',
@@ -298,6 +299,7 @@ export const Country = {
     CO: 'CO',
     KM: 'KM',
     CG: 'CG',
+    CD: 'CD',
     CR: 'CR',
     HR: 'HR',
     CU: 'CU',
@@ -346,6 +348,7 @@ export const Country = {
     KZ: 'KZ',
     KE: 'KE',
     KI: 'KI',
+    XK: 'XK',
     KW: 'KW',
     KG: 'KG',
     LA: 'LA',
