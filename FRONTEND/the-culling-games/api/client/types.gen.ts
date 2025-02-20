@@ -59,6 +59,13 @@ export type BaseAdminInfo = {
  * number: int
  */
 export type BaseCtAppInfo = {
+    /**
+     * The name of the application, must be between 3 and 100 characters
+     */
+    name: string;
+    /**
+     * The application of the cursed technique, explaining how it is used or applied in practice
+     */
     application: string;
     id: number;
     number: number;
@@ -71,7 +78,13 @@ export type BaseCtAppInfo = {
  * applications: list["BaseCTAppInfo"]
  */
 export type BaseCtInfo = {
+    /**
+     * The name of the cursed technique, must be between 3 and 100 characters
+     */
     name: string;
+    /**
+     * The definition of the cursed technique, explaining what it does without including its subsets
+     */
     definition: string;
     id: number;
     applications: Array<BaseCtAppInfo>;
@@ -129,9 +142,15 @@ export type BasePermissionInfo = {
  * `points: Decimal`
  */
 export type BasePlayerInfo = {
+    /**
+     * The name of the player, must be between 2 and 50 characters
+     */
     name: string;
     gender: Gender;
     age: number;
+    /**
+     * The role of the player, e.g., doctor, lawyer, student, curse user, sorcerer etc.
+     */
     role?: string | null;
     id: number;
     created: Date;
@@ -238,21 +257,14 @@ export type ColonyInfo = {
     players: Array<BasePlayerInfo>;
 };
 
-/**
- * the countries enum class
- */
-export type Country = 'AF' | 'AL' | 'DZ' | 'AD' | 'AO' | 'AG' | 'AR' | 'AM' | 'AU' | 'AT' | 'AZ' | 'BS' | 'BH' | 'BD' | 'BB' | 'BY' | 'BE' | 'BZ' | 'BJ' | 'BT' | 'BO' | 'BA' | 'BW' | 'BR' | 'BN' | 'BG' | 'BF' | 'BI' | 'CV' | 'KH' | 'CM' | 'CA' | 'CF' | 'TD' | 'CL' | 'CN' | 'CO' | 'KM' | 'CD' | 'CG' | 'CR' | 'HR' | 'CU' | 'CY' | 'CZ' | 'DK' | 'DJ' | 'DM' | 'DO' | 'EC' | 'EG' | 'SV' | 'GQ' | 'ER' | 'EE' | 'SZ' | 'ET' | 'FJ' | 'FI' | 'FR' | 'GA' | 'GM' | 'GE' | 'DE' | 'GH' | 'GR' | 'GD' | 'GT' | 'GN' | 'GW' | 'GY' | 'HT' | 'HN' | 'HU' | 'IS' | 'IN' | 'ID' | 'IR' | 'IQ' | 'IE' | 'IL' | 'IT' | 'JM' | 'JP' | 'JO' | 'KZ' | 'KE' | 'KI' | 'KP' | 'KR' | 'XK' | 'KW' | 'KG' | 'LA' | 'LV' | 'LB' | 'LS' | 'LR' | 'LY' | 'LI' | 'LT' | 'LU' | 'MG' | 'MW' | 'MY' | 'MV' | 'ML' | 'MT' | 'MH' | 'MR' | 'MU' | 'MX' | 'FM' | 'MD' | 'MC' | 'MN' | 'ME' | 'MA' | 'MZ' | 'MM' | 'NA' | 'NR' | 'NP' | 'NL' | 'NZ' | 'NI' | 'NE' | 'NG' | 'MK' | 'NO' | 'OM' | 'PK' | 'PW' | 'PS' | 'PA' | 'PG' | 'PY' | 'PE' | 'PH' | 'PL' | 'PT' | 'QA' | 'RO' | 'RU' | 'RW' | 'KN' | 'LC' | 'VC' | 'WS' | 'SM' | 'ST' | 'SA' | 'SN' | 'RS' | 'SC' | 'SL' | 'SG' | 'SK' | 'SI' | 'SB' | 'SO' | 'ZA' | 'SS' | 'ES' | 'LK' | 'SD' | 'SR' | 'SE' | 'CH' | 'SY' | 'TW' | 'TJ' | 'TZ' | 'TH' | 'TL' | 'TG' | 'TO' | 'TT' | 'TN' | 'TR' | 'TM' | 'TV' | 'UG' | 'UA' | 'AE' | 'GB' | 'US' | 'UY' | 'UZ' | 'VU' | 'VA' | 'VE' | 'VN' | 'YE' | 'ZM' | 'ZW';
+export type Country = 'AF' | 'AL' | 'DZ' | 'AD' | 'AO' | 'AR' | 'AM' | 'AU' | 'AT' | 'AZ' | 'BS' | 'BH' | 'BD' | 'BB' | 'BY' | 'BE' | 'BZ' | 'BJ' | 'BT' | 'BO' | 'BA' | 'BW' | 'BR' | 'BN' | 'BG' | 'BF' | 'BI' | 'CV' | 'KH' | 'CM' | 'CA' | 'CF' | 'TD' | 'CL' | 'CN' | 'CO' | 'KM' | 'CG' | 'CR' | 'HR' | 'CU' | 'CY' | 'CZ' | 'DK' | 'DJ' | 'DM' | 'DO' | 'EC' | 'EG' | 'SV' | 'GQ' | 'ER' | 'EE' | 'SZ' | 'ET' | 'FJ' | 'FI' | 'FR' | 'GA' | 'GM' | 'GE' | 'DE' | 'GH' | 'GR' | 'GD' | 'GT' | 'GN' | 'GW' | 'GY' | 'HT' | 'HN' | 'HU' | 'IS' | 'IN' | 'ID' | 'IR' | 'IQ' | 'IE' | 'IL' | 'IT' | 'JM' | 'JP' | 'JO' | 'KZ' | 'KE' | 'KI' | 'KW' | 'KG' | 'LA' | 'LV' | 'LB' | 'LS' | 'LR' | 'LY' | 'LI' | 'LT' | 'LU' | 'MG' | 'MW' | 'MY' | 'MV' | 'ML' | 'MT' | 'MH' | 'MR' | 'MU' | 'MX' | 'FM' | 'MD' | 'MC' | 'MN' | 'ME' | 'MA' | 'MZ' | 'MM' | 'NA' | 'NR' | 'NP' | 'NL' | 'NZ' | 'NI' | 'NE' | 'NG' | 'KP' | 'MK' | 'NO' | 'OM' | 'PK' | 'PW' | 'PS' | 'PA' | 'PG' | 'PY' | 'PE' | 'PH' | 'PL' | 'PT' | 'QA' | 'RO' | 'RU' | 'RW' | 'KN' | 'LC' | 'VC' | 'WS' | 'SM' | 'ST' | 'SA' | 'SN' | 'RS' | 'SC' | 'SL' | 'SG' | 'SK' | 'SI' | 'SB' | 'SO' | 'ZA' | 'KR' | 'SS' | 'ES' | 'LK' | 'SD' | 'SR' | 'SE' | 'CH' | 'SY' | 'TW' | 'TJ' | 'TZ' | 'TH' | 'TL' | 'TG' | 'TO' | 'TT' | 'TN' | 'TR' | 'TM' | 'TV' | 'UG' | 'UA' | 'AE' | 'GB' | 'US' | 'UY' | 'UZ' | 'VU' | 'VA' | 'VE' | 'VN' | 'YE' | 'ZM' | 'ZW';
 
-/**
- * the countries enum class
- */
 export const Country = {
     AF: 'AF',
     AL: 'AL',
     DZ: 'DZ',
     AD: 'AD',
     AO: 'AO',
-    AG: 'AG',
     AR: 'AR',
     AM: 'AM',
     AU: 'AU',
@@ -285,7 +297,6 @@ export const Country = {
     CN: 'CN',
     CO: 'CO',
     KM: 'KM',
-    CD: 'CD',
     CG: 'CG',
     CR: 'CR',
     HR: 'HR',
@@ -335,9 +346,6 @@ export const Country = {
     KZ: 'KZ',
     KE: 'KE',
     KI: 'KI',
-    KP: 'KP',
-    KR: 'KR',
-    XK: 'XK',
     KW: 'KW',
     KG: 'KG',
     LA: 'LA',
@@ -375,6 +383,7 @@ export const Country = {
     NI: 'NI',
     NE: 'NE',
     NG: 'NG',
+    KP: 'KP',
     MK: 'MK',
     NO: 'NO',
     OM: 'OM',
@@ -409,6 +418,7 @@ export const Country = {
     SB: 'SB',
     SO: 'SO',
     ZA: 'ZA',
+    KR: 'KR',
     SS: 'SS',
     ES: 'ES',
     LK: 'LK',
@@ -449,7 +459,13 @@ export const Country = {
  * for creating cursed technique
  */
 export type CreateCt = {
+    /**
+     * The name of the cursed technique, must be between 3 and 100 characters
+     */
     name: string;
+    /**
+     * The definition of the cursed technique, explaining what it does without including its subsets
+     */
     definition: string;
 };
 
@@ -457,6 +473,13 @@ export type CreateCt = {
  * for creating a cursed technique application
  */
 export type CreateCtApp = {
+    /**
+     * The name of the application, must be between 3 and 100 characters
+     */
+    name: string;
+    /**
+     * The application of the cursed technique, explaining how it is used or applied in practice
+     */
     application: string;
 };
 
@@ -475,9 +498,15 @@ export type CreatePermission = {
  * For creating a Player
  */
 export type CreatePlayer = {
+    /**
+     * The name of the player, must be between 2 and 50 characters
+     */
     name: string;
     gender: Gender;
     age: number;
+    /**
+     * The role of the player, e.g., doctor, lawyer, student, curse user, sorcerer etc.
+     */
     role?: string | null;
 };
 
@@ -631,9 +660,15 @@ export const PermissionLevel = {
  * Player info with cursed technique, user, and colony info
  */
 export type PlayerInfo = {
+    /**
+     * The name of the player, must be between 2 and 50 characters
+     */
     name: string;
     gender: Gender;
     age: number;
+    /**
+     * The role of the player, e.g., doctor, lawyer, student, curse user, sorcerer etc.
+     */
     role?: string | null;
     id: number;
     created: Date;

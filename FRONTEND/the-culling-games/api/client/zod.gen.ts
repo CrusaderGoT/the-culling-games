@@ -32,7 +32,6 @@ export const zAdminInfo = z.object({
                 'DZ',
                 'AD',
                 'AO',
-                'AG',
                 'AR',
                 'AM',
                 'AU',
@@ -65,7 +64,6 @@ export const zAdminInfo = z.object({
                 'CN',
                 'CO',
                 'KM',
-                'CD',
                 'CG',
                 'CR',
                 'HR',
@@ -115,9 +113,6 @@ export const zAdminInfo = z.object({
                 'KZ',
                 'KE',
                 'KI',
-                'KP',
-                'KR',
-                'XK',
                 'KW',
                 'KG',
                 'LA',
@@ -155,6 +150,7 @@ export const zAdminInfo = z.object({
                 'NI',
                 'NE',
                 'NG',
+                'KP',
                 'MK',
                 'NO',
                 'OM',
@@ -189,6 +185,7 @@ export const zAdminInfo = z.object({
                 'SB',
                 'SO',
                 'ZA',
+                'KR',
                 'SS',
                 'ES',
                 'LK',
@@ -272,14 +269,15 @@ export const zBaseAdminInfo = z.object({
 });
 
 export const zBaseCtAppInfo = z.object({
-    application: z.string(),
+    name: z.string().min(3).max(100),
+    application: z.string().min(50).max(500),
     id: z.number().int(),
     number: z.number().int()
 });
 
 export const zBaseCtInfo = z.object({
-    name: z.string(),
-    definition: z.string(),
+    name: z.string().min(3).max(100),
+    definition: z.string().min(50).max(500),
     id: z.number().int(),
     applications: z.array(zBaseCtAppInfo)
 });
@@ -291,7 +289,6 @@ export const zBaseColonyInfo = z.object({
         'DZ',
         'AD',
         'AO',
-        'AG',
         'AR',
         'AM',
         'AU',
@@ -324,7 +321,6 @@ export const zBaseColonyInfo = z.object({
         'CN',
         'CO',
         'KM',
-        'CD',
         'CG',
         'CR',
         'HR',
@@ -374,9 +370,6 @@ export const zBaseColonyInfo = z.object({
         'KZ',
         'KE',
         'KI',
-        'KP',
-        'KR',
-        'XK',
         'KW',
         'KG',
         'LA',
@@ -414,6 +407,7 @@ export const zBaseColonyInfo = z.object({
         'NI',
         'NE',
         'NG',
+        'KP',
         'MK',
         'NO',
         'OM',
@@ -448,6 +442,7 @@ export const zBaseColonyInfo = z.object({
         'SB',
         'SO',
         'ZA',
+        'KR',
         'SS',
         'ES',
         'LK',
@@ -493,7 +488,7 @@ export const zBaseMatchInfo = z.object({
     id: z.number().int(),
     winner: z.union([
         z.object({
-            name: z.string().min(2),
+            name: z.string().min(2).max(50),
             gender: z.enum([
                 'male',
                 'female',
@@ -501,7 +496,7 @@ export const zBaseMatchInfo = z.object({
             ]),
             age: z.number().int().gte(10).lte(102),
             role: z.union([
-                z.string(),
+                z.string().min(3).max(50),
                 z.null()
             ]).optional(),
             id: z.number().int(),
@@ -532,7 +527,7 @@ export const zBasePermissionInfo = z.object({
 });
 
 export const zBasePlayerInfo = z.object({
-    name: z.string().min(2),
+    name: z.string().min(2).max(50),
     gender: z.enum([
         'male',
         'female',
@@ -540,7 +535,7 @@ export const zBasePlayerInfo = z.object({
     ]),
     age: z.number().int().gte(10).lte(102),
     role: z.union([
-        z.string(),
+        z.string().min(3).max(50),
         z.null()
     ]).optional(),
     id: z.number().int(),
@@ -559,7 +554,6 @@ export const zBaseUserInfo = z.object({
             'DZ',
             'AD',
             'AO',
-            'AG',
             'AR',
             'AM',
             'AU',
@@ -592,7 +586,6 @@ export const zBaseUserInfo = z.object({
             'CN',
             'CO',
             'KM',
-            'CD',
             'CG',
             'CR',
             'HR',
@@ -642,9 +635,6 @@ export const zBaseUserInfo = z.object({
             'KZ',
             'KE',
             'KI',
-            'KP',
-            'KR',
-            'XK',
             'KW',
             'KG',
             'LA',
@@ -682,6 +672,7 @@ export const zBaseUserInfo = z.object({
             'NI',
             'NE',
             'NG',
+            'KP',
             'MK',
             'NO',
             'OM',
@@ -716,6 +707,7 @@ export const zBaseUserInfo = z.object({
             'SB',
             'SO',
             'ZA',
+            'KR',
             'SS',
             'ES',
             'LK',
@@ -774,7 +766,7 @@ export const zBaseVoteInfo = z.object({
 
 export const zBodyCreatePlayer = z.object({
     player: z.object({
-        name: z.string().min(2),
+        name: z.string().min(2).max(50),
         gender: z.enum([
             'male',
             'female',
@@ -782,13 +774,13 @@ export const zBodyCreatePlayer = z.object({
         ]),
         age: z.number().int().gte(10).lte(102),
         role: z.union([
-            z.string(),
+            z.string().min(3).max(50),
             z.null()
         ]).optional()
     }),
     cursed_technique: z.object({
-        name: z.string(),
-        definition: z.string()
+        name: z.string().min(3).max(100),
+        definition: z.string().min(50).max(500)
     }),
     applications: z.unknown()
 });
@@ -876,7 +868,6 @@ export const zColonyInfo = z.object({
         'DZ',
         'AD',
         'AO',
-        'AG',
         'AR',
         'AM',
         'AU',
@@ -909,7 +900,6 @@ export const zColonyInfo = z.object({
         'CN',
         'CO',
         'KM',
-        'CD',
         'CG',
         'CR',
         'HR',
@@ -959,9 +949,6 @@ export const zColonyInfo = z.object({
         'KZ',
         'KE',
         'KI',
-        'KP',
-        'KR',
-        'XK',
         'KW',
         'KG',
         'LA',
@@ -999,6 +986,7 @@ export const zColonyInfo = z.object({
         'NI',
         'NE',
         'NG',
+        'KP',
         'MK',
         'NO',
         'OM',
@@ -1033,6 +1021,7 @@ export const zColonyInfo = z.object({
         'SB',
         'SO',
         'ZA',
+        'KR',
         'SS',
         'ES',
         'LK',
@@ -1078,7 +1067,6 @@ export const zCountry = z.enum([
     'DZ',
     'AD',
     'AO',
-    'AG',
     'AR',
     'AM',
     'AU',
@@ -1111,7 +1099,6 @@ export const zCountry = z.enum([
     'CN',
     'CO',
     'KM',
-    'CD',
     'CG',
     'CR',
     'HR',
@@ -1161,9 +1148,6 @@ export const zCountry = z.enum([
     'KZ',
     'KE',
     'KI',
-    'KP',
-    'KR',
-    'XK',
     'KW',
     'KG',
     'LA',
@@ -1201,6 +1185,7 @@ export const zCountry = z.enum([
     'NI',
     'NE',
     'NG',
+    'KP',
     'MK',
     'NO',
     'OM',
@@ -1235,6 +1220,7 @@ export const zCountry = z.enum([
     'SB',
     'SO',
     'ZA',
+    'KR',
     'SS',
     'ES',
     'LK',
@@ -1272,12 +1258,13 @@ export const zCountry = z.enum([
 ]);
 
 export const zCreateCt = z.object({
-    name: z.string(),
-    definition: z.string()
+    name: z.string().min(3).max(100),
+    definition: z.string().min(50).max(500)
 });
 
 export const zCreateCtApp = z.object({
-    application: z.string()
+    name: z.string().min(3).max(100),
+    application: z.string().min(50).max(500)
 });
 
 export const zCreatePermission = z.object({
@@ -1298,15 +1285,15 @@ export const zCreatePermission = z.object({
 });
 
 export const zCreatePlayer = z.object({
-    name: z.string().min(2),
+    name: z.string().min(2).max(50),
     gender: z.enum([
         'male',
         'female',
         'non-binary'
     ]),
-    age: z.coerce.number().int().gte(10).lte(102),
+    age: z.number().int().gte(10).lte(102),
     role: z.union([
-        z.string(),
+        z.string().min(3).max(50),
         z.null()
     ]).optional()
 });
@@ -1429,11 +1416,11 @@ export const zPermissionInfo = z.object({
 export const zPermissionLevel = z.unknown();
 
 export const zPlayerInfo = z.object({
-    name: z.string().min(2),
+    name: z.string().min(2).max(50),
     gender: zGender,
     age: z.number().int().gte(10).lte(102),
     role: z.union([
-        z.string(),
+        z.string().min(3).max(50),
         z.null()
     ]).optional(),
     id: z.number().int(),
