@@ -131,7 +131,7 @@ export type BasePermissionInfo = {
 export type BasePlayerInfo = {
     name: string;
     gender: Gender;
-    age?: number | null;
+    age: number;
     role?: string | null;
     id: number;
     created: Date;
@@ -477,7 +477,7 @@ export type CreatePermission = {
 export type CreatePlayer = {
     name: string;
     gender: Gender;
-    age?: number | null;
+    age: number;
     role?: string | null;
 };
 
@@ -633,7 +633,7 @@ export const PermissionLevel = {
 export type PlayerInfo = {
     name: string;
     gender: Gender;
-    age?: number | null;
+    age: number;
     role?: string | null;
     id: number;
     created: Date;

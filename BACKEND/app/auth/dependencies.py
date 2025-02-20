@@ -1,15 +1,17 @@
-from fastapi import HTTPException, status, Depends
-from fastapi.security import OAuth2PasswordBearer
-import jwt
-from jwt.exceptions import InvalidTokenError, ExpiredSignatureError
 from typing import Annotated
-from app.auth.models import TokenData
-from app.api.settings import SECRET_KEY, ALGORITHM
-from app.utils.logic import get_user
-from app.models.user import User
-from ..models.admin import AdminUser
-from app.utils.dependencies import session
 
+import jwt
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
+
+from app.api.settings import ALGORITHM, SECRET_KEY
+from app.auth.models import TokenData
+from app.models.user import User
+from app.utils.dependencies import session
+from app.utils.logic import get_user
+
+from ..models.admin import AdminUser
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 '''A dependency of the OAuth2PasswordBearer class.'''

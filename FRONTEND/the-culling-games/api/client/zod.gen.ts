@@ -499,10 +499,7 @@ export const zBaseMatchInfo = z.object({
                 'female',
                 'non-binary'
             ]),
-            age: z.union([
-                z.number().int().gte(10).lte(102),
-                z.null()
-            ]).optional(),
+            age: z.number().int().gte(10).lte(102),
             role: z.union([
                 z.string(),
                 z.null()
@@ -541,10 +538,7 @@ export const zBasePlayerInfo = z.object({
         'female',
         'non-binary'
     ]),
-    age: z.union([
-        z.number().int().gte(10).lte(102),
-        z.null()
-    ]).optional(),
+    age: z.number().int().gte(10).lte(102),
     role: z.union([
         z.string(),
         z.null()
@@ -786,10 +780,7 @@ export const zBodyCreatePlayer = z.object({
             'female',
             'non-binary'
         ]),
-        age: z.union([
-            z.number().int().gte(10).lte(102),
-            z.null()
-        ]).optional(),
+        age: z.number().int().gte(10).lte(102),
         role: z.union([
             z.string(),
             z.null()
@@ -1313,10 +1304,7 @@ export const zCreatePlayer = z.object({
         'female',
         'non-binary'
     ]),
-    age: z.union([
-        z.number().int().gte(10).lte(102),
-        z.null()
-    ]).optional(),
+    age: z.coerce.number().int().gte(10).lte(102),
     role: z.union([
         z.string(),
         z.null()
@@ -1443,10 +1431,7 @@ export const zPermissionLevel = z.unknown();
 export const zPlayerInfo = z.object({
     name: z.string().min(2),
     gender: zGender,
-    age: z.union([
-        z.number().int().gte(10).lte(102),
-        z.null()
-    ]).optional(),
+    age: z.number().int().gte(10).lte(102),
     role: z.union([
         z.string(),
         z.null()

@@ -1,18 +1,16 @@
 "use client";
 
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Form } from "@/components/ui/form";
+import { DisplayResponseMessage } from "@/components/DisplayServerResponse";
 import { InputWithLabel } from "@/components/inputs/InputWithLabel";
-import { Button } from "@/components/ui/button";
 import { LinkButton } from "@/components/LinkButton";
+import { Button } from "@/components/ui/button";
+import { Form } from "@/components/ui/form";
+import { useLoginMutation } from "@/lib/custom-hooks/user-mutations";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { LogInIcon, UserPlus2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useMutation } from "@tanstack/react-query";
-import { createTokenMutation } from "@/api/client/@tanstack/react-query.gen";
-import { toast } from "sonner";
-import { DisplayResponseMessage } from "@/components/DisplayServerResponse";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 export const loginUserSchema = z.object({
     username: z
@@ -26,8 +24,6 @@ export const loginUserSchema = z.object({
 type formSchemaType = z.infer<typeof loginUserSchema>;
 
 export function LoginForm() {
-    const router = useRouter();
-
     const form = useForm<formSchemaType>({
         resolver: zodResolver(loginUserSchema),
         defaultValues: {
@@ -36,24 +32,7 @@ export function LoginForm() {
         },
     });
 
-    const { isPending, isSuccess, mutate, error } = useMutation({
-        ...createTokenMutation(),
-        onError: (error) => {
-            if (error.detail) {
-                toast(`${error.detail}`);
-            } else {
-                toast("An error occured");
-            }
-        },
-        onSuccess: (data) => {
-            // save token to cookie; did not work
-            const tokenString = data.access_token;
-            localStorage.setItem("access_token", tokenString);
-            // invalidate prev user; refetch user query keys
-            // redirect
-            router.push("/dashboard");
-        },
-    });
+    const { isPending, isSuccess, mutate, error } = useLoginMutation();
 
     function onSubmit(data: formSchemaType) {
         // tanstack mutation here

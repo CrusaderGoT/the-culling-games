@@ -1,19 +1,22 @@
 "use client";
 
-import { SelectWithLabel } from "@/components/inputs/SelectWithLabel";
 import { type EditUser, UserInfo } from "@/api/client";
-import { zEditUser,  } from "@/api/client/zod.gen";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Form } from "@/components/ui/form";
+import { editUserMutation } from "@/api/client/@tanstack/react-query.gen";
+import { zEditUser } from "@/api/client/zod.gen";
 import { InputWithLabel } from "@/components/inputs/InputWithLabel";
+import { SelectWithLabel } from "@/components/inputs/SelectWithLabel";
 import { Button } from "@/components/ui/button";
-import { LinkButton } from "@/components/LinkButton";
-import { LogInIcon, PersonStandingIcon } from "lucide-react";
+import { Form } from "@/components/ui/form";
+import { COUNTRIES } from "@/constants/COUNTRIES";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { Edit3Icon } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 type EditUserFormProp = {
-    user: UserInfo,
-}
+    user: UserInfo;
+};
 
 export function EditUserForm({ user }: EditUserFormProp) {
     const defaultValues: EditUser = {
@@ -27,52 +30,70 @@ export function EditUserForm({ user }: EditUserFormProp) {
         defaultValues: defaultValues,
     });
 
-    const countries = [{ id: "NG", description: "Nigeria" }];
+    const { isPending, mutate } = useMutation({
+        ...editUserMutation(),
+        onError: (error) => {
+            if (error.detail) {
+                toast(`${error.detail}`);
+            } else {
+                toast(`${error ? error : "An error occured"}`);
+            }
+        },
+        onSuccess: () => {
+            toast("Edited successfully");
+        },
+    });
 
     function onSubmit(data: EditUser) {
-        console.log({ ...data });
+        const token = localStorage.getItem("access_token");
+        mutate({
+            path: {
+                user: user.id,
+            },
+            body: { ...data },
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
     }
 
     return (
-        <div className="sm:px-8 p-4 border rounded container">
+        <div className="sm:px-8 p-4 border rounded container h-max w-max mx-auto my-[10%]">
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)}>
-                    <div className="flex flex-col gap-4 w-full max-w-xs">
-                        <InputWithLabel<EditUser>
-                            fieldTitle="Username"
-                            nameInSchema="username"
-                        />
+                    <div className="flex flex-col gap-4 md:flex-row">
+                        <div className="flex flex-col sm:flex-row gap-5 sm:justify-center">
+                            <InputWithLabel<EditUser>
+                                fieldTitle="Username"
+                                nameInSchema="username"
+                            />
 
-                        <InputWithLabel<EditUser>
-                            fieldTitle="Email"
-                            nameInSchema="email"
-                            type="email"
-                            autoComplete="false"
-                        />
+                            <InputWithLabel<EditUser>
+                                fieldTitle="Email"
+                                nameInSchema="email"
+                                type="email"
+                                autoComplete="false"
+                            />
 
-                        <SelectWithLabel<EditUser>
-                            data={countries}
-                            fieldTitle="Country"
-                            nameInSchema="country"
-                        />
+                            <SelectWithLabel<EditUser>
+                                data={COUNTRIES}
+                                fieldTitle="Country"
+                                nameInSchema="country"
+                            />
+                        </div>
 
-                        <div className="flex justify-between gap-3 sm:flex-row-reverse">
+                        <div className="self-end">
                             <Button
                                 type="submit"
                                 className="flex"
-                                title="Create Account"
+                                title="Edit User"
+                                disabled={isPending}
                             >
-                                Create Account
+                                Edit User
                                 <div className="hidden sm:block">
-                                    <PersonStandingIcon />
+                                    <Edit3Icon />
                                 </div>
                             </Button>
-                            
-                            <LinkButton
-                                href="/user/login"
-                                label="Login"
-                                icon={LogInIcon}
-                            />
                         </div>
                     </div>
                 </form>

@@ -1,27 +1,25 @@
 "use client";
 
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
-import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
 
 import { Form } from "@/components/ui/form";
 
-import { SelectWithLabel } from "@/components/inputs/SelectWithLabel";
 import { InputWithLabel } from "@/components/inputs/InputWithLabel";
-import { Button } from "@/components/ui/button";
+import { SelectWithLabel } from "@/components/inputs/SelectWithLabel";
 import { LinkButton } from "@/components/LinkButton";
-import { LogInIcon, UserPlus2Icon, LoaderCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { LoaderCircle, LogInIcon, UserPlus2Icon } from "lucide-react";
 
-import { CreateUser, Country } from "@/api/client";
+import { Country, CreateUser } from "@/api/client";
 import { zCreateUser } from "@/api/client/zod.gen";
-import {
-    createTokenMutation,
-    createUserMutation,
-} from "@/api/client/@tanstack/react-query.gen";
-import { COUNTRIES } from "@/constants/COUNTRIES";
 import { DisplayResponseMessage } from "@/components/DisplayServerResponse";
+import { COUNTRIES } from "@/constants/COUNTRIES";
+import {
+    useLoginMutation,
+    useSignUpMutation,
+} from "@/lib/custom-hooks/user-mutations";
 
 export function CreateUserForm() {
     const router = useRouter();
@@ -30,11 +28,11 @@ export function CreateUserForm() {
     router.prefetch("/user/login");
 
     const defaultValues: CreateUser = {
-        username: "Zanib",
-        email: "mcdonald@gmail.com",
+        username: "",
+        email: "",
         country: Country.AD,
-        password: "SpparrowKing1234@@",
-        confirm_password: "SpparrowKing1234@@",
+        password: "",
+        confirm_password: "",
     };
 
     const form = useForm<CreateUser>({
@@ -43,47 +41,10 @@ export function CreateUserForm() {
     });
 
     // Define the signup mutation with its success/error side effects.
-    const signupMutation = useMutation({
-        ...createUserMutation(),
-        onError: (error) => {
-            if (error.detail) {
-                toast(
-                    `${
-                        typeof error?.detail === "string"
-                            ? error.detail
-                            : "A sign up error occurred"
-                    }`
-                );
-            } else {
-                toast("A sign up error occurred");
-            }
-        },
-        onSuccess: (data) => {
-            toast(`User '${data.username}' created successfully`);
-        },
-        retry: 3,
-    });
+    const signupMutation = useSignUpMutation();
 
     // Define the login mutation with its side effects.
-    const loginMutation = useMutation({
-        ...createTokenMutation(),
-        onError: (error) => {
-            if (error.detail) {
-                toast(
-                    `${
-                        typeof error?.detail === "string"
-                            ? error.detail
-                            : "A log in error occurred"
-                    }`
-                );
-            }
-        },
-        onSuccess: (data) => {
-            localStorage.setItem("access_token", data.access_token);
-            router.push("/dashboard");
-        },
-        retry: 3,
-    });
+    const loginMutation = useLoginMutation();
 
     // Use async/await to chain the signup and login flows.
     async function onSubmit(data: CreateUser) {
@@ -97,13 +58,16 @@ export function CreateUserForm() {
             });
         } catch (error) {
             // Errors are already handled by each mutation's onError callback.
-            console.error("Signup/Login error", error);
+            alert("Signup/Login error");
         }
     }
 
-    // Optionally, display a loading indicator.
-    const isSigningUp = signupMutation.status === "pending";
-    const isLoggingIn = loginMutation.status === "pending";
+    // booleans for display a loading indicator, or diasbling buttons.
+    const isSigningUp = signupMutation.isPending;
+    const isLoggingIn = loginMutation.isPending;
+
+    const signUpSuccess = signupMutation.isSuccess;
+    const loginSuccess = loginMutation.isSuccess;
 
     const signUpError = signupMutation.error;
 
@@ -119,7 +83,12 @@ export function CreateUserForm() {
                     )}
                     {isLoggingIn && (
                         <span className="text-green-500">
-                            User Created Successfully: Logging in the user...
+                            User Created Successfully, Logging in the user...
+                        </span>
+                    )}
+                    {loginSuccess && (
+                        <span className="text-yellow-500">
+                            Logged in successfully, redirecting to dashboard...
                         </span>
                     )}
                 </div>
@@ -131,6 +100,7 @@ export function CreateUserForm() {
                             <InputWithLabel<CreateUser>
                                 fieldTitle="Username"
                                 nameInSchema="username"
+                                placeholder="your username is not the same as player name"
                             />
 
                             <InputWithLabel<CreateUser>
@@ -138,6 +108,7 @@ export function CreateUserForm() {
                                 nameInSchema="email"
                                 type="email"
                                 autoComplete="false"
+                                placeholder="myemail@example.com"
                             />
 
                             <SelectWithLabel<CreateUser>
@@ -169,7 +140,9 @@ export function CreateUserForm() {
 
                         <div className="flex flex-col items-start gap-3 sm:flex-row w-max">
                             <Button
-                                disabled={isSigningUp || isLoggingIn}
+                                disabled={
+                                    isSigningUp || isLoggingIn || signUpSuccess
+                                }
                                 type="submit"
                                 className="flex text-center gap-1 max-w-max max-h-max"
                                 title="Create Account"
@@ -185,7 +158,9 @@ export function CreateUserForm() {
                             </div>
 
                             <LinkButton
-                                disabled={isSigningUp || isLoggingIn}
+                                disabled={
+                                    isSigningUp || isLoggingIn || loginSuccess
+                                }
                                 href="/user/login"
                                 label="Login"
                                 icon={LogInIcon}

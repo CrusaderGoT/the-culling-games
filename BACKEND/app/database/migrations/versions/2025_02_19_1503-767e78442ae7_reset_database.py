@@ -1,8 +1,8 @@
-"""new migration
+"""reset database
 
-Revision ID: d2d240604f1e
+Revision ID: 767e78442ae7
 Revises: 
-Create Date: 2024-10-22 12:38:37.481732
+Create Date: 2025-02-19 15:03:53.906716
 
 """
 from typing import Sequence, Union
@@ -13,7 +13,7 @@ import sqlmodel
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'd2d240604f1e'
+revision: str = '767e78442ae7'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -27,7 +27,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('permission',
-    sa.Column('model', sa.Enum('colony', 'user', 'player', 'cursedtechnique', 'ctapp', 'barriertech', 'match', 'vote', 'barrierdetail', 'adminuser', 'permission', name='modelname'), nullable=False),
+    sa.Column('model', sa.Enum('colony', 'user', 'barriertech', 'barrierrecord', 'player', 'cursedtechnique', 'ctapp', 'match', 'vote', 'adminuser', 'permission', name='modelname'), nullable=False),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('level', sa.Enum('READ', 'CREATE', 'UPDATE', 'DELETE', name='permissionlevel'), nullable=False),
@@ -88,8 +88,6 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['permission_id'], ['permission.id'], ),
     sa.PrimaryKeyConstraint('admin_id', 'permission_id')
     )
-    op.create_index(op.f('ix_adminpermissionlink_admin_id'), 'adminpermissionlink', ['admin_id'], unique=False)
-    op.create_index(op.f('ix_adminpermissionlink_permission_id'), 'adminpermissionlink', ['permission_id'], unique=False)
     op.create_table('barriertech',
     sa.Column('domain_expansion', sa.Boolean(), nullable=False),
     sa.Column('binding_vow', sa.Boolean(), nullable=False),
@@ -124,13 +122,13 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_match_colony_id'), 'match', ['colony_id'], unique=False)
     op.create_index(op.f('ix_match_winner_id'), 'match', ['winner_id'], unique=False)
-    op.create_table('barrierdetail',
+    op.create_table('barrierrecord',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('domain_counter', sa.Integer(), nullable=False),
     sa.Column('simple_domain_counter', sa.Integer(), nullable=False),
     sa.Column('binding_vow_counter', sa.Integer(), nullable=False),
-    sa.Column('barrier_tech_id', sa.Integer(), nullable=False),
-    sa.Column('match_id', sa.Integer(), nullable=False),
+    sa.Column('barrier_tech_id', sa.Integer(), nullable=True),
+    sa.Column('match_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['barrier_tech_id'], ['barriertech.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['match_id'], ['match.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
@@ -157,6 +155,8 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=True),
     sa.Column('match_id', sa.Integer(), nullable=True),
+    sa.Column('point', sa.Float(), nullable=False),
+    sa.Column('has_been_added', sa.Boolean(), nullable=False),
     sa.ForeignKeyConstraint(['ct_app_id'], ['ctapp.id'], ondelete='RESTRICT'),
     sa.ForeignKeyConstraint(['match_id'], ['match.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['player_id'], ['player.id'], ondelete='RESTRICT'),
@@ -180,15 +180,13 @@ def downgrade() -> None:
     op.drop_table('matchplayerlink')
     op.drop_index(op.f('ix_ctapp_ct_id'), table_name='ctapp')
     op.drop_table('ctapp')
-    op.drop_table('barrierdetail')
+    op.drop_table('barrierrecord')
     op.drop_index(op.f('ix_match_winner_id'), table_name='match')
     op.drop_index(op.f('ix_match_colony_id'), table_name='match')
     op.drop_table('match')
     op.drop_index(op.f('ix_cursedtechnique_player_id'), table_name='cursedtechnique')
     op.drop_table('cursedtechnique')
     op.drop_table('barriertech')
-    op.drop_index(op.f('ix_adminpermissionlink_permission_id'), table_name='adminpermissionlink')
-    op.drop_index(op.f('ix_adminpermissionlink_admin_id'), table_name='adminpermissionlink')
     op.drop_table('adminpermissionlink')
     op.drop_index(op.f('ix_player_user_id'), table_name='player')
     op.drop_index(op.f('ix_player_role'), table_name='player')
