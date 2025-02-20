@@ -1,10 +1,6 @@
 "use client";
 
-import {
-    zCreateCt,
-    zCreateCtApp,
-    zCreatePlayer
-} from "@/api/client/zod.gen";
+import { zCreateCt, zCreateCtApp, zCreatePlayer } from "@/api/client/zod.gen";
 import { InputWithLabel } from "@/components/inputs/InputWithLabel";
 import { SelectWithLabel } from "@/components/inputs/SelectWithLabel";
 import { TextAreaWithLabel } from "@/components/inputs/TextAreaWithLabel";
@@ -28,27 +24,25 @@ export function CreatePlayerForm() {
             name: "",
             age: 18,
             gender: "non-binary",
-            role: ""
+            role: "",
         },
         cursed_technique: {
             name: "",
             definition: "",
         },
         applications: [
-            {application: ""},
-            {application: ""},
-            {application: ""},
-            {application: ""},
-            {application: ""},
-        ]
-    }
-
-    
+            { name: "", application: "" },
+            { name: "", application: "" },
+            { name: "", application: "" },
+            { name: "", application: "" },
+            { name: "", application: "" },
+        ],
+    };
 
     const form = useForm<createPlayerFormType>({
         resolver: zodResolver(createPlayerFormSchema),
         mode: "onBlur",
-        defaultValues
+        defaultValues,
     });
 
     function onSubmit(data: createPlayerFormType) {
@@ -82,7 +76,6 @@ export function CreatePlayerForm() {
                             />
                         </div>
 
-
                         <div>
                             {/** for cursed technique */}
                             <InputWithLabel<createPlayerFormType>
@@ -96,26 +89,60 @@ export function CreatePlayerForm() {
                         </div>
                         <div>
                             {/** for applications */}
-                            <TextAreaWithLabel<createPlayerFormType>
-                                nameInSchema="applications.0.application"
-                                fieldTitle="Technique Application 1"
-                            />
-                            <TextAreaWithLabel<createPlayerFormType>
-                                nameInSchema="applications.1.application"
-                                fieldTitle="Technique Application 2"
-                            />
-                            <TextAreaWithLabel<createPlayerFormType>
-                                nameInSchema="applications.2.application"
-                                fieldTitle="Technique Application 3"
-                            />
-                            <TextAreaWithLabel<createPlayerFormType>
-                                nameInSchema="applications.3.application"
-                                fieldTitle="Technique Application 4"
-                            />
-                            <TextAreaWithLabel<createPlayerFormType>
-                                nameInSchema="applications.4.application"
-                                fieldTitle="Technique Application 5"
-                            />
+                            <div>
+                                <InputWithLabel<createPlayerFormType>
+                                    nameInSchema="applications.0.name"
+                                    fieldTitle="Name"
+                                />
+                                <TextAreaWithLabel<createPlayerFormType>
+                                    nameInSchema="applications.0.application"
+                                    fieldTitle="Application"
+                                />
+                            </div>
+
+                            <div>
+                                <InputWithLabel<createPlayerFormType>
+                                    nameInSchema="applications.1.name"
+                                    fieldTitle="Name"
+                                />
+                                <TextAreaWithLabel<createPlayerFormType>
+                                    nameInSchema="applications.1.application"
+                                    fieldTitle="Application"
+                                />
+                            </div>
+
+                            <div>
+                                <InputWithLabel<createPlayerFormType>
+                                    nameInSchema="applications.2.name"
+                                    fieldTitle="Name"
+                                />
+                                <TextAreaWithLabel<createPlayerFormType>
+                                    nameInSchema="applications.2.application"
+                                    fieldTitle="Application"
+                                />
+                            </div>
+
+                            <div>
+                                <InputWithLabel<createPlayerFormType>
+                                    nameInSchema="applications.3.name"
+                                    fieldTitle="Name"
+                                />
+                                <TextAreaWithLabel<createPlayerFormType>
+                                    nameInSchema="applications.3.application"
+                                    fieldTitle="Application"
+                                />
+                            </div>
+
+                            <div>
+                                <InputWithLabel<createPlayerFormType>
+                                    nameInSchema="applications.4.name"
+                                    fieldTitle="Name"
+                                />
+                                <TextAreaWithLabel<createPlayerFormType>
+                                    nameInSchema="applications.4.application"
+                                    fieldTitle="Application"
+                                />
+                            </div>
                         </div>
 
                         <div className="self-end">

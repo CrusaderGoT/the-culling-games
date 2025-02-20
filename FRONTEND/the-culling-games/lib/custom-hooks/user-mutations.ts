@@ -25,6 +25,10 @@ export const useLoginMutation = () => {
               : "A log in error occurred"
           }`
         );
+      } else if (error instanceof Error) {
+        toast(error.message)
+      } else {
+        toast("a login error occured")
       }
     },
     onSuccess: (data) => {

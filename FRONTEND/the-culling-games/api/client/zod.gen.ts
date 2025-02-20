@@ -1306,7 +1306,7 @@ export const zCreatePlayer = z.object({
         'female',
         'non-binary'
     ]),
-    age: z.number().int().gte(10).lte(102),
+    age: z.coerce.number().int().gte(10).lte(102),
     role: z.union([
         z.string().min(3).max(50),
         z.null()
