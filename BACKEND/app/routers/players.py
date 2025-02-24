@@ -1,25 +1,33 @@
-from sqlmodel import select, or_
+from typing import Annotated, Union
+
 from app.models.barrier import BarrierTech
-from app.utils.logic import get_user, get_player, id_name_email
 from app.models.player import (
-    CreatePlayer,
+    BasePlayerInfo,
     CreateCT,
     CreateCTApp,
+    CreatePlayer,
     CTApp,
     CursedTechnique,
-    Player,
-    PlayerInfo,
-    BasePlayerInfo,
-    EditPlayer,
     EditCT,
     EditCTApp,
+    EditPlayer,
+    Player,
+    PlayerInfo,
 )
 from app.utils.config import Tag, UserException
 from app.utils.dependencies import colony, session
-from app.utils.logic import points_required_for_upgrade, calculate_points
-from ..auth.dependencies import oauth2_scheme, active_user
-from fastapi import APIRouter, Body, HTTPException, Path, status, Depends, Query
-from typing import Annotated, Union
+from app.utils.logic import (
+    calculate_points,
+    get_player,
+    get_user,
+    id_name_email,
+    points_required_for_upgrade,
+)
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, status
+from sqlmodel import or_, select
+
+from ..auth.dependencies import active_user, oauth2_scheme
+
 # PLAYERS
 
 router = APIRouter(
@@ -176,12 +184,18 @@ def edit_player(
         else:  # update database infos
             if player is not None:
                 edit_player_data = player.model_dump(
-                    exclude_unset=True, exclude_defaults=True
+                    exclude_unset=True,
+                    exclude_defaults=True,
+                    exclude_none=True,
+                    warnings="error",
                 )
                 playerdb.sqlmodel_update(edit_player_data)
             if cursed_technique is not None:
                 edit_ct_data = cursed_technique.model_dump(
-                    exclude_unset=True, exclude_defaults=True
+                    exclude_unset=True,
+                    exclude_defaults=True,
+                    exclude_none=True,
+                    warnings="error",
                 )
                 playerdb.cursed_technique.sqlmodel_update(edit_ct_data)
             if applications is not None:
@@ -192,13 +206,16 @@ def edit_player(
                     select(CTApp)
                     .join(CursedTechnique)
                     .where(CTApp.ct_id == playerdb.cursed_technique.id)
-                    .where(CTApp.number.in_(app_numbers)) # type: ignore
+                    .where(CTApp.number.in_(app_numbers))  # type: ignore
                 ).all()
                 for ct_app in ctapps:
                     for edit_ct_app in applications:
                         if edit_ct_app.number == ct_app.number:
                             ct_app_data = edit_ct_app.model_dump(
-                                exclude_unset=True, exclude_defaults=True
+                                exclude_unset=True,
+                                exclude_defaults=True,
+                                exclude_none=True,
+                                warnings="error",
                             )
                             ct_app.sqlmodel_update(ct_app_data)
             # add playerdb to session, and commit to update infos

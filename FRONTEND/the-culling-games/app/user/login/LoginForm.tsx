@@ -1,14 +1,13 @@
 "use client";
 
 import { DisplayResponseMessage } from "@/components/DisplayServerResponse";
-import { InputWithLabel } from "@/components/inputs/InputWithLabel";
+import { InputForm } from "@/components/inputs/InputForm";
 import { LinkButton } from "@/components/LinkButton";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { useLoginMutation } from "@/lib/custom-hooks/user-mutations";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LogInIcon, UserPlus2Icon } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -51,20 +50,22 @@ export function LoginForm() {
                     <form onSubmit={form.handleSubmit(onSubmit)}>
                         <div className="flex flex-col sm:flex-row gap-5 sm:justify-center">
                             <div className="flex flex-col gap-3 sm:flex-row">
-                                <InputWithLabel<formSchemaType>
+                                <InputForm<formSchemaType>
                                     fieldTitle="Username"
                                     nameInSchema="username"
                                 />
-                                <InputWithLabel<formSchemaType>
+                                <InputForm<formSchemaType>
                                     fieldTitle="Password"
                                     nameInSchema="password"
                                     type="password"
                                 />
                             </div>
 
-                            <div className="sm:self-end">
+                            <div className="sm:self-end ">
                                 {error && (
-                                    <DisplayResponseMessage error={error} />
+                                    <div className="max-w-xs my-1 max-h-max">
+                                        <DisplayResponseMessage error={error} />
+                                    </div>
                                 )}
 
                                 <div className="mt-3 sm:m-0 max-w-xs h-max flex items-center justify-between gap-2">

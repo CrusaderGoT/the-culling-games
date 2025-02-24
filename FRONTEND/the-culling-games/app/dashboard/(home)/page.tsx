@@ -1,13 +1,13 @@
-"use client"
+"use server"
 
-import { LeaderboardChart } from "@/components/Chart";
+import { LeaderboardChart } from "@/components/LeaderBoardChart";
 import { ColonyStatus } from "@/components/ColonyCard";
 import { ColonyPlayerGradeChart } from "@/components/ColonyPlayersGradeChart";
 import { LatestMatch } from "@/components/CurrentMatch";
-import { PlayerCard } from "@/components/PlayerCard";
+import { OrPlayerCard } from "@/components/PlayerCard";
 import { CommentSection } from "@/components/SocialBoard";
 
-export default function Dashboard() {
+export default async function Dashboard() {
     return (
         <div className="flex flex-col justify-between gap-3 p-4 container min-h-screen">
             <div className="flex gap-2 flex-1">
@@ -18,7 +18,7 @@ export default function Dashboard() {
                                 <LatestMatch />
                             </div>
                             <div>
-                                <PlayerCard />
+                                <OrPlayerCard />
                             </div>
                         </div>
                         <div>
@@ -31,7 +31,7 @@ export default function Dashboard() {
                     </div>
                 </div>
 
-                <div className="w-1/3">
+                <div className="w-1/3 flex-1">
                     <CommentSection />
                 </div>
             </div>

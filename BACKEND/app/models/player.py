@@ -93,19 +93,20 @@ class CTInfo(BaseCTInfo):
 # Edit Models
 class EditPlayer(SQLModel):
     'For editing a Player'
-    name: str | None = None
+    name: str | None = Field(default=None, min_length=2, max_length=50, description="The name of the player, must be between 2 and 50 characters")
     gender: BasePlayer.Gender | None = None
     age: int| None = Field(default=None, ge=10, le=102)
-    role: str | None = None
+    role: str | None = Field(default=None, min_length=3, max_length=50, description="The role of the player, e.g., doctor, lawyer, student, curse user, sorcerer etc.")
 
 class EditCT(SQLModel):
     'for editing a cursed technique'
-    name: str | None = None
-    definition: str | None = None
+    name: str | None = Field(default=None, min_length=3, max_length=100, description="The name of the cursed technique, must be between 3 and 100 characters", schema_extra={"examples": ["Boogie Woogie", "Cursed Speech", "Infinity", "Black Flash"]})
+    definition: str | None = Field(default=None, min_length=50, max_length=500, description="The definition of the cursed technique, explaining what it does without including its subsets")
 
 class EditCTApp(SQLModel):
     'for editing a cursed technique application'
     number: int = Field(ge=1, le=5)
-    application: str
+    name: str | None = Field(default=None, min_length=3, max_length=100, description="The name of the application, must be between 3 and 100 characters", schema_extra={"examples": ["Hollow Purple", "Demon Dogs", "Resonance", "Overtime"]})
+    application: str | None = Field(default=None, min_length=100, max_length=500, description="The application of the cursed technique, explaining how it is used or applied in practice")
 
 

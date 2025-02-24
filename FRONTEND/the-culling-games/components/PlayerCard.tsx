@@ -1,5 +1,8 @@
 "use client";
 
+import { PlayerInfo } from "@/api/client";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import {
     Card,
     CardContent,
@@ -8,21 +11,17 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { PlayerInfo } from "@/api/client";
-import { KoganeImage } from "./KoganeImage";
+import { useMyPlayerQuery } from "@/lib/custom-hooks/player-queries";
 import { Barcode } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { myPlayerOptions } from "@/api/client/@tanstack/react-query.gen";
+import { KoganeImage } from "./KoganeImage";
 
-export function PlayerCard() {
-    const { data: player, error, isSuccess } = useQuery({
-        ...myPlayerOptions(),
-      }
-    );
+export function OrPlayerCard() {
+    const accessToken = localStorage.getItem("access_token");
+
+    const { data: player, error } = useMyPlayerQuery(accessToken);
 
     if (!player) {
+        console.log(error)
         return <NoPlayerCard />;
     }
     return <YesPlayerCard player={player} />;
@@ -30,7 +29,7 @@ export function PlayerCard() {
 
 function NoPlayerCard() {
     return (
-        <Card className="p-0 shadow-sm bg-gray-200 dark:bg-gray-800 opacity-50 pointer-events-none overflow-hidden">
+        <Card className="p-0 shadow-sm bg-gray-200 dark:bg-gray-800 opacity-50 pointer-events-none overflow-hidden max-w-sm">
             <CardHeader className="p-1 max-h-min">
                 <CardTitle className="flex justify-between">
                     <div className="flex">
@@ -111,11 +110,11 @@ interface PlayerCardProps {
     player: PlayerInfo;
 }
 
-function YesPlayerCard({ player }: PlayerCardProps) {
+export function YesPlayerCard({ player }: PlayerCardProps) {
     return (
         <Card
-            className="p-0 shadow-sm bg-gradient-to-tr from-[hsl(73,84%,60%)] to-emerald-500
-            dark:bg-gradient-to-bl dark:from-indigo-600 dark:to-violet-900 dark:text-white overflow-hidden"
+            className="p-0 shadow-sm bg-gradient-to-tr from-[hsl(73,84%,60%)] to-[hsl(175,98%,34%)]
+            dark:bg-gradient-to-bl dark:from-[hsl(115,94%,34%)] dark:to-[hsl(258,94%,44%)] dark:text-white overflow-hidden max-w-sm border-none"
         >
             <CardHeader className="p-1 max-h-min">
                 <CardTitle className="flex justify-between">
@@ -135,7 +134,7 @@ function YesPlayerCard({ player }: PlayerCardProps) {
                 <CardDescription>
                     <div className="flex justify-center items-center gap-2">
                         <p className="text-pretty text-center">
-                            This player? is currently
+                            This player is currently
                         </p>
                         <Badge variant={"destructive"}>Dead</Badge>
                     </div>
@@ -185,7 +184,7 @@ function YesPlayerCard({ player }: PlayerCardProps) {
                 <div className="w-full">
                     <div className="flex justify-center w-full">
                         <p className="text-[10px] font-light text-center">
-                            {"The Above Proves this individual is a player? in the culling games".toLocaleUpperCase()}
+                            {"The Above Proves this individual is a player in the culling games".toLocaleUpperCase()}
                         </p>
                     </div>
                     <div className="text-black flex justify-center">

@@ -1,26 +1,33 @@
 "use client";
 
+import { YesPlayerCard } from "@/components/PlayerCard";
 import { Button } from "@/components/ui/button";
 import { useMyPlayerQuery } from "@/lib/custom-hooks/player-queries";
 import { LoaderCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { EditPlayerForm } from "./EditPlayerForm";
 
-export default function EditPlayerPage() {
+export function MyPlayerPage() {
     const router = useRouter();
 
     const accessToken = localStorage.getItem("access_token");
 
     const {
-        data: myPlayer,
-        error,
-        refetch,
-        isPending,
+        data: player,
         isSuccess,
+        error,
+        isPending,
+        refetch,
     } = useMyPlayerQuery(accessToken);
 
     return (
         <div className="m-6">
+            {player && isSuccess && (
+                <div className="container">
+                    <YesPlayerCard player={player} />
+                    {/** BarChart */}
+                </div>
+            )}
+
             {isPending && (
                 <div className="w-full h-dvh grid place-content-center fixed inset-0">
                     <div className="flex gap-1">
@@ -65,15 +72,6 @@ export default function EditPlayerPage() {
                             </Button>
                         </div>
                     )}
-                </div>
-            )}
-
-            {myPlayer && isSuccess && (
-                <div className="flex flex-col">
-                    <h2 className="text-lg font-bold self-center">
-                        Edit Your Player Here
-                    </h2>
-                    <EditPlayerForm player={myPlayer} />
                 </div>
             )}
         </div>

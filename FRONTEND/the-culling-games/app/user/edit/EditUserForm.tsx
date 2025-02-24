@@ -3,8 +3,8 @@
 import { type EditUser, UserInfo } from "@/api/client";
 import { editUserMutation } from "@/api/client/@tanstack/react-query.gen";
 import { zEditUser } from "@/api/client/zod.gen";
-import { InputWithLabel } from "@/components/inputs/InputWithLabel";
-import { SelectWithLabel } from "@/components/inputs/SelectWithLabel";
+import { InputForm } from "@/components/inputs/InputForm";
+import { SelectForm } from "@/components/inputs/SelectWithLabel";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { COUNTRIES } from "@/constants/COUNTRIES";
@@ -63,19 +63,19 @@ export function EditUserForm({ user }: EditUserFormProp) {
                 <form onSubmit={form.handleSubmit(onSubmit)}>
                     <div className="flex flex-col gap-4 md:flex-row">
                         <div className="flex flex-col sm:flex-row gap-5 sm:justify-center">
-                            <InputWithLabel<EditUser>
+                            <InputForm<EditUser>
                                 fieldTitle="Username"
                                 nameInSchema="username"
                             />
 
-                            <InputWithLabel<EditUser>
+                            <InputForm<EditUser>
                                 fieldTitle="Email"
                                 nameInSchema="email"
                                 type="email"
                                 autoComplete="false"
                             />
 
-                            <SelectWithLabel<EditUser>
+                            <SelectForm<EditUser>
                                 data={COUNTRIES}
                                 fieldTitle="Country"
                                 nameInSchema="country"

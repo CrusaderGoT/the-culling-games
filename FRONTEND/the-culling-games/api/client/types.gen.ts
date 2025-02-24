@@ -29,15 +29,15 @@ export type BarrierTechInfo = {
     /**
      * the time a player cast their domain
      */
-    de_end_time?: Date | null;
+    de_end_time?: string | null;
     /**
      * the time a player cast their binding_vow
      */
-    bv_end_time?: Date | null;
+    bv_end_time?: string | null;
     /**
      * the time a player cast their simple_domain
      */
-    sd_end_time?: Date | null;
+    sd_end_time?: string | null;
     id: number;
 };
 
@@ -107,8 +107,8 @@ export type BaseColonyInfo = {
  * `winner: Union[BasePlayerInfo, None]`
  */
 export type BaseMatchInfo = {
-    begin: Date;
-    end: Date;
+    begin: string;
+    end: string;
     part: number;
     id: number;
     winner: BasePlayerInfo | null;
@@ -153,7 +153,7 @@ export type BasePlayerInfo = {
      */
     role?: string | null;
     id: number;
-    created: Date;
+    created: string;
     grade: Grade;
     points: number;
 };
@@ -181,7 +181,7 @@ export type BaseUserInfo = {
     /**
      * the date the account was created
      */
-    created: Date;
+    created: string;
 };
 
 /**
@@ -543,7 +543,13 @@ export type CreateUser = {
  * for editing a cursed technique
  */
 export type EditCt = {
+    /**
+     * The name of the cursed technique, must be between 3 and 100 characters
+     */
     name?: string | null;
+    /**
+     * The definition of the cursed technique, explaining what it does without including its subsets
+     */
     definition?: string | null;
 };
 
@@ -552,16 +558,29 @@ export type EditCt = {
  */
 export type EditCtApp = {
     number: number;
-    application: string;
+    /**
+     * The name of the application, must be between 3 and 100 characters
+     */
+    name?: string | null;
+    /**
+     * The application of the cursed technique, explaining how it is used or applied in practice
+     */
+    application?: string | null;
 };
 
 /**
  * For editing a Player
  */
 export type EditPlayer = {
+    /**
+     * The name of the player, must be between 2 and 50 characters
+     */
     name?: string | null;
     gender?: Gender | null;
     age?: number | null;
+    /**
+     * The role of the player, e.g., doctor, lawyer, student, curse user, sorcerer etc.
+     */
     role?: string | null;
 };
 
@@ -612,8 +631,8 @@ export type HttpValidationError = {
  * match info for client side
  */
 export type MatchInfo = {
-    begin: Date;
-    end: Date;
+    begin: string;
+    end: string;
     part: number;
     id: number;
     winner: BasePlayerInfo | null;
@@ -674,7 +693,7 @@ export type PlayerInfo = {
      */
     role?: string | null;
     id: number;
-    created: Date;
+    created: string;
     grade: Grade;
     points: number;
     cursed_technique: BaseCtInfo;
@@ -709,7 +728,7 @@ export type UserInfo = {
     /**
      * the date the account was created
      */
-    created: Date;
+    created: string;
     player?: BasePlayerInfo | null;
     admin?: BaseAdminInfo | null;
 };
@@ -1192,6 +1211,31 @@ export type SimpleDomainResponses = {
 };
 
 export type SimpleDomainResponse = SimpleDomainResponses[keyof SimpleDomainResponses];
+
+export type DeleteMatchData = {
+    body?: never;
+    path: {
+        match_id: number;
+    };
+    query?: never;
+    url: '/match/delete/{match_id}';
+};
+
+export type DeleteMatchErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteMatchError = DeleteMatchErrors[keyof DeleteMatchErrors];
+
+export type DeleteMatchResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
 
 export type CreateAdminData = {
     body: Array<CreatePermission>;

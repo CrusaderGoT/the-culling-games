@@ -273,7 +273,7 @@ export const zBaseAdminInfo = z.object({
 
 export const zBaseCtAppInfo = z.object({
     name: z.string().min(3).max(100),
-    application: z.string().min(50).max(500),
+    application: z.string().min(100).max(500),
     id: z.number().int(),
     number: z.number().int()
 });
@@ -816,7 +816,7 @@ export const zBodyEditPlayer = z.object({
     player: z.union([
         z.object({
             name: z.union([
-                z.string(),
+                z.string().min(2).max(50),
                 z.null()
             ]).optional(),
             gender: z.union([
@@ -832,7 +832,7 @@ export const zBodyEditPlayer = z.object({
                 z.null()
             ]).optional(),
             role: z.union([
-                z.string(),
+                z.string().min(3).max(50),
                 z.null()
             ]).optional()
         }),
@@ -841,11 +841,11 @@ export const zBodyEditPlayer = z.object({
     cursed_technique: z.union([
         z.object({
             name: z.union([
-                z.string(),
+                z.string().min(3).max(100),
                 z.null()
             ]).optional(),
             definition: z.union([
-                z.string(),
+                z.string().min(50).max(500),
                 z.null()
             ]).optional()
         }),
@@ -854,7 +854,14 @@ export const zBodyEditPlayer = z.object({
     applications: z.union([
         z.array(z.object({
             number: z.number().int().gte(1).lte(5),
-            application: z.string()
+            name: z.union([
+                z.string().min(3).max(100),
+                z.null()
+            ]).optional(),
+            application: z.union([
+                z.string().min(100).max(500),
+                z.null()
+            ]).optional()
         })).max(5),
         z.null()
     ]).optional()
@@ -1279,7 +1286,7 @@ export const zCreateCt = z.object({
 
 export const zCreateCtApp = z.object({
     name: z.string().min(3).max(100),
-    application: z.string().min(50).max(500)
+    application: z.string().min(100).max(500)
 });
 
 export const zCreatePermission = z.object({
@@ -1306,7 +1313,7 @@ export const zCreatePlayer = z.object({
         'female',
         'non-binary'
     ]),
-    age: z.coerce.number().int().gte(10).lte(102),
+    age: z.number().int().gte(10).lte(102),
     role: z.union([
         z.string().min(3).max(50),
         z.null()
@@ -1326,23 +1333,30 @@ export const zCreateUser = z.object({
 
 export const zEditCt = z.object({
     name: z.union([
-        z.string(),
+        z.string().min(3).max(100),
         z.null()
     ]).optional(),
     definition: z.union([
-        z.string(),
+        z.string().min(50).max(500),
         z.null()
     ]).optional()
 });
 
 export const zEditCtApp = z.object({
     number: z.number().int().gte(1).lte(5),
-    application: z.string()
+    name: z.union([
+        z.string().min(3).max(100),
+        z.null()
+    ]).optional(),
+    application: z.union([
+        z.string().min(100).max(500),
+        z.null()
+    ]).optional()
 });
 
 export const zEditPlayer = z.object({
     name: z.union([
-        z.string(),
+        z.string().min(2).max(50),
         z.null()
     ]).optional(),
     gender: z.union([
@@ -1358,7 +1372,7 @@ export const zEditPlayer = z.object({
         z.null()
     ]).optional(),
     role: z.union([
-        z.string(),
+        z.string().min(3).max(50),
         z.null()
     ]).optional()
 });

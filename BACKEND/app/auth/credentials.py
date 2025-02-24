@@ -44,7 +44,7 @@ class PasswordAuth:
         return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
 
 
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 300
 'constant for expiration of access token'
 
 def create_access_token(data: dict,

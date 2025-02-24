@@ -1,3 +1,5 @@
+"use client"
+
 import {
   createTokenMutation,
   createUserMutation,
@@ -5,6 +7,8 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+
+
 
 export const useLoginMutation = () => {
   const router = useRouter();
@@ -26,9 +30,9 @@ export const useLoginMutation = () => {
           }`
         );
       } else if (error instanceof Error) {
-        toast(error.message)
+        toast(error.message);
       } else {
-        toast("a login error occured")
+        toast("a login error occured");
       }
     },
     onSuccess: (data) => {
@@ -63,6 +67,8 @@ export const useSignUpMutation = () => {
     },
     onSuccess: (data) => {
       toast(`User '${data.username}' created successfully`);
+      // invalidate/refetch all queries, as this user was just created
+      queryClient.invalidateQueries();
     },
     retry: 3,
   });

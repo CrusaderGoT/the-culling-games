@@ -8,6 +8,6 @@ export const useMyPlayerQuery = (access_token: string | null) => {
                 Authorization: `Bearer ${access_token}`
             }
         }),
-        refetchOnMount: false,
+        retry: Infinity,
     })
 }

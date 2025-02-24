@@ -1,7 +1,7 @@
 Error requesting http://localhost:8000/openapi.json 
-fetch failed
+This operation was aborted
 ResolverError: Error requesting http://localhost:8000/openapi.json 
-fetch failed
+This operation was aborted
     at Object.sendRequest (C:\Users\DELL\Documents\my progamming folder\Projects\the-culling-games\FRONTEND\the-culling-games\node_modules\@hey-api\json-schema-ref-parser\dist\lib\resolvers\url.js:44:15)
     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
     at async Zs (C:\Users\DELL\Documents\my progamming folder\Projects\the-culling-games\FRONTEND\the-culling-games\node_modules\@hey-api\openapi-ts\dist\index.cjs:12:908)

@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
     Select,
@@ -16,26 +16,38 @@ import {
     FormMessage,
 } from "@/components/ui/form";
 
-import { useFormContext, FieldPath, FieldValues } from "react-hook-form";
-
+import { LucideIcon } from "lucide-react";
+import { FieldPath, FieldValues, useFormContext } from "react-hook-form";
+import { TooltipPopover } from "../TooltipPopover";
 
 type DataObj = {
-    id: string,
-    description: string
-}
+    id: string;
+    description: string;
+};
 
 type SelectProps<S extends FieldValues> = {
-    data: DataObj[]
-    fieldTitle: string,
-    nameInSchema: FieldPath<S>,
-    className?: string,
-}
+    data: DataObj[];
+    fieldTitle: string;
+    nameInSchema: FieldPath<S>;
+    className?: string;
+    includeTip?: boolean;
+    TooltipComponent?: React.ElementType;
+    TooltipIcon?: LucideIcon;
+    tooltipContent?: string;
+    triggerText?: string;
+};
 
-
-export function SelectWithLabel<S extends FieldValues>({
-    data, fieldTitle, nameInSchema, className
-}: SelectProps<S> ) {
-
+export function SelectForm<S extends FieldValues>({
+    data,
+    fieldTitle,
+    nameInSchema,
+    className,
+    includeTip = false,
+    TooltipComponent,
+    TooltipIcon,
+    tooltipContent = "",
+    triggerText,
+}: SelectProps<S>) {
     const form = useFormContext();
 
     return (
@@ -44,11 +56,18 @@ export function SelectWithLabel<S extends FieldValues>({
             name={nameInSchema}
             render={({ field }) => (
                 <FormItem>
-
-                    <FormLabel
-                        className="text-xs sm:text-base"
-                    >
-                        {fieldTitle}
+                    <FormLabel className="text-xs sm:text-base">
+                        <div className="flex items-center gap-1">
+                            <span>{fieldTitle}</span>
+                            {includeTip && (
+                                <TooltipPopover
+                                    TriggerComponent={TooltipComponent}
+                                    TriggerIcon={TooltipIcon}
+                                    triggerText={triggerText}
+                                    content={tooltipContent}
+                                />
+                            )}
+                        </div>
                     </FormLabel>
 
                     <Select
@@ -56,7 +75,6 @@ export function SelectWithLabel<S extends FieldValues>({
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                     >
-                    
                         <FormControl>
                             <SelectTrigger
                                 id={nameInSchema}
@@ -64,11 +82,10 @@ export function SelectWithLabel<S extends FieldValues>({
                             >
                                 <SelectValue placeholder="Select" />
                             </SelectTrigger>
-                        
                         </FormControl>
-                    
+
                         <SelectContent>
-                            {data.map(item => (
+                            {data.map((item) => (
                                 <SelectItem
                                     key={`${nameInSchema}_${item.id}`}
                                     value={item.id}
@@ -80,11 +97,8 @@ export function SelectWithLabel<S extends FieldValues>({
                     </Select>
 
                     <FormMessage className="overflow-y-scroll overflow-x- max-h-10 sm:max-w-sm max-w-xs text-wrap" />
-                    
-
                 </FormItem>
             )}
         />
-
     );
 }

@@ -1,6 +1,6 @@
 import time
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timezone
 from random import choice, sample
 from typing import Annotated, Literal, Sequence
 
@@ -138,7 +138,7 @@ id_name_email = Annotated[
 
 def ongoing_match(match: Match):
     "checks if a match is still ongoing, returns false if match is over, otherwise true"
-    time_now = datetime.now()
+    time_now = datetime.now(timezone.utc)
     end_time = match.end
     ongoing = time_now < end_time
     return ongoing
@@ -178,7 +178,7 @@ def create_new_match(session: session, part: int, atp: atp):
         # Randomly select 2 players from the colony for the match
         players = random_players_for_match(session, players_not_in_part, colony_id)
         # create match
-        begin = datetime.now() + atp.delay_begin_match  # match begins in timedelta
+        begin = datetime.now(timezone.utc) + atp.delay_begin_match  # match begins in timedelta
         end = begin + atp.match_duration  # match ends in timedelta
         new_match = Match(
             begin=begin, end=end, part=part, colony_id=colony_id, players=players
@@ -254,7 +254,7 @@ def activate_domain(
     # activate domain
     barrier_tech.domain_expansion = True
     # set deactivation time
-    barrier_tech.de_end_time = datetime.now() + atp.domain_duration
+    barrier_tech.de_end_time = datetime.now(timezone.utc) + atp.domain_duration
     # deduct points
     barrier_tech.player.points = calculate_points(
         barrier_tech.player.points, atp.cost_domain_expansion, "minus"
@@ -280,7 +280,7 @@ def deactivate_domain(barrier_tech: BarrierTech, session: session):
     "function for the background task of deactivating a domain"
     active = True
     while active:
-        now = datetime.now()  # the current time
+        now = datetime.now(timezone.utc)  # the current time
         # check if there is no end time for the specified barrier tech DE
         if barrier_tech.de_end_time is None:
             # deactivate domain
@@ -465,7 +465,7 @@ def activate_simple_domain(
     # activate simple domain
     barrier_tech.simple_domain = True
     # set deactivation time
-    barrier_tech.sd_end_time = datetime.now() + atp.simple_domain_duration
+    barrier_tech.sd_end_time = datetime.now(timezone.utc) + atp.simple_domain_duration
     # deduct points
     barrier_tech.player.points = calculate_points(
         barrier_tech.player.points, atp.cost_simple_domain, "minus"
@@ -491,7 +491,7 @@ def deactivate_simple_domain(barrier_tech: BarrierTech, session: session):
     "function for the background task of deactivating a simple domain"
     active = True
     while active:
-        now = datetime.now()  # the current time
+        now = datetime.now(timezone.utc)  # the current time
         # check if there is no end time for the specified barrier tech SD
         if barrier_tech.sd_end_time is None:
             # deactivate simple domain
@@ -548,7 +548,7 @@ def assign_match_winner(*, match_id: int, session: session, atp: atp):
     active = ongoing_match(match)
     while active:
         # pause the loop for 1/2 the time remaining
-        now = datetime.now()  # the current time
+        now = datetime.now(timezone.utc)  # the current time
         half_time_remaining = (match.end - now).total_seconds() // 2
         if (
             half_time_remaining < 0

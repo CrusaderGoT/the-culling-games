@@ -6,8 +6,8 @@ import { useForm } from "react-hook-form";
 
 import { Form } from "@/components/ui/form";
 
-import { InputWithLabel } from "@/components/inputs/InputWithLabel";
-import { SelectWithLabel } from "@/components/inputs/SelectWithLabel";
+import { InputForm } from "@/components/inputs/InputForm";
+import { SelectForm } from "@/components/inputs/SelectWithLabel";
 import { LinkButton } from "@/components/LinkButton";
 import { Button } from "@/components/ui/button";
 import { LoaderCircle, LogInIcon, UserPlus2Icon } from "lucide-react";
@@ -97,13 +97,13 @@ export function CreateUserForm() {
                 <form onSubmit={form.handleSubmit(onSubmit)}>
                     <div className="flex flex-col gap-6">
                         <div className="flex flex-col gap-4">
-                            <InputWithLabel<CreateUser>
+                            <InputForm<CreateUser>
                                 fieldTitle="Username"
                                 nameInSchema="username"
                                 placeholder="your username is not the same as player name"
                             />
 
-                            <InputWithLabel<CreateUser>
+                            <InputForm<CreateUser>
                                 fieldTitle="Email"
                                 nameInSchema="email"
                                 type="email"
@@ -111,13 +111,13 @@ export function CreateUserForm() {
                                 placeholder="myemail@example.com"
                             />
 
-                            <SelectWithLabel<CreateUser>
+                            <SelectForm<CreateUser>
                                 data={COUNTRIES}
                                 fieldTitle="Country"
                                 nameInSchema="country"
                             />
 
-                            <InputWithLabel<CreateUser>
+                            <InputForm<CreateUser>
                                 fieldTitle="Password"
                                 nameInSchema="password"
                                 type="password"
@@ -125,16 +125,19 @@ export function CreateUserForm() {
                                 aria-autocomplete="none"
                             />
 
-                            <InputWithLabel<CreateUser>
+                            <InputForm<CreateUser>
                                 fieldTitle="Confirm Password"
                                 nameInSchema="confirm_password"
                                 type="password"
                                 autoComplete="off"
                                 aria-autocomplete="none"
                             />
-
                             {signUpError && (
-                                <DisplayResponseMessage error={signUpError} />
+                                <div className="max-w-xs my-1 max-h-max">
+                                    <DisplayResponseMessage
+                                        error={signUpError}
+                                    />
+                                </div>
                             )}
                         </div>
 

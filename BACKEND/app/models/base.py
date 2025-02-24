@@ -6,7 +6,7 @@ write attributes in class string definition, for easier understanding of their s
 should be imported only in other model modules.\n
 '''
 import os
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Column, TIMESTAMP
 from enum import Enum, IntEnum
 from datetime import date, datetime
 from pydantic import EmailStr, StringConstraints
@@ -127,7 +127,7 @@ class BaseCTApp(SQLModel):
     application: str
     '''
     name: str = Field(min_length=3, max_length=100, description="The name of the application, must be between 3 and 100 characters", schema_extra={"examples": ["Hollow Purple", "Demon Dogs", "Resonance", "Overtime"]})
-    application: str = Field(min_length=50, max_length=500, description="The application of the cursed technique, explaining how it is used or applied in practice")
+    application: str = Field(min_length=100, max_length=500, description="The application of the cursed technique, explaining how it is used or applied in practice")
 
 class BaseCTAppInfo(BaseCTApp):
     '''
@@ -216,8 +216,8 @@ class BaseMatch(SQLModel):
     end: datetime
     part: int
     """
-    begin: datetime
-    end: datetime
+    begin: datetime = Field(sa_column=Column(TIMESTAMP(timezone=True)))
+    end: datetime = Field(sa_column=Column(TIMESTAMP(timezone=True)))
     part: int
 
 
@@ -245,9 +245,9 @@ class BaseBarrierTech(SQLModel):
     simple_domain: bool = Field(default=False, description="the player's simple domain")
     
     # the times are useful for know when to activate/deactivate the techniques
-    de_end_time: datetime | None = Field(default=None, description="the time a player cast their domain")
-    bv_end_time: datetime | None = Field(default=None, description="the time a player cast their binding_vow")
-    sd_end_time: datetime | None = Field(default=None, description="the time a player cast their simple_domain")
+    de_end_time: datetime | None = Field(default=None, sa_column=Column(TIMESTAMP(timezone=True)), description="the time a player cast their domain")
+    bv_end_time: datetime | None = Field(default=None, sa_column=Column(TIMESTAMP(timezone=True)), description="the time a player cast their binding_vow")
+    sd_end_time: datetime | None = Field(default=None, sa_column=Column(TIMESTAMP(timezone=True)), description="the time a player cast their simple_domain")
 
 
 class BaseVote(SQLModel):

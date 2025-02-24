@@ -15,18 +15,13 @@ export default defineConfig({
     {
       name: "@hey-api/sdk",
       asClass: true,
-      validator: "zod",
-      transformer: "@hey-api/transformers",
     },
     {
       name: "@hey-api/typescript",
-      enums: "javascript"
+      enums: "javascript",
     },
     "zod",
-    "@hey-api/transformers",
     "@tanstack/react-query",
-    
-    
   ],
   watch: true, // true to keep check for changes to fastapi openapi specs
 });

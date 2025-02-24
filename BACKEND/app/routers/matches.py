@@ -78,7 +78,7 @@ async def create_match(
                     session.refresh(new_match)
                     background.add_task(
                         assign_match_winner,
-                        match_id=new_match.id, # type: ignore
+                        match_id=new_match.id,  # type: ignore
                         session=session,
                         atp=atp,
                     )  # type: ignore
@@ -323,11 +323,31 @@ def simple_domain(
     background: BackgroundTasks,
     atp: atp,
 ) -> BarrierTech:
-    """Activates the simple domain of a player in an ongoing match.\n
-    Which either\n\t
-    * Reduces the opponent's vote to half per vote, If opponent doesn't have domain expansion active.\n
-    or
-    * If opponent's domain is expanded, the simple domain weakens the domain expansion effect"""
+    """
+    \nActivates the simple domain effect for a player during an ongoing match. The simple domain interaction
+    modifies the opponent's capabilities based on their current domain status:
+        - If the opponent's domain expansion is inactive, it halves the effect of their vote per action.
+        - If the domain expansion is active, it weakens its effect.
+    \nParameters:
+            player_id (int): Unique identifier for the player whose simple domain is being activated.
+            match_id (int): The match identifier provided as a query parameter.
+            current_user (active_user): The currently authenticated user executing the action.
+            session (session): Database session for transactional operations and data retrieval.
+            background (BackgroundTasks): Background task manager to schedule asynchronous deactivation.
+            atp (atp): Configuration containing limitations, including limits on the number of activations
+                                 per match for the simple domain.
+    \nReturns:
+            BarrierTech: An updated BarrierTech object reflecting the current state and timing details of
+                                     the simple domain effect.
+    \nRaises:
+            HTTPException:
+                    - If the player has already reached the activation limit for the simple domain in the match.
+                    - If the simple domain is already active and the deactivation time has not passed.
+    \nNotes:
+            This function checks relevant conditions before activating the simple domain, including limits
+            and current activation status. When appropriate, it schedules a background task to automatically
+            deactivate the effect after its duration has elapsed.
+    """
     match_none = session.get(Match, match_id)
     player = session.get(Player, player_id)
 
@@ -385,3 +405,68 @@ def simple_domain(
         # schedule background task for deactivation
         background.add_task(deactivate_simple_domain, barrier_tech, session)
         return barrier_tech
+
+
+@router.delete("/delete/{match_id}")
+async def delete_match(
+    match_id: Annotated[int, Path()],
+    session: session,
+    admin: admin_user,
+):
+    """
+    Deletes a match from the database given its ID after verifying delete permissions.
+
+    This endpoint operation checks whether the specified administrative user has the
+    required permission to delete a match. First, it looks up the permission for deletion
+    on the match model. If the permission exists, it then validates whether the admin
+    either possesses this permission or is a superuser. If the admin is authorized, the
+    function attempts to retrieve the match by its match_id. If the match is found, it
+    will be deleted from the database and the deleted match object is returned. If it is
+    not found, an HTTPException with a 404 status code is raised. If the admin lacks
+    the required permission, a UserException is raised. If the delete permission itself
+    is not defined, an HTTPException with a 403 status code is raised.
+
+    Parameters:
+        match_id (int): The ID of the match to be deleted, passed as a query parameter.
+        session (Session): The current database session used for executing queries.
+        admin (AdminUser): The admin user attempting to delete the match, used to check authorization.
+
+    Returns:
+        The deleted match object if the deletion is successful.
+
+    Raises:
+        HTTPException: If the match does not exist (404 Not Found) or the deletion permission
+                       is not defined (403 Forbidden).
+        UserException: If the admin does not have the authorization to delete the match
+                       (401 Unauthorized).
+    """
+    # first get the permission for creating match
+    permission = session.exec(
+        select(Permission)
+        .where(Permission.model == ModelName.match)  # type: ignore
+        .where(Permission.level == Permission.PermissionLevel.DELETE)
+    ).first()
+    if permission is not None:
+        # check if admin user has permission
+        if permission in admin.permissions or admin.is_superuser:
+            # get the match
+            match = get_match(session=session, match_id=match_id)
+            if match is not None:
+                session.delete(match)
+                session.commit()
+                return match
+            else:
+                raise HTTPException(
+                    status.HTTP_404_NOT_FOUND, f"Match with Id: {match_id}, Not Found"
+                )
+        else:  # admin doesn't have permission to create match
+            raise UserException(
+                admin.user,
+                code=status.HTTP_401_UNAUTHORIZED,
+                detail=f"{admin.user.username} doesn't have permission to create a match.",
+            )
+    else:
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN,
+            detail="Permission to delete a match does not exist, contact a superuser",
+        )

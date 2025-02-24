@@ -1,6 +1,9 @@
 "use client";
 
-import { useFormContext, FieldPath, FieldValues } from "react-hook-form";
+import { LucideIcon } from "lucide-react";
+import { InputHTMLAttributes } from "react";
+import { FieldPath, FieldValues, useFormContext } from "react-hook-form";
+import { TooltipPopover } from "../TooltipPopover";
 import {
     FormControl,
     FormField,
@@ -9,20 +12,29 @@ import {
     FormMessage,
 } from "../ui/form";
 import { Input } from "../ui/input";
-import { InputHTMLAttributes } from "react";
 
 type InputProps<S extends FieldValues> = {
     fieldTitle: string;
     nameInSchema: FieldPath<S>;
     className?: string;
     fieldInfo?: string;
+    includeTip?: boolean;
+    TooltipComponent?: React.ElementType;
+    TooltipIcon?: LucideIcon;
+    tooltipContent?: string;
+    triggerText?: string;
 } & InputHTMLAttributes<HTMLInputElement>;
 
-export function InputWithLabel<S extends FieldValues>({
+export function InputForm<S extends FieldValues>({
     fieldTitle,
     nameInSchema,
     className,
     fieldInfo,
+    includeTip = false,
+    TooltipComponent,
+    TooltipIcon,
+    triggerText,
+    tooltipContent = "input info",
     ...props
 }: InputProps<S>) {
     const form = useFormContext();
@@ -37,7 +49,17 @@ export function InputWithLabel<S extends FieldValues>({
                         className="text-xs sm:text-base"
                         htmlFor={nameInSchema}
                     >
-                        {fieldTitle}
+                        <div className="flex items-center gap-1">
+                            <span>{fieldTitle}</span>
+                            {includeTip && (
+                                <TooltipPopover
+                                    TriggerComponent={TooltipComponent}
+                                    TriggerIcon={TooltipIcon}
+                                    triggerText={triggerText}
+                                    content={tooltipContent}
+                                />
+                            )}
+                        </div>
                     </FormLabel>
 
                     <FormControl>

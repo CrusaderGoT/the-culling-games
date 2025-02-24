@@ -2,7 +2,7 @@
 
 import { type Options, UsersService, PlayersService, MatchesService, AdminService, ColoniesService, AuthService } from '../sdk.gen';
 import { queryOptions, type UseMutationOptions, infiniteQueryOptions, type InfiniteData } from '@tanstack/react-query';
-import type { CurrentUserData, AuserData, EditUserData, EditUserError, EditUserResponse, DeleteUserData, DeleteUserError, DeleteUserResponse, CreatePlayerData, CreatePlayerError, CreatePlayerResponse, MyPlayerData, GetPlayersData, GetPlayersError, GetPlayersResponse, APlayerData, EditPlayerData, EditPlayerError, EditPlayerResponse, DeletePlayerData, DeletePlayerError, DeletePlayerResponse, UpgradePlayerData, UpgradePlayerError, UpgradePlayerResponse, CreateMatchData, CreateMatchError, CreateMatchResponse, GetMatchesData, GetMatchesError, GetMatchesResponse, GetLastestMatchData, VoteData, VoteError, VoteResponse, DomainExpansionData, DomainExpansionError, DomainExpansionResponse, SimpleDomainData, SimpleDomainError, SimpleDomainResponse, CreateAdminData, CreateAdminError, CreateAdminResponse, NewPermissionData, NewPermissionError, NewPermissionResponse, DemoSuperuserData, DemoSuperuserError, GetColoniesData, GetColoniesError, GetColoniesResponse, CreateTokenData, CreateTokenError, CreateTokenResponse, CreateUserData, CreateUserError, CreateUserResponse } from '../types.gen';
+import type { CurrentUserData, AuserData, EditUserData, EditUserError, EditUserResponse, DeleteUserData, DeleteUserError, DeleteUserResponse, CreatePlayerData, CreatePlayerError, CreatePlayerResponse, MyPlayerData, GetPlayersData, GetPlayersError, GetPlayersResponse, APlayerData, EditPlayerData, EditPlayerError, EditPlayerResponse, DeletePlayerData, DeletePlayerError, DeletePlayerResponse, UpgradePlayerData, UpgradePlayerError, UpgradePlayerResponse, CreateMatchData, CreateMatchError, CreateMatchResponse, GetMatchesData, GetMatchesError, GetMatchesResponse, GetLastestMatchData, VoteData, VoteError, VoteResponse, DomainExpansionData, DomainExpansionError, DomainExpansionResponse, SimpleDomainData, SimpleDomainError, SimpleDomainResponse, DeleteMatchData, DeleteMatchError, CreateAdminData, CreateAdminError, CreateAdminResponse, NewPermissionData, NewPermissionError, NewPermissionResponse, DemoSuperuserData, DemoSuperuserError, GetColoniesData, GetColoniesError, GetColoniesResponse, CreateTokenData, CreateTokenError, CreateTokenResponse, CreateUserData, CreateUserError, CreateUserResponse } from '../types.gen';
 import { client as _heyApiClient } from '../client.gen';
 
 export type QueryKey<TOptions extends Options> = [
@@ -468,6 +468,20 @@ export const simpleDomainMutation = (options?: Partial<Options<SimpleDomainData>
     const mutationOptions: UseMutationOptions<SimpleDomainResponse, SimpleDomainError, Options<SimpleDomainData>> = {
         mutationFn: async (localOptions) => {
             const { data } = await MatchesService.simpleDomain({
+                ...options,
+                ...localOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const deleteMatchMutation = (options?: Partial<Options<DeleteMatchData>>) => {
+    const mutationOptions: UseMutationOptions<unknown, DeleteMatchError, Options<DeleteMatchData>> = {
+        mutationFn: async (localOptions) => {
+            const { data } = await MatchesService.deleteMatch({
                 ...options,
                 ...localOptions,
                 throwOnError: true

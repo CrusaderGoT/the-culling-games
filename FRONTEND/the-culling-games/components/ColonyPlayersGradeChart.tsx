@@ -1,7 +1,7 @@
 "use client";
 
-import * as React from "react";
 import { TrendingUp } from "lucide-react";
+import * as React from "react";
 import { Label, Pie, PieChart } from "recharts";
 
 import {
@@ -15,10 +15,10 @@ import {
 import {
     type ChartConfig,
     ChartContainer,
-    ChartTooltip,
-    ChartTooltipContent,
     ChartLegend,
     ChartLegendContent,
+    ChartTooltip,
+    ChartTooltipContent,
 } from "@/components/ui/chart";
 
 // Imagine this data is coming in as a prop or from a fetch
@@ -65,26 +65,23 @@ function transformPlayerToChartData(
             (item) => item.grade === player.grade
         );
         if (gradeIndex !== -1) {
-            result[gradeIndex].player++;
+            result[gradeIndex]!.player++;
         }
     });
     return result;
 }
 
 const chartConfig: ChartConfig = {
-
     ...Object.fromEntries(
         GRADE_MAPPING.map((grade) => [
             grade.label,
             {
                 label: grade.label,
                 color: grade.fill,
-                
             },
         ])
     ),
 };
-console.log(chartConfig)
 
 export function ColonyPlayerGradeChart() {
     const chartData = React.useMemo(
@@ -108,11 +105,10 @@ export function ColonyPlayerGradeChart() {
         ).label;
     }, [chartData]);
 
-
     return (
-        <Card className="flex flex-col sm:max-w-max">
+        <Card className="flex flex-col sm:max-w-sm md:max-w-md min-w-fit">
             <CardHeader className="items-center pb-0">
-                <CardTitle>Colonies Grade Distribution</CardTitle>
+                <CardTitle className="text-center">Colonies Grade Distribution</CardTitle>
                 <CardDescription>Surviving Player Grades</CardDescription>
             </CardHeader>
             <CardContent className="flex-1 pb-0">
@@ -135,7 +131,6 @@ export function ColonyPlayerGradeChart() {
                             cornerRadius={3}
                             label
                         >
-                            
                             <Label
                                 content={({ viewBox }) => {
                                     if (
@@ -161,7 +156,7 @@ export function ColonyPlayerGradeChart() {
                                                 <tspan
                                                     x={viewBox.cx}
                                                     y={(viewBox.cy || 0) + 24}
-                                                    className="fill-muted-foreground text-xs sm:text-base"
+                                                    className="fill-muted-foreground text-xs sm:text-base hidden sm:block"
                                                 >
                                                     Players
                                                 </tspan>
@@ -172,12 +167,9 @@ export function ColonyPlayerGradeChart() {
                             />
                         </Pie>
                         <ChartLegend
-                            content={<ChartLegendContent 
-                            
-                            />}
+                            content={<ChartLegendContent />}
                             className="
                             sm:grid grid-flow-row grid-cols-3 gap-1 flex-wrap flex basis-1/5 justify-between"
-                            
                         />
                     </PieChart>
                 </ChartContainer>
@@ -202,4 +194,3 @@ export function ColonyPlayerGradeChart() {
         </Card>
     );
 }
-

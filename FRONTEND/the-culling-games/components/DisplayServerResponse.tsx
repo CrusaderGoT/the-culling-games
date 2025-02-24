@@ -1,6 +1,5 @@
 import { HttpValidationError } from "@/api/client";
 
-
 type ResultProps = {
     error?: HttpValidationError;
     success?: string;
@@ -14,7 +13,7 @@ const MessageBox = ({
     content: string;
 }) => (
     <div
-        className={`bg-accent px-4 py-2 rounded-lg max-w-xs max-h-max text-xs md:text-base my-1 ${
+        className={`bg-accent px-4 py-2 rounded-lg max-h-max text-xs md:text-base ${
             type === "error" ? "text-red-500" : ""
         }`}
     >
@@ -25,15 +24,14 @@ const MessageBox = ({
 export function DisplayResponseMessage({ error, success }: ResultProps) {
     return (
         <>
-            {(typeof error?.detail === "string") && (
+            {typeof error?.detail === "string" && (
                 <MessageBox type="error" content={error.detail} />
-            ) }
+            )}
 
-            {(typeof error?.detail === "object") && (
+            {typeof error?.detail === "object" &&
                 error.detail.map((e, ind) => (
                     <MessageBox key={ind} type="error" content={e.msg} />
-                ))
-            )}
+                ))}
         </>
     );
 }
