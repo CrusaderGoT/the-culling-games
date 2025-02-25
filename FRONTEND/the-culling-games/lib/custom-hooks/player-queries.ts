@@ -7,7 +7,6 @@ export const useMyPlayerQuery = (access_token: string | null) => {
             headers: {
                 Authorization: `Bearer ${access_token}`
             }
-        }),
-        retry: Infinity,
+        })
     })
 }

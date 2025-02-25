@@ -14,9 +14,7 @@ export function LatestMatch() {
     const accessToken = localStorage.getItem("access_token");
 
     const { data: match, error } = useLatestMatchQuery(accessToken);
-    console.log(accessToken)
     if (!match) {
-        console.log(error)
         return <NoMatchCard />;
     }
     return <MatchCard match={match} />;
