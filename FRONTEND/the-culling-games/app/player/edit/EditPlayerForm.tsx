@@ -4,13 +4,12 @@ import { type BodyEditPlayer, type PlayerInfo } from "@/api/client";
 import { zBodyEditPlayer } from "@/api/client/zod.gen";
 import { DisplayResponseMessage } from "@/components/DisplayServerResponse";
 import { InputForm } from "@/components/inputs/InputForm";
-import { SelectForm } from "@/components/inputs/SelectWithLabel";
-import { TextAreaForm } from "@/components/inputs/TextAreaWithLabel";
+import { SelectForm } from "@/components/inputs/SelectForm";
+import { TextAreaForm } from "@/components/inputs/TextAreaForm";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { GENDERS } from "@/constants/GENDERS";
 import { useEditPlayerMutation } from "@/lib/custom-hooks/player-mutations";
-import { accessToken } from "@/lib/custom-hooks/user-mutations";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { InfoIcon, LoaderCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -37,11 +36,13 @@ export function EditPlayerForm({ player: currentPlayer }: EditPlayerProps) {
         defaultValues: defaultValues,
     });
 
+    const accessToken = localStorage.getItem("accesstoken");
+
     const {
         mutate,
         isPending: isEditingUser,
         error: editPlayerError,
-    } = useEditPlayerMutation(accessToken());
+    } = useEditPlayerMutation(accessToken);
 
     function onSubmit(data: BodyEditPlayer) {
         console.log(data);

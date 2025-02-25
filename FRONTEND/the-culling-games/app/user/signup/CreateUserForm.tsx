@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { Form } from "@/components/ui/form";
 
 import { InputForm } from "@/components/inputs/InputForm";
-import { SelectForm } from "@/components/inputs/SelectWithLabel";
+import { SelectForm } from "@/components/inputs/SelectForm";
 import { LinkButton } from "@/components/LinkButton";
 import { Button } from "@/components/ui/button";
 import { LoaderCircle, LogInIcon, UserPlus2Icon } from "lucide-react";
@@ -58,7 +58,7 @@ export function CreateUserForm() {
             });
         } catch (error) {
             // Errors are already handled by each mutation's onError callback.
-            alert("Signup/Login error");
+            console.log("SignUp Error")
         }
     }
 
@@ -123,6 +123,7 @@ export function CreateUserForm() {
                                 type="password"
                                 autoComplete="off"
                                 aria-autocomplete="none"
+                                placeholder="password"
                             />
 
                             <InputForm<CreateUser>
@@ -131,6 +132,7 @@ export function CreateUserForm() {
                                 type="password"
                                 autoComplete="off"
                                 aria-autocomplete="none"
+                                placeholder="confirm password"
                             />
                             {signUpError && (
                                 <div className="max-w-xs my-1 max-h-max">

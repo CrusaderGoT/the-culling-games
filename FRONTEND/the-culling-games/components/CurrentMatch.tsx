@@ -1,6 +1,6 @@
 "use client";
 
-import { MatchInfo } from "@/api/client";
+import { type MatchInfo } from "@/api/client";
 import {
     Card,
     CardContent,
@@ -13,10 +13,10 @@ import React from "react";
 export function LatestMatch() {
     const accessToken = localStorage.getItem("access_token");
 
-    const { data: match, error } = useLatestMatchQuery(accessToken);
-    if (!match) {
-        return <NoMatchCard />;
-    }
+    const { data: match } = useLatestMatchQuery(accessToken);
+
+    if (!match) return <NoMatchCard />;
+
     return <MatchCard match={match} />;
 }
 

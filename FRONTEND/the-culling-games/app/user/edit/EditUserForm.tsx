@@ -4,7 +4,7 @@ import { type EditUser, UserInfo } from "@/api/client";
 import { editUserMutation } from "@/api/client/@tanstack/react-query.gen";
 import { zEditUser } from "@/api/client/zod.gen";
 import { InputForm } from "@/components/inputs/InputForm";
-import { SelectForm } from "@/components/inputs/SelectWithLabel";
+import { SelectForm } from "@/components/inputs/SelectForm";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { COUNTRIES } from "@/constants/COUNTRIES";

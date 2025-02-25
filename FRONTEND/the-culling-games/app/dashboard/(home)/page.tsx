@@ -1,5 +1,3 @@
-"use server"
-
 import { LeaderboardChart } from "@/components/LeaderBoardChart";
 import { ColonyStatus } from "@/components/ColonyCard";
 import { ColonyPlayerGradeChart } from "@/components/ColonyPlayersGradeChart";

@@ -4,13 +4,12 @@ import { BodyCreatePlayer, UserInfo } from "@/api/client";
 import { zCreateCt, zCreateCtApp, zCreatePlayer } from "@/api/client/zod.gen";
 import { DisplayResponseMessage } from "@/components/DisplayServerResponse";
 import { InputForm } from "@/components/inputs/InputForm";
-import { SelectForm } from "@/components/inputs/SelectWithLabel";
-import { TextAreaForm } from "@/components/inputs/TextAreaWithLabel";
+import { SelectForm } from "@/components/inputs/SelectForm";
+import { TextAreaForm } from "@/components/inputs/TextAreaForm";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { GENDERS } from "@/constants/GENDERS";
 import { useCreatePlayerMutation } from "@/lib/custom-hooks/player-mutations";
-import { accessToken } from "@/lib/custom-hooks/user-mutations";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { InfoIcon, LoaderCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -53,12 +52,14 @@ export function CreatePlayerForm({ user }: CreatePlayerProp) {
         defaultValues,
     });
 
+    const accessToken = localStorage.getItem("access_token");
+
     const {
         mutate,
         isPending: isCreatingPlayer,
         error: createPlayerError,
         isSuccess: createPlayerSuccess,
-    } = useCreatePlayerMutation(accessToken());
+    } = useCreatePlayerMutation(accessToken);
 
     function onSubmit(data: BodyCreatePlayer) {
         mutate({
@@ -248,7 +249,9 @@ export function CreatePlayerForm({ user }: CreatePlayerProp) {
                             {/** submit buttons */}
                             <Button
                                 type="submit"
-                                disabled={isCreatingPlayer || createPlayerSuccess}
+                                disabled={
+                                    isCreatingPlayer || createPlayerSuccess
+                                }
                             >
                                 Create Player
                             </Button>
