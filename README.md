@@ -1,3 +1,5 @@
+#This repo is Archived and no longer improved. Check out the new one I am working on at [The Culling Game](https://github.com/CrusaderGoT/The-Culling-Game)
+
 # The Culling Games
 *This is a repository for the Implementation of the culling games from reddit, r/thecullinggames as a website/api.*
 *Engineered using FastAPI and NextJS.*
